@@ -77,34 +77,6 @@
 </head>
 <body class="bg-cyberBlack text-chromeWhite min-h-screen flex flex-col justify-between selection:bg-neonCyan selection:text-cyberBlack cyber-grid-bg">
 
-    <!-- Top Toolbar (Hidden on print) -->
-    <header class="no-print sticky top-0 z-40 bg-cyberDark/95 backdrop-blur border-b border-neonCyan/25 p-3">
-        <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div class="flex items-center space-x-2.5">
-                <a href="/" class="w-8 h-8 rounded-lg bg-cyberDark hover:bg-neonCyan/20 border border-neonCyan/40 flex items-center justify-center text-neonCyan transition" title="Dashboard">
-                    <i class="fa-solid fa-arrow-left text-xs"></i>
-                </a>
-                <div>
-                    <h1 class="text-xs sm:text-sm font-bold text-neonCyan font-cyber flex items-center gap-1.5">
-                        MEJA REGISTRASI • TAB S6 LITE
-                        <span class="text-[9px] font-monoTech font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                            TOUCH ACTIVE
-                        </span>
-                    </h1>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <button onclick="promptChangeIp()" class="px-2.5 py-1 bg-cyberDark border border-neonCyan/40 text-neonCyan hover:bg-neonCyan/20 rounded-lg text-[11px] font-tech font-semibold transition">
-                    <i class="fa-solid fa-network-wired"></i> Ganti URL / IP
-                </button>
-                <a id="btnPdfDownload" href="/api/venue/standee/pdf" class="px-2.5 py-1 bg-gradient-to-r from-neonCyan/20 to-neonPurple/20 text-neonCyan border border-neonCyan/50 rounded-lg text-[11px] font-tech font-semibold transition hover:scale-105">
-                    <i class="fa-solid fa-file-pdf"></i> Cetak A4
-                </a>
-            </div>
-        </div>
-    </header>
-
     <!-- Main Standee Showcase (Optimized for Samsung Tab S6 Lite) -->
     <main class="standee-container flex-1 flex items-center justify-center p-4 sm:p-6">
         
