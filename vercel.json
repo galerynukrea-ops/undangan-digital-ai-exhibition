@@ -18,10 +18,6 @@
       "destination": "/live.html"
     },
     {
-      "source": "/print",
-      "destination": "/print-preview.html"
-    },
-    {
       "source": "/scanner",
       "destination": "/scanner.html"
     },

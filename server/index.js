@@ -12,7 +12,7 @@ const uuidv4 = () => crypto.randomUUID();
 
 const { db, generateToken, resetAttendanceOnly, seedDatabase } = require('./db');
 const { analyzeSentiment } = require('./aiService');
-const { generateInvitationsPdf, generateVenueStandeePdf, PALETTE, EVENT_DETAILS } = require('./pdfService');
+const { generateVenueStandeePdf, PALETTE, EVENT_DETAILS } = require('./pdfService');
 const { addClient, broadcastEvent } = require('./sseService');
 
 const app = express();
@@ -256,39 +256,10 @@ app.all(['/api/admin/reset', '/api/reset'], (req, res) => {
 });
 
 // -------------------------------------------------------------
-// REST API: Print Invitations (NO BARCODE) & 1 Master Barcode Venue
+// REST API: 1 Master Barcode Venue (PDF & PNG)
 // -------------------------------------------------------------
 
-// 1. Download batch PDF of all invitations (CLEAN FORMAL CARDS - NO BARCODE)
-app.get('/api/invitations/pdf', async (req, res) => {
-    try {
-        const { category } = req.query;
-        let query = 'SELECT * FROM guests';
-        const params = [];
-        if (category && category !== 'all') {
-            query += ' WHERE category = ?';
-            params.push(category);
-        }
-        query += ' ORDER BY created_at ASC';
-
-        const guests = db.prepare(query).all(...params);
-        if (guests.length === 0) {
-            return res.status(404).send('Tidak ada data instansi tamu untuk dicetak.');
-        }
-
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename="Undangan_Exhibition_AI_Menembus_Batas_Digital.pdf"');
-
-        await generateInvitationsPdf(guests, res);
-    } catch (err) {
-        console.error('[PDF] Error generating batch PDF:', err.message);
-        if (!res.headersSent) {
-            res.status(500).send('Gagal men-generate file PDF undangan.');
-        }
-    }
-});
-
-// 2. Download Standee Barcode Depan Venue (PDF Siap Cetak A4/A5)
+// 1. Download Standee Barcode Depan Venue (PDF Siap Cetak A4/A5)
 app.get('/api/venue/standee/pdf', async (req, res) => {
     try {
         const checkinUrl = resolveCheckinUrl(req);
@@ -546,10 +517,6 @@ app.get('/checkin', (req, res) => {
 
 app.get('/live', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'live.html'));
-});
-
-app.get('/print', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'print-preview.html'));
 });
 
 app.get('/scanner', (req, res) => {
