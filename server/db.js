@@ -132,28 +132,38 @@ try {
                         saveStore();
                         return;
                     }
-                    if (s.startsWith('UPDATE GUESTS SET STATUS = \'CHECKED_IN\'')) {
-                        const id = params[0];
+                    if (s.includes('UPDATE GUESTS SET STATUS = \'CHECKED_IN\'')) {
+                        const id = params.length > 1 ? params[1] : params[0];
+                        const checkedTime = params.length > 1 ? params[0] : new Date().toISOString();
                         const g = store.guests.find(x => x.id === id);
                         if (g) {
                             g.status = 'checked_in';
-                            g.checked_in_at = new Date().toISOString();
+                            g.checked_in_at = checkedTime;
                             saveStore();
                         }
                         return;
                     }
-                    if (s.startsWith('INSERT INTO GUEST_MESSAGES')) {
+                    if (s.includes('INSERT INTO GUEST_MESSAGES')) {
                         const [id, guest_id, message, sentiment, score, emotion, keywords] = params;
-                        store.messages.push({
-                            id,
-                            guest_id,
-                            message,
-                            sentiment: sentiment || 'neutral',
-                            score: score !== undefined ? score : 0.5,
-                            emotion: emotion || 'Inspiratif',
-                            keywords: typeof keywords === 'string' ? keywords : JSON.stringify(keywords || []),
-                            created_at: new Date().toISOString()
-                        });
+                        const existing = store.messages.find(m => m.guest_id === guest_id);
+                        if (existing) {
+                            existing.message = message;
+                            existing.sentiment = sentiment || 'neutral';
+                            existing.score = score !== undefined ? score : 0.5;
+                            existing.emotion = emotion || 'Inspiratif';
+                            existing.keywords = typeof keywords === 'string' ? keywords : JSON.stringify(keywords || []);
+                        } else {
+                            store.messages.push({
+                                id,
+                                guest_id,
+                                message,
+                                sentiment: sentiment || 'neutral',
+                                score: score !== undefined ? score : 0.5,
+                                emotion: emotion || 'Inspiratif',
+                                keywords: typeof keywords === 'string' ? keywords : JSON.stringify(keywords || []),
+                                created_at: new Date().toISOString()
+                            });
+                        }
                         saveStore();
                         return;
                     }
@@ -168,9 +178,17 @@ try {
                     if (s.includes('COUNT(*) AS CHECKED FROM GUESTS')) {
                         return { checked: store.guests.filter(g => g.status === 'checked_in').length };
                     }
+                    if (s.includes('WHERE GUEST_ID = ?')) {
+                        const gid = params[0];
+                        return store.messages.find(m => m.guest_id === gid) || null;
+                    }
+                    if (s.includes('WHERE INSTITUTION = ?')) {
+                        const inst = (params[0] || '').trim().toLowerCase();
+                        return store.guests.find(g => g.institution.trim().toLowerCase() === inst) || null;
+                    }
                     if (s.startsWith('SELECT * FROM GUESTS WHERE ID = ?')) {
                         const id = params[0];
-                        return store.guests.find(g => g.id === id);
+                        return store.guests.find(g => g.id === id) || null;
                     }
                     if (s.includes('WHERE QR_TOKEN = ? OR INSTITUTION LIKE ?')) {
                         const token = params[0];
