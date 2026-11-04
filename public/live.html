@@ -222,9 +222,16 @@
                 <span>Dinas KUKM Kota Madiun</span>
             </div>
 
-            <p id="popMsg" class="mt-4 text-xs sm:text-sm text-chromeSilver leading-relaxed border-t border-neonCyan/25 pt-3 italic font-tech">
-                "Selamat datang dan terima kasih atas kehadirannya di Waroeng Latte Madiun!"
-            </p>
+            <!-- Pesan Ucapan / Harapan dari Tamu -->
+            <div class="mt-4 border-t border-neonCyan/25 pt-3 text-left">
+                <div class="flex items-center gap-1.5 text-[10px] font-cyber text-neonPurple font-bold uppercase tracking-wider mb-1">
+                    <i class="fa-solid fa-quote-left text-neonCyan"></i>
+                    <span>UCAPAN & HARAPAN TAMU:</span>
+                </div>
+                <p id="popMsg" class="text-xs sm:text-sm text-chromeSilver leading-relaxed italic font-tech">
+                    "Sukses selalu untuk kolaborasi talenta muda & inovasi kecerdasan artifisial di Kota Madiun!"
+                </p>
+            </div>
 
             <!-- 6-Second Linear Countdown Glowing Bar -->
             <div class="mt-5 w-full bg-cyberBlack/80 rounded-full h-1.5 overflow-hidden border border-neonCyan/30">
@@ -405,9 +412,22 @@
             const guest = guestData.guest || guestData;
             const guestName = guest.name || guest.institution || 'Tamu Kehormatan';
             const guestInst = guest.institution || 'Mitra Kehormatan';
-            const guestMsg = (guest.message && guest.message.trim())
-                ? `“${guest.message}”`
-                : `“Selamat datang dan terima kasih atas kehadirannya di Waroeng Latte Madiun!”`;
+
+            // Ambil pesan/harapan tamu secara presisi dari payload (baik object maupun string)
+            let rawMsg = '';
+            if (typeof guestData.message === 'string') {
+                rawMsg = guestData.message;
+            } else if (guestData.message && guestData.message.text) {
+                rawMsg = guestData.message.text;
+            } else if (typeof guest.message === 'string') {
+                rawMsg = guest.message;
+            } else if (guest.message && guest.message.text) {
+                rawMsg = guest.message.text;
+            }
+
+            const guestMsg = (rawMsg && rawMsg.trim())
+                ? `“${rawMsg.trim()}”`
+                : `“Sukses selalu untuk seluruh talenta muda & kemajuan kecerdasan artifisial di Kota Madiun!”`;
 
             // 1. Robot terbang ke kanan (Smooth Flight & Bank into turn)
             if (window.Robot3D) {

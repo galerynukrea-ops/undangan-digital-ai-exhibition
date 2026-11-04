@@ -136,16 +136,22 @@
             </button>
         </form>
 
-        <!-- Success Notice -->
-        <div id="selfSuccess" class="p-6 rounded-xl bg-cyberDark border border-neonCyan/60 text-center space-y-3 hidden shadow-[0_0_30px_rgba(0,240,255,0.35)]">
-            <div class="w-12 h-12 rounded-full bg-neonCyan/20 text-neonCyan flex items-center justify-center mx-auto text-xl shadow-[0_0_15px_rgba(0,240,255,0.5)]">
-                <i class="fa-solid fa-circle-check animate-bounce"></i>
+        <!-- Success Notice (Tanpa tombol kembali ke formulir) -->
+        <div id="selfSuccess" class="p-6 rounded-2xl bg-cyberDark/95 border-2 border-neonCyan/70 text-center space-y-3.5 hidden shadow-[0_0_40px_rgba(0,240,255,0.4)]">
+            <div class="w-14 h-14 rounded-full bg-neonCyan/20 text-neonCyan flex items-center justify-center mx-auto text-2xl shadow-[0_0_20px_rgba(0,240,255,0.6)] border border-neonCyan/50">
+                <i class="fa-solid fa-circle-check"></i>
             </div>
-            <h3 id="successInstTitle" class="text-base font-bold font-cyber text-neonCyan">Terima Kasih!</h3>
-            <p class="text-xs font-tech text-chromeSilver">Kedatangan Anda telah terverifikasi dan sambutan resmi telah tampil di Layar Utama Waroeng Latte.</p>
-            <button onclick="resetForm()" class="px-4 py-2 bg-cyberBlack border border-neonCyan/40 text-neonCyan hover:bg-neonCyan/20 rounded-xl text-xs font-cyber transition">
-                Kembali ke Formulir
-            </button>
+            <h3 id="successInstTitle" class="text-lg font-bold font-cyber text-neonCyan leading-snug">Terima Kasih!</h3>
+            <p class="text-xs font-tech text-chromeWhite/90 leading-relaxed">
+                Kedatangan Anda telah terverifikasi. Pesan ucapan dan sambutan Anda telah tampil di Layar Utama Waroeng Latte Madiun.
+            </p>
+            <div id="selfRecordedMsgBox" class="hidden p-3 rounded-xl bg-cyberBlack/80 border border-neonCyan/30 text-left">
+                <span class="text-[10px] font-cyber text-neonPurple font-bold block mb-1">PESAN & HARAPAN ANDA:</span>
+                <p id="selfRecordedMsg" class="text-xs text-chromeSilver italic leading-relaxed"></p>
+            </div>
+            <div class="text-[10.5px] font-cyber text-emerald-400 font-semibold tracking-wider pt-2 border-t border-neonCyan/20">
+                ✨ SELAMAT MENIKMATI ACARA ✨
+            </div>
         </div>
 
     </div>
@@ -249,6 +255,12 @@
                     succ.classList.remove('hidden');
                     const display = json.data.guest.name ? `${json.data.guest.name} (${json.data.guest.institution})` : json.data.guest.institution;
                     document.getElementById('successInstTitle').innerText = `Selamat Datang, ${display}!`;
+
+                    const recordedMsg = json.data.message?.text || json.data.message || message;
+                    if (recordedMsg && recordedMsg.trim()) {
+                        document.getElementById('selfRecordedMsg').innerText = `“${recordedMsg.trim()}”`;
+                        document.getElementById('selfRecordedMsgBox').classList.remove('hidden');
+                    }
                 } else {
                     alert(json.error || 'Gagal memverifikasi');
                 }

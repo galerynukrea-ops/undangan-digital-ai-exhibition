@@ -378,7 +378,7 @@ app.post('/api/checkin/submit', async (req, res) => {
         }
 
         // Analyze sentiment (fast fail-safe)
-        const guestMessage = (message && message.trim()) || 'Selamat dan sukses atas penyelenggaraan acara Menembus Batas Digital!';
+        const guestMessage = (message && message.trim()) || 'Sukses selalu untuk seluruh talenta muda & kemajuan kecerdasan artifisial di Kota Madiun!';
         const aiResult = await analyzeSentiment(guestMessage);
 
         const msgId = uuidv4();
