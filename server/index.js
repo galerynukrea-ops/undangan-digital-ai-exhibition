@@ -10,7 +10,7 @@ const QRCode = require('qrcode');
 const crypto = require('node:crypto');
 const uuidv4 = () => crypto.randomUUID();
 
-const { db, generateToken } = require('./db');
+const { db, generateToken, resetAttendanceOnly, seedDatabase } = require('./db');
 const { analyzeSentiment } = require('./aiService');
 const { generateInvitationsPdf, generateVenueStandeePdf, PALETTE, EVENT_DETAILS } = require('./pdfService');
 const { addClient, broadcastEvent } = require('./sseService');
@@ -223,6 +223,35 @@ app.delete('/api/guests/:id', (req, res) => {
     } catch (err) {
         console.error('[API] Error delete guest:', err.message);
         res.status(500).json({ success: false, error: 'Gagal menghapus data instansi' });
+    }
+});
+
+// 5. Reset Testing & Attendance Data (Supports mode: 'attendance' | 'factory')
+app.all(['/api/admin/reset', '/api/reset'], (req, res) => {
+    try {
+        const mode = (req.body?.mode || req.query?.mode || 'attendance').toLowerCase();
+        
+        if (mode === 'factory') {
+            seedDatabase();
+            broadcastEvent('database_reset', { mode: 'factory', timestamp: new Date().toISOString() });
+            return res.json({
+                success: true,
+                mode: 'factory',
+                message: 'Database berhasil di-reset penuh ke 10 instansi awal (kondisi pabrik).'
+            });
+        }
+
+        // Default: attendance reset
+        resetAttendanceOnly();
+        broadcastEvent('database_reset', { mode: 'attendance', timestamp: new Date().toISOString() });
+        return res.json({
+            success: true,
+            mode: 'attendance',
+            message: 'Status kehadiran berhasil dibersihkan (0 hadir). 10 mitra resmi siap digunakan kembali.'
+        });
+    } catch (err) {
+        console.error('[API] Error reset database:', err.message);
+        res.status(500).json({ success: false, error: 'Gagal melakukan reset data' });
     }
 });
 

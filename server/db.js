@@ -104,19 +104,35 @@ try {
                     if (s.startsWith('DELETE FROM GUEST_MESSAGES')) {
                         store.messages = [];
                         saveStore();
-                        return;
+                        return { changes: 1 };
+                    }
+                    if (s.includes('DELETE FROM GUESTS WHERE CATEGORY = \'MITRA TAMBAHAN\'') || s.includes('DELETE FROM GUESTS WHERE CATEGORY = ?')) {
+                        const cat = params[0] || 'Mitra Tambahan';
+                        const prev = store.guests.length;
+                        store.guests = store.guests.filter(g => g.category !== cat);
+                        saveStore();
+                        return { changes: prev - store.guests.length };
                     }
                     if (s.startsWith('DELETE FROM GUESTS WHERE ID = ?')) {
                         const id = params[0];
+                        const prev = store.guests.length;
                         store.guests = store.guests.filter(g => g.id !== id);
                         store.messages = store.messages.filter(m => m.guest_id !== id);
                         saveStore();
-                        return;
+                        return { changes: prev - store.guests.length };
                     }
                     if (s.startsWith('DELETE FROM GUESTS')) {
                         store.guests = [];
                         saveStore();
-                        return;
+                        return { changes: 1 };
+                    }
+                    if (s.includes('UPDATE GUESTS SET STATUS = \'PENDING\'') || s.includes('SET STATUS = \'PENDING\'')) {
+                        store.guests.forEach(g => {
+                            g.status = 'pending';
+                            g.checked_in_at = null;
+                        });
+                        saveStore();
+                        return { changes: store.guests.length };
                     }
                     if (s.startsWith('INSERT INTO GUESTS')) {
                         const [id, institution, category, qr_token] = params;
@@ -264,6 +280,17 @@ try {
     };
 }
 
+function resetAttendanceOnly() {
+    dbInstance.prepare('DELETE FROM guest_messages').run();
+    try {
+        dbInstance.prepare("UPDATE guests SET status = 'pending', checked_in_at = NULL").run();
+        dbInstance.prepare("DELETE FROM guests WHERE category = 'Mitra Tambahan'").run();
+    } catch (e) {
+        console.warn('[DB] Reset attendance warning:', e.message);
+    }
+    console.log('[DB] Kehadiran tamu berhasil direset ke status pending (0 hadir).');
+}
+
 function seedDatabase() {
     dbInstance.prepare('DELETE FROM guest_messages').run();
     dbInstance.prepare('DELETE FROM guests').run();
@@ -291,5 +318,6 @@ try {
 module.exports = {
     db: dbInstance,
     generateToken,
-    seedDatabase
+    seedDatabase,
+    resetAttendanceOnly
 };

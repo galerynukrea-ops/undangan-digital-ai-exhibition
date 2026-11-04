@@ -400,6 +400,16 @@
                 if (arrivedList.length > 0) {
                     displayCard(arrivedList[0], false);
                     startCarousel();
+                } else {
+                    clearInterval(carouselInterval);
+                    document.getElementById('spotInstitution').innerText = 'Selamat Datang di Waroeng Latte';
+                    document.getElementById('spotCategory').innerText = 'MITRA RESMI KOTA MADIUN';
+                    document.getElementById('spotAvatar').innerText = 'AI';
+                    document.getElementById('spotMessage').innerText = '"Menghubungkan masa depan UMKM, teknologi, dan kecerdasan artifisial di Kota Pendekar Madiun."';
+                    document.getElementById('spotEmotion').innerHTML = '<i class="fa-solid fa-sparkles text-neonCyan"></i> Menunggu Kehadiran';
+                    document.getElementById('spotKeywords').innerHTML = '<span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/30">#AI</span><span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-neonPurple/10 text-neonPurple border border-neonPurple/30">#MADIUN</span><span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-emerald-400/10 text-emerald-300 border border-emerald-400/30">#EXHIBITION</span>';
+                    document.getElementById('spotlightTimestamp').innerText = '[STANDBY TELEMETRY]';
+                    document.getElementById('displayModeTitle').innerText = 'AI RECEPTION DESK • WAROENG LATTE';
                 }
             }
         }
@@ -520,6 +530,10 @@
                             isSpotlightLocked = false;
                             startCarousel();
                         }, 10000);
+                    } else if (parsed.type === 'database_reset') {
+                        isSpotlightLocked = false;
+                        clearTimeout(lockTimer);
+                        loadStats();
                     }
                 } catch (err) {
                     console.error('SSE error:', err);
