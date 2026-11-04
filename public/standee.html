@@ -236,39 +236,53 @@
     </div>
 
     <script>
-        let currentIp = '192.168.18.10';
+        let currentTargetUrl = 'https://bukutamuexhibition.vercel.app/checkin';
         let isQuickCustom = false;
         let guestList = [];
 
         async function fetchNetworkInfo() {
+            // If opened on Vercel or any domain other than localhost/127.0.0.1
+            if (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                currentTargetUrl = `${window.location.origin}/checkin`;
+                updateBarcodeDisplay(currentTargetUrl);
+                return;
+            }
+
             try {
                 const res = await fetch('/api/network-info');
                 const json = await res.json();
-                if (json.success) {
-                    currentIp = json.localIp;
-                    updateBarcodeDisplay(currentIp);
+                if (json.success && json.checkinUrl) {
+                    currentTargetUrl = json.checkinUrl;
+                } else if (json.localIp) {
+                    currentTargetUrl = `http://${json.localIp}:3000/checkin`;
                 }
             } catch (e) {
-                updateBarcodeDisplay(currentIp);
+                currentTargetUrl = 'https://bukutamuexhibition.vercel.app/checkin';
+            }
+            updateBarcodeDisplay(currentTargetUrl);
+        }
+
+        function updateBarcodeDisplay(targetUrl) {
+            currentTargetUrl = targetUrl;
+            document.getElementById('checkinUrlText').innerText = targetUrl;
+            
+            const img = document.getElementById('standeeBarcodeImg');
+            img.src = `/api/venue/barcode/png?url=${encodeURIComponent(targetUrl)}&t=${Date.now()}`;
+
+            const pdfBtn = document.getElementById('btnPdfDownload');
+            if (pdfBtn) {
+                pdfBtn.href = `/api/venue/standee/pdf?url=${encodeURIComponent(targetUrl)}`;
             }
         }
 
-        function updateBarcodeDisplay(ip) {
-            const url = `http://${ip}:3000/checkin`;
-            document.getElementById('checkinUrlText').innerText = url;
-            
-            const img = document.getElementById('standeeBarcodeImg');
-            img.src = `/api/venue/barcode/png?ip=${encodeURIComponent(ip)}&t=${Date.now()}`;
-
-            const pdfBtn = document.getElementById('btnPdfDownload');
-            pdfBtn.href = `/api/venue/standee/pdf?ip=${encodeURIComponent(ip)}`;
-        }
-
         function promptChangeIp() {
-            const newIp = prompt('Masukkan IP Laptop saat terhubung ke Wi-Fi Venue:', currentIp);
-            if (newIp && newIp.trim() !== '') {
-                currentIp = newIp.trim();
-                updateBarcodeDisplay(currentIp);
+            const input = prompt('Masukkan Domain atau IP untuk Barcode (misal: https://bukutamuexhibition.vercel.app/checkin atau 192.168.1.5):', currentTargetUrl);
+            if (input && input.trim() !== '') {
+                let val = input.trim();
+                if (!val.startsWith('http://') && !val.startsWith('https://')) {
+                    val = `http://${val}:3000/checkin`;
+                }
+                updateBarcodeDisplay(val);
             }
         }
 

@@ -43,18 +43,47 @@ if (!fs.existsSync(uploadsDir)) {
 }
 const upload = multer({ dest: uploadsDir });
 
+// Helper to resolve check-in URL dynamically (Domain on Vercel vs LAN IP on Local)
+function resolveCheckinUrl(req) {
+    if (req.query.url && req.query.url.trim() !== '') {
+        return req.query.url.trim();
+    }
+    if (req.query.ip && req.query.ip.trim() !== '') {
+        const ip = req.query.ip.trim();
+        if (ip.startsWith('http://') || ip.startsWith('https://')) {
+            return ip;
+        }
+        return `http://${ip}:${PORT}/checkin`;
+    }
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    if (process.env.VERCEL || (host && !host.includes('localhost') && !host.includes('127.0.0.1'))) {
+        return `https://${host || 'bukutamuexhibition.vercel.app'}/checkin`;
+    }
+    return `http://${getLocalIpAddress()}:${PORT}/checkin`;
+}
+
 // -------------------------------------------------------------
 // REST API: Network Info for Smartphone Testing
 // -------------------------------------------------------------
 app.get('/api/network-info', (req, res) => {
+    const isVercel = !!process.env.VERCEL;
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    const isPublicHost = host && !host.includes('localhost') && !host.includes('127.0.0.1');
+    const baseUrl = (isVercel || isPublicHost) ? `${proto}://${host || 'bukutamuexhibition.vercel.app'}` : `http://${getLocalIpAddress()}:${PORT}`;
     const localIp = getLocalIpAddress();
+
     res.json({
         success: true,
+        isVercel,
+        host,
         localIp,
         port: PORT,
-        checkinUrl: `http://${localIp}:${PORT}/checkin`,
-        liveUrl: `http://${localIp}:${PORT}/live`,
-        standeeUrl: `http://${localIp}:${PORT}/standee`
+        baseUrl,
+        checkinUrl: `${baseUrl}/checkin`,
+        liveUrl: `${baseUrl}/live`,
+        standeeUrl: `${baseUrl}/standee`
     });
 });
 
@@ -228,8 +257,7 @@ app.get('/api/invitations/pdf', async (req, res) => {
 // 2. Download Standee Barcode Depan Venue (PDF Siap Cetak A4/A5)
 app.get('/api/venue/standee/pdf', async (req, res) => {
     try {
-        const localIp = req.query.ip || getLocalIpAddress();
-        const checkinUrl = `http://${localIp}:${PORT}/checkin`;
+        const checkinUrl = resolveCheckinUrl(req);
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename="Standee_Barcode_Depan_Venue_A4.pdf"');
@@ -243,11 +271,10 @@ app.get('/api/venue/standee/pdf', async (req, res) => {
     }
 });
 
-// 3. PNG Stream for the 1 Master Barcode Venue (Encodes Local LAN IP for Phone Scanning)
+// 3. PNG Stream for the 1 Master Barcode Venue (Encodes Local LAN IP or Production Domain)
 app.get('/api/venue/barcode/png', async (req, res) => {
     try {
-        const localIp = req.query.ip || getLocalIpAddress();
-        const checkinUrl = `http://${localIp}:${PORT}/checkin`;
+        const checkinUrl = resolveCheckinUrl(req);
 
         const qrBuffer = await QRCode.toBuffer(checkinUrl, {
             errorCorrectionLevel: 'H',
