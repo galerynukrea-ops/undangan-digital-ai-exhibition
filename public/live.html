@@ -345,9 +345,14 @@
                 const json = await res.json();
                 if (json.success) {
                     const stats = json.data;
-                    totalCount = stats.totalGuests || 4;
-                    document.getElementById('counterTotal').innerText = totalCount;
-                    document.getElementById('counterChecked').innerText = stats.checkedInCount || 0;
+                    totalCount = stats.totalGuests || 0;
+                    const checkedIn = stats.checkedInCount || 0;
+                    const counterEl = document.getElementById('counterText');
+                    if (totalCount > 0) {
+                        counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedIn}</span> / <span id="counterTotal">${totalCount}</span> HADIR`;
+                    } else {
+                        counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedIn}</span> TAMU HADIR`;
+                    }
 
                     if (stats.recentCheckins && stats.recentCheckins.length > 0) {
                         checkedInGuests = stats.recentCheckins;

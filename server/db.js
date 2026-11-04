@@ -8,12 +8,18 @@ function generateToken() {
     return `MBD-${randomHex.slice(0, 4)}-${randomHex.slice(4)}`;
 }
 
-// 4 Realistic Sample Guests for Madiun Exhibition (Name + Institution)
-const sampleGuests = [
-    { name: 'Bpk. Bambang Sutrisno', institution: 'Dinas KUKM Kota Madiun', category: 'Instansi Pemerintah (Pembina UMKM)' },
-    { name: 'Ibu Rina Wijaya', institution: 'Bluder Cokro Madiun', category: 'Industri Kuliner Khas Madiun' },
-    { name: 'Bpk. Hendro Gunawan', institution: 'Maju Hardware Madiun', category: 'Pusat Retail Komputer & Gadget IT' },
-    { name: 'Dr. Irfan Mahendra', institution: 'Politeknik Negeri Madiun', category: 'Akademisi & Praktisi AI' }
+// 10 Kumpulan Instansi Resmi Kota Madiun (Daftar Preset untuk Registrasi)
+const sampleInstitutions = [
+    { institution: 'Dinas KUKM', category: 'Instansi Pemerintah (Pembina UMKM)' },
+    { institution: 'Votel Kartika', category: 'Hospitality & Hotel' },
+    { institution: 'Bluder Cokro', category: 'Industri Kuliner Khas Madiun' },
+    { institution: 'Jiwan Oli', category: 'Bengkel Otomotif & Perawatan Mobil' },
+    { institution: 'MPOINT', category: 'Bengkel & Servis Motor' },
+    { institution: 'Kelurahan Josenan', category: 'Pemerintahan Daerah (Kelurahan)' },
+    { institution: 'Maju Hardware', category: 'Pusat Retail Komputer & Gadget IT' },
+    { institution: 'Hotel Setia Budi', category: 'Hospitality & Hotel' },
+    { institution: 'Yessles (Yesless)', category: 'Lembaga Bimbingan Belajar & Les Privat' },
+    { institution: 'Neo Kramik', category: 'Pusat Grosir Granit Keramik & Bangunan' }
 ];
 
 let dbInstance = null;
@@ -26,15 +32,6 @@ try {
         fs.mkdirSync(dbDir, { recursive: true });
     }
     const dbPath = path.join(dbDir, 'undangan.db');
-
-    if (process.env.VERCEL && !fs.existsSync(dbPath)) {
-        const seedSrc = path.join(__dirname, '..', 'data', 'undangan.db');
-        if (fs.existsSync(seedSrc)) {
-            try {
-                fs.copyFileSync(seedSrc, dbPath);
-            } catch (e) {}
-        }
-    }
 
     const sqliteDb = new DatabaseSync(dbPath);
     sqliteDb.exec(`
@@ -62,7 +59,7 @@ try {
         );
     `);
 
-    // Ensure 'name' column exists in case table was created previously without it
+    // Ensure 'name' column exists
     try {
         sqliteDb.exec("ALTER TABLE guests ADD COLUMN name TEXT DEFAULT ''");
     } catch (e) {}
@@ -73,32 +70,31 @@ try {
     console.warn('[DB] node:sqlite unavailable in this environment, activating In-Memory / JSON DB fallback:', err.message);
 
     // Bulletproof Fallback Store
-    const store = {
+    const fallbackStoreFile = process.env.VERCEL 
+        ? '/tmp/undangan_memory.json' 
+        : path.join(__dirname, '..', 'data', 'undangan_memory.json');
+
+    let store = {
         guests: [],
         messages: []
     };
 
-    const persistFile = process.env.VERCEL ? '/tmp/guestbook_store.json' : path.join(__dirname, '..', 'data', 'guestbook_store.json');
-    if (fs.existsSync(persistFile)) {
+    function saveStore() {
         try {
-            const data = JSON.parse(fs.readFileSync(persistFile, 'utf-8'));
-            store.guests = data.guests || [];
-            store.messages = data.messages || [];
+            fs.writeFileSync(fallbackStoreFile, JSON.stringify(store, null, 2), 'utf-8');
         } catch (e) {}
     }
 
-    function saveStore() {
+    if (fs.existsSync(fallbackStoreFile)) {
         try {
-            fs.writeFileSync(persistFile, JSON.stringify(store));
+            store = JSON.parse(fs.readFileSync(fallbackStoreFile, 'utf-8'));
         } catch (e) {}
     }
 
     dbInstance = {
-        exec: () => {},
+        exec: (sql) => {},
         prepare: (sql) => {
-            const trimmed = sql.trim();
-            const s = trimmed.toUpperCase();
-
+            const s = sql.trim().toUpperCase();
             return {
                 run: (...params) => {
                     if (s.startsWith('DELETE FROM GUEST_MESSAGES')) {
@@ -106,7 +102,7 @@ try {
                         saveStore();
                         return { changes: 1 };
                     }
-                    if (s.includes('DELETE FROM GUESTS WHERE CATEGORY = \'MITRA TAMBAHAN\'') || s.includes('DELETE FROM GUESTS WHERE CATEGORY = ?')) {
+                    if (s.includes('DELETE FROM GUESTS WHERE CATEGORY = ?')) {
                         const cat = params[0] || 'Mitra Tambahan';
                         const prev = store.guests.length;
                         store.guests = store.guests.filter(g => g.category !== cat);
@@ -135,128 +131,142 @@ try {
                         return { changes: store.guests.length };
                     }
                     if (s.startsWith('INSERT INTO GUESTS')) {
-                        const id = params[0];
-                        const name = params.length >= 5 ? params[1] : '';
-                        const institution = params.length >= 5 ? params[2] : params[1];
-                        const category = params.length >= 5 ? params[3] : params[2];
-                        const qr_token = params.length >= 5 ? params[4] : params[3];
-
+                        let id, name, institution, category, qr_token;
+                        if (params.length === 5) {
+                            [id, name, institution, category, qr_token] = params;
+                        } else {
+                            [id, institution, category, qr_token] = params;
+                            name = '';
+                        }
                         store.guests.push({
                             id,
                             name: name || '',
                             institution,
-                            category: category || 'Mitra / Instansi',
+                            category,
                             qr_token,
                             status: 'pending',
                             checked_in_at: null,
                             created_at: new Date().toISOString()
                         });
                         saveStore();
-                        return;
+                        return { changes: 1 };
                     }
-                    if (s.includes('UPDATE GUESTS SET STATUS = \'CHECKED_IN\'')) {
-                        const id = params.length > 1 ? params[1] : params[0];
-                        const checkedTime = params.length > 1 ? params[0] : new Date().toISOString();
+                    if (s.startsWith('UPDATE GUESTS SET STATUS = ?')) {
+                        const [status, checked_in_at, id] = params;
                         const g = store.guests.find(x => x.id === id);
                         if (g) {
-                            g.status = 'checked_in';
-                            g.checked_in_at = checkedTime;
+                            g.status = status;
+                            g.checked_in_at = checked_in_at;
                             saveStore();
                         }
-                        return;
+                        return { changes: 1 };
                     }
-                    if (s.includes('INSERT INTO GUEST_MESSAGES')) {
-                        const [id, guest_id, message, sentiment, score, emotion, keywords] = params;
-                        const existing = store.messages.find(m => m.guest_id === guest_id);
-                        if (existing) {
-                            existing.message = message;
-                            existing.sentiment = sentiment || 'neutral';
-                            existing.score = score !== undefined ? score : 0.5;
-                            existing.emotion = emotion || 'Inspiratif';
-                            existing.keywords = typeof keywords === 'string' ? keywords : JSON.stringify(keywords || []);
-                        } else {
-                            store.messages.push({
-                                id,
-                                guest_id,
-                                message,
-                                sentiment: sentiment || 'neutral',
-                                score: score !== undefined ? score : 0.5,
-                                emotion: emotion || 'Inspiratif',
-                                keywords: typeof keywords === 'string' ? keywords : JSON.stringify(keywords || []),
-                                created_at: new Date().toISOString()
-                            });
+                    if (s.startsWith('UPDATE GUESTS SET NAME =') || s.includes('SET NAME =')) {
+                        const [nameVal, id] = params;
+                        const g = store.guests.find(x => x.id === id);
+                        if (g) {
+                            if (nameVal) g.name = nameVal;
+                            g.status = 'checked_in';
+                            g.checked_in_at = new Date().toISOString();
+                            saveStore();
                         }
-                        saveStore();
-                        return;
+                        return { changes: 1 };
                     }
+                    if (s.startsWith('INSERT INTO GUEST_MESSAGES')) {
+                        const [id, guest_id, message, sentiment, score, emotion, keywords] = params;
+                        store.messages.push({
+                            id,
+                            guest_id,
+                            message,
+                            sentiment,
+                            score,
+                            emotion,
+                            keywords,
+                            created_at: new Date().toISOString()
+                        });
+                        saveStore();
+                        return { changes: 1 };
+                    }
+                    return { changes: 0 };
                 },
                 get: (...params) => {
-                    if (s.includes('COUNT(*) AS COUNT FROM GUESTS')) {
+                    if (s.includes('COUNT(*)')) {
+                        if (s.includes("STATUS = 'CHECKED_IN'")) {
+                            return { count: store.guests.filter(g => g.status === 'checked_in').length };
+                        }
+                        if (s.includes("STATUS = 'PENDING'")) {
+                            return { count: store.guests.filter(g => g.status === 'pending').length };
+                        }
                         return { count: store.guests.length };
                     }
-                    if (s.includes('COUNT(*) AS TOTAL FROM GUESTS')) {
-                        return { total: store.guests.length };
+                    if (s.includes('AVG(SCORE)')) {
+                        if (store.messages.length === 0) return { avg_score: 0.5 };
+                        const sum = store.messages.reduce((acc, m) => acc + (m.score || 0.5), 0);
+                        return { avg_score: sum / store.messages.length };
                     }
-                    if (s.includes('COUNT(*) AS CHECKED FROM GUESTS')) {
-                        return { checked: store.guests.filter(g => g.status === 'checked_in').length };
+                    if (s.includes('FROM GUESTS WHERE ID = ?')) {
+                        return store.guests.find(g => g.id === params[0]) || null;
                     }
-                    if (s.includes('WHERE GUEST_ID = ?')) {
-                        const gid = params[0];
-                        return store.messages.find(m => m.guest_id === gid) || null;
+                    if (s.includes('FROM GUESTS WHERE QR_TOKEN = ?')) {
+                        return store.guests.find(g => g.qr_token === params[0]) || null;
                     }
-                    if (s.includes('WHERE INSTITUTION = ?')) {
-                        const inst = (params[0] || '').trim().toLowerCase();
-                        return store.guests.find(g => g.institution.trim().toLowerCase() === inst) || null;
+                    if (s.includes('FROM GUESTS WHERE INSTITUTION = ?')) {
+                        return store.guests.find(g => g.institution.toLowerCase() === String(params[0]).toLowerCase()) || null;
                     }
-                    if (s.startsWith('SELECT * FROM GUESTS WHERE ID = ?')) {
-                        const id = params[0];
-                        return store.guests.find(g => g.id === id) || null;
-                    }
-                    if (s.includes('WHERE QR_TOKEN = ? OR INSTITUTION LIKE ?')) {
-                        const token = params[0];
-                        const instLike = (params[1] || '').replace(/%/g, '').toLowerCase();
-                        return store.guests.find(g => g.qr_token === token || (instLike && g.institution.toLowerCase().includes(instLike)));
-                    }
-                    if (s.includes('WHERE QR_TOKEN = ?')) {
-                        const token = params[0];
-                        return store.guests.find(g => g.qr_token === token);
+                    if (s.includes('FROM GUEST_MESSAGES WHERE GUEST_ID = ?')) {
+                        return store.messages.find(m => m.guest_id === params[0]) || null;
                     }
                     return null;
                 },
                 all: (...params) => {
-                    if (s.includes('CATEGORY, COUNT(*) AS COUNT FROM GUESTS')) {
-                        const map = {};
+                    if (s.includes('GROUP BY CATEGORY')) {
+                        const cats = {};
                         store.guests.forEach(g => {
-                            map[g.category] = (map[g.category] || 0) + 1;
+                            if (!cats[g.category]) cats[g.category] = { category: g.category, total: 0, checked_in: 0 };
+                            cats[g.category].total++;
+                            if (g.status === 'checked_in') cats[g.category].checked_in++;
                         });
-                        return Object.entries(map).map(([category, count]) => ({ category, count }));
+                        return Object.values(cats);
                     }
-                    if (s.includes('EMOTION, COUNT(*) AS COUNT FROM GUEST_MESSAGES')) {
-                        const map = {};
+                    if (s.includes('GROUP BY EMOTION')) {
+                        const emos = {};
                         store.messages.forEach(m => {
-                            map[m.emotion] = (map[m.emotion] || 0) + 1;
+                            if (!m.emotion) return;
+                            emos[m.emotion] = (emos[m.emotion] || 0) + 1;
                         });
-                        return Object.entries(map).map(([emotion, count]) => ({ emotion, count }));
+                        return Object.entries(emos).map(([emotion, count]) => ({ emotion, count }));
                     }
                     if (s.includes('SELECT KEYWORDS FROM GUEST_MESSAGES')) {
                         return store.messages.map(m => ({ keywords: m.keywords }));
                     }
-                    if (s.includes('WHERE G.STATUS = \'CHECKED_IN\'')) {
+                    if (s.includes('WHERE STATUS = \'CHECKED_IN\' ORDER BY CHECKED_IN_AT DESC')) {
                         return store.guests
                             .filter(g => g.status === 'checked_in')
-                            .sort((a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0))
-                            .slice(0, 10)
                             .map(g => {
                                 const m = store.messages.find(x => x.guest_id === g.id) || {};
                                 return {
                                     ...g,
-                                    message: m.message,
-                                    emotion: m.emotion,
-                                    keywords: m.keywords
+                                    message: m.message || null,
+                                    sentiment: m.sentiment || null,
+                                    score: m.score !== undefined ? m.score : null,
+                                    emotion: m.emotion || null,
+                                    keywords: m.keywords || null
                                 };
-                            });
+                            })
+                            .sort((a, b) => new Date(b.checked_in_at) - new Date(a.checked_in_at));
                     }
-                    // Main guest list query
+                    if (s.includes('SELECT DISTINCT INSTITUTION')) {
+                        const distinct = [];
+                        const seen = new Set();
+                        store.guests.forEach(g => {
+                            if (g.institution && !seen.has(g.institution.toLowerCase())) {
+                                seen.add(g.institution.toLowerCase());
+                                distinct.push({ institution: g.institution, category: g.category });
+                            }
+                        });
+                        return distinct;
+                    }
+
                     let list = store.guests.map(g => {
                         const m = store.messages.find(x => x.guest_id === g.id) || {};
                         return {
@@ -273,6 +283,7 @@ try {
                         const p0 = String(params[0] || '').replace(/%/g, '').toLowerCase();
                         if (p0) {
                             list = list.filter(g => 
+                                (g.name && g.name.toLowerCase().includes(p0)) ||
                                 g.institution.toLowerCase().includes(p0) || 
                                 g.qr_token.toLowerCase().includes(p0) || 
                                 g.category.toLowerCase().includes(p0)
@@ -290,40 +301,26 @@ function resetAttendanceOnly() {
     dbInstance.prepare('DELETE FROM guest_messages').run();
     try {
         dbInstance.prepare("UPDATE guests SET status = 'pending', checked_in_at = NULL").run();
-        dbInstance.prepare("DELETE FROM guests WHERE category = 'Mitra Tambahan'").run();
     } catch (e) {
         console.warn('[DB] Reset attendance warning:', e.message);
     }
-    console.log('[DB] Kehadiran tamu berhasil direset ke status pending (0 hadir).');
+    console.log('[DB] Kehadiran tamu berhasil direset.');
 }
 
+// Reset / Kosongkan Database Awal (0 Tamu di Dashboard)
 function seedDatabase() {
     dbInstance.prepare('DELETE FROM guest_messages').run();
     dbInstance.prepare('DELETE FROM guests').run();
-
-    const insertStmt = dbInstance.prepare(`
-        INSERT INTO guests (id, name, institution, category, qr_token, status, created_at)
-        VALUES (?, ?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)
-    `);
-
-    for (const g of sampleGuests) {
-        insertStmt.run(uuidv4(), g.name, g.institution, g.category, generateToken());
-    }
-    console.log(`[DB] Berhasil memperbarui database dengan 4 contoh tamu realistis di Kota Madiun.`);
+    console.log('[DB] Database dibersihkan (0 tamu terdaftar). Dashboard siap menerima registrasi tamu.');
 }
 
-try {
-    const res = dbInstance.prepare('SELECT COUNT(*) as count FROM guests').get();
-    if (!res || res.count === 0 || res.count > 4) {
-        seedDatabase();
-    }
-} catch (e) {
-    seedDatabase();
-}
+// Dikosongkan di awal sesuai permintaan: "mending kosongin aja dulu nama& instansi didashboard"
+seedDatabase();
 
 module.exports = {
     db: dbInstance,
     generateToken,
     seedDatabase,
-    resetAttendanceOnly
+    resetAttendanceOnly,
+    sampleInstitutions
 };

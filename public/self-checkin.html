@@ -160,16 +160,15 @@
 
         async function loadInstitutions() {
             try {
-                const res = await fetch('/api/guests');
+                const res = await fetch('/api/institutions');
                 const json = await res.json();
                 if (json.success) {
-                    guestList = json.data;
+                    const instList = json.data;
                     const select = document.getElementById('selectInstitution');
                     select.innerHTML = '<option value="">-- Pilih Instansi / Perusahaan --</option>' +
-                        '<option value="__NEW__" class="text-neonCyan font-bold">➕ Instansi Lainnya (Undangan Tambahan / Belum Terdaftar)</option>' +
-                        guestList.map(g => {
-                            const isChecked = g.status === 'checked_in';
-                            return `<option value="${g.institution}">${g.institution} • (${g.category}) ${isChecked ? '• [Sudah Hadir]' : ''}</option>`;
+                        '<option value="__NEW__" class="text-neonCyan font-bold">➕ Instansi Lainnya (Undangan Tambahan / Ketik Baru)</option>' +
+                        instList.map(item => {
+                            return `<option value="${item.institution}">${item.institution} • (${item.category})</option>`;
                         }).join('');
                 }
             } catch (err) {
@@ -211,7 +210,6 @@
             e.preventDefault();
             
             const guestName = document.getElementById('selfName').value.trim();
-            if (!guestName) return alert('Silakan masukkan nama lengkap Anda.');
 
             let institutionName = '';
             let customCategory = '';
@@ -219,11 +217,11 @@
             if (isCustomMode) {
                 institutionName = document.getElementById('customInstitutionInput').value.trim();
                 customCategory = document.getElementById('customCategoryInput').value.trim();
-                if (!institutionName) return alert('Silakan masukkan nama instansi/perusahaan Anda');
             } else {
                 institutionName = document.getElementById('selectInstitution').value;
-                if (!institutionName || institutionName === '__NEW__') {
-                    return alert('Silakan pilih instansi atau masukkan nama instansi tambahan');
+                if (institutionName === '__NEW__') {
+                    toggleCustomMode(true);
+                    return;
                 }
             }
 

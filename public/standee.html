@@ -282,16 +282,16 @@
             document.getElementById('quickSuccessNotice').classList.add('hidden');
 
             try {
-                const res = await fetch('/api/guests');
+                const res = await fetch('/api/institutions');
                 const json = await res.json();
                 if (json.success) {
-                    guestList = json.data;
+                    const instList = json.data;
                     const select = document.getElementById('quickSelectInst');
                     select.innerHTML = '<option value="">-- Pilih Instansi / Perusahaan --</option>' +
-                        guestList.map(g => {
-                            const isChecked = g.status === 'checked_in';
-                            return `<option value="${g.institution}">${g.institution} • (${g.category}) ${isChecked ? '• [Sudah Hadir]' : ''}</option>`;
-                        }).join('');
+                        instList.map(item => {
+                            return `<option value="${item.institution}">${item.institution} • (${item.category})</option>`;
+                        }).join('') +
+                        '<option value="__NEW__" class="font-bold text-neonCyan">+ Tulis Nama Instansi Baru...</option>';
                 }
             } catch (e) {}
         }
@@ -327,15 +327,15 @@
             let targetInst = '';
             if (isQuickCustom) {
                 targetInst = document.getElementById('quickCustomInput').value.trim();
-                if (!targetInst) return alert('Ketik nama instansi terlebih dahulu');
             } else {
                 targetInst = document.getElementById('quickSelectInst').value;
-                if (!targetInst) return alert('Silakan pilih nama instansi');
+                if (targetInst === '__NEW__') {
+                    toggleQuickCustom();
+                    return;
+                }
             }
 
             const name = document.getElementById('quickNameInput').value.trim();
-            if (!name) return alert('Silakan masukkan nama lengkap Anda.');
-
             const msg = document.getElementById('quickMessage').value;
             const btn = document.getElementById('btnSubmitQuick');
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyambung...`;

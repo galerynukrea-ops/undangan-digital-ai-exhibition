@@ -10,7 +10,7 @@ const QRCode = require('qrcode');
 const crypto = require('node:crypto');
 const uuidv4 = () => crypto.randomUUID();
 
-const { db, generateToken, resetAttendanceOnly, seedDatabase } = require('./db');
+const { db, generateToken, resetAttendanceOnly, seedDatabase, sampleInstitutions } = require('./db');
 const { analyzeSentiment } = require('./aiService');
 const { generateVenueStandeePdf, PALETTE, EVENT_DETAILS } = require('./pdfService');
 const { addClient, broadcastEvent } = require('./sseService');
@@ -303,88 +303,104 @@ app.get('/api/venue/barcode/png', async (req, res) => {
 });
 
 // -------------------------------------------------------------
-// REST API: Check-In & AI Guestbook (Supports on-the-spot additional institutions)
+// REST API: Get Preset Institutions List (10 Instansi Resmi Madiun)
+// -------------------------------------------------------------
+app.get('/api/institutions', (req, res) => {
+    try {
+        const rows = db.prepare('SELECT DISTINCT institution, category FROM guests WHERE institution IS NOT NULL AND institution != ""').all();
+        const seen = new Set(sampleInstitutions.map(s => s.institution.toLowerCase()));
+        const combined = [...sampleInstitutions];
+
+        if (Array.isArray(rows)) {
+            rows.forEach(r => {
+                if (r.institution && !seen.has(r.institution.toLowerCase())) {
+                    seen.add(r.institution.toLowerCase());
+                    combined.push({ institution: r.institution, category: r.category || 'Mitra Tambahan' });
+                }
+            });
+        }
+        res.json({ success: true, count: combined.length, data: combined });
+    } catch (e) {
+        res.json({ success: true, count: sampleInstitutions.length, data: sampleInstitutions });
+    }
+});
+
+// -------------------------------------------------------------
+// REST API: Check-In & AI Guestbook (Never Rejects, Always Enters Dashboard)
 // -------------------------------------------------------------
 
 app.post('/api/checkin/submit', async (req, res) => {
     try {
-        const { token, name, institution, newInstitution, category, message } = req.body;
+        const { token, name, institution, newInstitution, category, message } = req.body || {};
+
+        let targetInst = (newInstitution || institution || '').trim();
+        if (targetInst === '__NEW__') targetInst = '';
+        if (!targetInst) {
+            targetInst = 'Tamu Undangan';
+        }
+
+        let targetName = (name || '').trim();
+        if (!targetName) {
+            targetName = targetInst !== 'Tamu Undangan' ? targetInst : 'Tamu Kehormatan';
+        }
+
+        let finalCategory = (category && category.trim()) ? category.trim() : 'Mitra / Tamu';
 
         let guest = null;
         if (token) {
             guest = db.prepare('SELECT * FROM guests WHERE qr_token = ?').get(token.trim().toUpperCase());
         }
-        if (!guest && institution && institution !== '__NEW__') {
-            guest = db.prepare('SELECT * FROM guests WHERE institution = ?').get(institution.trim());
+        if (!guest && targetInst !== 'Tamu Undangan') {
+            guest = db.prepare('SELECT * FROM guests WHERE institution = ?').get(targetInst);
         }
 
-        // Handle additional institution (not yet pre-registered in DB)
-        if (!guest) {
-            const targetName = (newInstitution || institution || '').trim();
-            if (!targetName || targetName === '__NEW__') {
-                return res.status(400).json({ success: false, error: 'Nama instansi/perusahaan wajib diisi' });
-            }
-
-            // Check if it already exists under this name
-            const existingByName = db.prepare('SELECT * FROM guests WHERE institution = ?').get(targetName);
-            if (existingByName) {
-                guest = existingByName;
-            } else {
-                const id = uuidv4();
-                const newToken = generateToken();
-                const finalCategory = (category && category.trim()) ? category.trim() : 'Mitra Tambahan';
-                db.prepare(`
-                    INSERT INTO guests (id, name, institution, category, qr_token, status, created_at)
-                    VALUES (?, ?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)
-                `).run(id, (name || '').trim(), targetName, finalCategory, newToken);
-                guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(id);
-                console.log(`[CHECKIN] Instansi baru otomatis terdaftar di venue: ${targetName}`);
-            }
-        }
-
-        // 1. Mark as checked in and update person name if provided
         const now = new Date().toISOString();
-        const personName = (name && name.trim()) || guest.name || '';
-        if (personName) {
+
+        if (guest) {
+            // Update existing guest record
             try {
-                db.prepare(`UPDATE guests SET name = ? WHERE id = ?`).run(personName, guest.id);
-                guest.name = personName;
+                db.prepare(`
+                    UPDATE guests 
+                    SET name = ?, status = 'checked_in', checked_in_at = ? 
+                    WHERE id = ?
+                `).run(targetName, now, guest.id);
             } catch (e) {}
+            guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(guest.id);
+        } else {
+            // Always insert new record into database so it appears on dashboard!
+            const id = uuidv4();
+            const newToken = generateToken();
+            db.prepare(`
+                INSERT INTO guests (id, name, institution, category, qr_token, status, checked_in_at, created_at)
+                VALUES (?, ?, ?, ?, ?, 'checked_in', ?, ?)
+            `).run(id, targetName, targetInst, finalCategory, newToken, now, now);
+            guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(id);
         }
 
-        db.prepare(`
-            UPDATE guests 
-            SET status = 'checked_in', checked_in_at = ? 
-            WHERE id = ?
-        `).run(now, guest.id);
-
-        // 2. Analyze sentiment with Gemini API / Local Fallback
-        const guestMessage = (message && message.trim()) || 'Selamat dan sukses atas pameran karya kolaborasi talenta muda AI di Waroeng Latte!';
+        // Analyze sentiment (fast fail-safe)
+        const guestMessage = (message && message.trim()) || 'Selamat dan sukses atas penyelenggaraan acara Menembus Batas Digital!';
         const aiResult = await analyzeSentiment(guestMessage);
 
-        // 3. Store message & sentiment
-        const existing = db.prepare('SELECT id FROM guest_messages WHERE guest_id = ?').get(guest.id);
-        const msgId = existing ? existing.id : uuidv4();
-
-        if (existing) {
-            db.prepare(`
-                UPDATE guest_messages 
-                SET message = ?, sentiment = ?, score = ?, emotion = ?, keywords = ?, created_at = ?
-                WHERE id = ?
-            `).run(guestMessage, aiResult.sentiment, aiResult.score, aiResult.emotion, JSON.stringify(aiResult.keywords), now, msgId);
-        } else {
-            db.prepare(`
-                INSERT INTO guest_messages (id, guest_id, message, sentiment, score, emotion, keywords, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            `).run(msgId, guest.id, guestMessage, aiResult.sentiment, aiResult.score, aiResult.emotion, JSON.stringify(aiResult.keywords), now);
-        }
+        const msgId = uuidv4();
+        db.prepare(`
+            INSERT INTO guest_messages (id, guest_id, message, sentiment, score, emotion, keywords, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        `).run(
+            msgId,
+            guest.id,
+            guestMessage,
+            aiResult.sentiment,
+            aiResult.score,
+            aiResult.emotion,
+            JSON.stringify(aiResult.keywords)
+        );
 
         const payload = {
             guest: {
                 id: guest.id,
-                name: guest.name || personName || '',
-                institution: guest.institution,
-                category: guest.category,
+                name: targetName,
+                institution: targetInst,
+                category: guest.category || finalCategory,
                 checked_in_at: now
             },
             message: {
@@ -397,12 +413,12 @@ app.post('/api/checkin/submit', async (req, res) => {
             }
         };
 
-        // 4. Real-time broadcast to all connected Live Walls via SSE
+        // Real-time broadcast to all connected Live Walls & Dashboard via SSE
         broadcastEvent('guest_checked_in', payload);
 
         res.json({
             success: true,
-            message: `Verifikasi kedatangan berhasil untuk ${guest.name ? guest.name + ' - ' : ''}${guest.institution}`,
+            message: `Verifikasi kedatangan berhasil untuk ${targetName}`,
             data: payload
         });
     } catch (err) {
