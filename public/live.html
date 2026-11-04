@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Display Meja Registrasi • Surface Pro 3 Display</title>
+    <title>Live Hologram Display • Digital Work AI Exhibition: MENEMBUS BATAS DIGITAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -13,11 +13,19 @@
             theme: {
                 extend: {
                     colors: {
-                        navy: '#112250',
-                        sapphire: '#3B507D',
-                        warmTaupe: '#BEB7A7',
-                        champagne: '#E7E2CE',
-                        ivory: '#F5F4F0'
+                        cyberBlack: '#050814',
+                        cyberDark: '#080E21',
+                        neonCyan: '#00F0FF',
+                        neonBlue: '#0077FE',
+                        neonPurple: '#BD00FF',
+                        neonMagenta: '#E056FD',
+                        chromeWhite: '#FFFFFF',
+                        chromeSilver: '#CBD5E1'
+                    },
+                    fontFamily: {
+                        cyber: ['Orbitron', 'sans-serif'],
+                        tech: ['Rajdhani', 'sans-serif'],
+                        monoTech: ['Share Tech Mono', 'monospace']
                     }
                 }
             }
@@ -28,30 +36,33 @@
             user-select: none;
             -webkit-user-select: none;
             overflow: hidden;
+            background-color: #050814;
         }
 
-        .surface-card {
-            background: rgba(27, 45, 93, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1.5px solid rgba(231, 226, 206, 0.45);
-            box-shadow: 0 15px 40px rgba(10, 20, 50, 0.7);
+        .hud-card {
+            background: linear-gradient(135deg, rgba(8, 14, 33, 0.92) 0%, rgba(13, 24, 58, 0.88) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1.5px solid rgba(0, 240, 255, 0.4);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 240, 255, 0.2), inset 0 0 20px rgba(189, 0, 255, 0.12);
         }
 
-        @keyframes cardPulse {
+        @keyframes cyberPulseActive {
             0%, 100% {
-                box-shadow: 0 0 25px rgba(231, 226, 206, 0.25), inset 0 0 15px rgba(231, 226, 206, 0.1);
+                border-color: rgba(0, 240, 255, 0.5);
+                box-shadow: 0 0 35px rgba(0, 240, 255, 0.35), inset 0 0 25px rgba(189, 0, 255, 0.2);
             }
             50% {
-                box-shadow: 0 0 55px rgba(231, 226, 206, 0.55), inset 0 0 35px rgba(231, 226, 206, 0.3);
+                border-color: rgba(189, 0, 255, 0.8);
+                box-shadow: 0 0 65px rgba(189, 0, 255, 0.55), inset 0 0 45px rgba(0, 240, 255, 0.35);
             }
         }
 
         .spotlight-active {
-            animation: cardPulse 2.5s infinite;
+            animation: cyberPulseActive 2s infinite ease-in-out;
         }
 
-        /* Running Ticker */
+        /* Marquee styles */
         .marquee-container {
             overflow: hidden;
             position: relative;
@@ -73,146 +84,201 @@
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
         }
+
+        /* Scanning HUD Laser */
+        .cyber-laser-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00F0FF, #BD00FF, transparent);
+            box-shadow: 0 0 12px #00F0FF, 0 0 20px #BD00FF;
+            animation: scanLaser 3.5s ease-in-out infinite alternate;
+            z-index: 25;
+            pointer-events: none;
+        }
+
+        @keyframes scanLaser {
+            0% { top: 2%; opacity: 0.2; }
+            50% { opacity: 0.9; }
+            100% { top: 98%; opacity: 0.2; }
+        }
+
+        /* Glowing Hex Grid Ambient */
+        .cyber-grid {
+            background-image: 
+                linear-gradient(to right, rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
     </style>
 </head>
-<body class="min-h-screen bg-navy text-ivory flex flex-col justify-between selection:bg-champagne selection:text-navy">
+<body class="min-h-screen bg-cyberBlack text-chromeWhite flex flex-col justify-between selection:bg-neonCyan selection:text-cyberBlack cyber-grid relative">
 
-    <!-- Ambient Glowing Orbs Background -->
+    <!-- Ambient Neon Cyber Glow Orbs -->
     <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div class="absolute -top-40 -left-40 w-96 h-96 bg-sapphire/25 rounded-full blur-3xl animate-pulse"></div>
-        <div class="absolute top-1/2 -right-40 w-96 h-96 bg-champagne/15 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
-        <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-sapphire/25 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+        <div class="absolute -top-32 -left-32 w-[450px] h-[450px] bg-neonCyan/15 rounded-full blur-[120px] animate-pulse"></div>
+        <div class="absolute top-1/2 -right-32 w-[500px] h-[500px] bg-neonPurple/15 rounded-full blur-[140px] animate-pulse" style="animation-delay: 1.5s;"></div>
+        <div class="absolute -bottom-32 left-1/3 w-[450px] h-[450px] bg-neonBlue/15 rounded-full blur-[120px] animate-pulse" style="animation-delay: 2.5s;"></div>
     </div>
 
     <!-- Header Wall (Surface Pro 3 Desk Display) -->
-    <header class="relative z-10 border-b border-warmTaupe/25 bg-navy/90 backdrop-blur-md px-6 py-3">
-        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
-            <div class="flex items-center space-x-3.5">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sapphire via-warmTaupe to-champagne p-0.5 shadow-xl">
-                    <div class="w-full h-full bg-navy rounded-[12px] flex items-center justify-center">
-                        <i class="fa-solid fa-gem text-champagne text-xl"></i>
-                    </div>
+    <header class="relative z-10 border-b border-neonCyan/25 bg-cyberDark/90 backdrop-blur-md px-6 py-2.5 shadow-xl">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            
+            <!-- Left Branding with Official 3D Graphic Logo -->
+            <div class="flex items-center space-x-4">
+                <div class="relative group shrink-0">
+                    <img src="/images/logo-header.png" alt="Digital Work AI Exhibition" class="h-12 sm:h-14 w-auto object-contain drop-shadow-[0_0_15px_rgba(0,240,255,0.45)] transition hover:scale-105 duration-300" />
                 </div>
                 <div>
-                    <div class="flex items-center gap-2.5">
-                        <h1 class="text-lg sm:text-xl font-bold tracking-wider text-champagne font-luxury">
-                            MENEMBUS BATAS DIGITAL
-                        </h1>
-                        <span id="audioStatusPill" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 cursor-pointer" onclick="toggleAudio()" title="Klik atau tekan M untuk Mute/Unmute">
-                            <i id="audioIcon" class="fa-solid fa-volume-high text-[9px]"></i> <span id="audioText">Audio AI Aktif</span>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded text-[9.5px] font-cyber font-bold tracking-widest bg-neonCyan/15 text-neonCyan border border-neonCyan/40 uppercase">
+                            AI TELEMETRY HUB
+                        </span>
+                        <span id="audioStatusPill" class="px-2 py-0.5 rounded text-[9.5px] font-tech font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 cursor-pointer transition hover:bg-emerald-500/30" onclick="toggleAudio()" title="Klik atau tekan M untuk Mute/Unmute">
+                            <i id="audioIcon" class="fa-solid fa-volume-high text-[9px]"></i> <span id="audioText">AI AUDIO ONLINE</span>
                         </span>
                     </div>
-                    <p class="text-[11px] text-warmTaupe tracking-wide flex items-center gap-2 mt-0.5">
-                        <span><i class="fa-solid fa-location-dot text-champagne"></i> Waroeng Latte, Jl. Cokroaminoto No.88, Madiun</span>
-                        <span>•</span>
+                    <p class="text-[11px] font-tech text-chromeSilver/80 tracking-wider flex items-center gap-2 mt-0.5">
+                        <span class="text-neonCyan"><i class="fa-solid fa-location-crosshairs mr-1"></i>Waroeng Latte Madiun</span>
+                        <span class="text-neonPurple">•</span>
                         <span>11 November 2026, 10.00 WIB</span>
                     </p>
                 </div>
             </div>
 
-            <!-- Stats & Clock -->
-            <div class="flex items-center space-x-4">
-                <!-- Attendance Counter -->
-                <div class="flex items-center space-x-2.5 bg-sapphire/35 border border-warmTaupe/30 px-3.5 py-1.5 rounded-2xl">
-                    <div class="w-8 h-8 rounded-xl bg-champagne/15 border border-champagne/30 flex items-center justify-center text-champagne text-xs">
-                        <i class="fa-solid fa-building-circle-check"></i>
+            <!-- Right Telemetry & Real-time Cyber Clock -->
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                <!-- Verified Attendance HUD Meter -->
+                <div class="flex items-center space-x-2.5 bg-cyberDark/90 border border-neonCyan/40 px-3.5 py-1.5 rounded-xl shadow-[0_0_15px_rgba(0,240,255,0.15)] cyber-clip-sm">
+                    <div class="w-8 h-8 rounded-lg bg-neonCyan/10 border border-neonCyan/40 flex items-center justify-center text-neonCyan text-xs shrink-0">
+                        <i class="fa-solid fa-shield-halved"></i>
                     </div>
                     <div>
-                        <div class="text-[9px] uppercase font-bold text-warmTaupe tracking-wider">Mitra Hadir</div>
-                        <div class="text-sm font-bold text-ivory flex items-center gap-1 font-luxury">
-                            <span id="counterChecked" class="text-champagne">0</span>
-                            <span class="text-warmTaupe text-xs">/</span>
+                        <div class="text-[8.5px] font-cyber font-bold uppercase text-neonCyan tracking-wider">Mitra Terverifikasi</div>
+                        <div class="text-sm font-bold font-cyber text-chromeWhite flex items-center gap-1">
+                            <span id="counterChecked" class="text-neonCyan text-base">0</span>
+                            <span class="text-chromeSilver/50 text-xs">/</span>
                             <span id="counterTotal">10</span>
-                            <span id="counterRate" class="text-[11px] font-normal text-warmTaupe ml-1">(0%)</span>
+                            <span id="counterRate" class="text-[11px] font-tech text-neonPurple ml-1 font-semibold">(0%)</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Clock -->
-                <div class="text-right pl-1">
-                    <div id="liveClock" class="text-base sm:text-lg font-bold font-mono text-champagne tracking-wider">00:00:00</div>
-                    <div id="liveDate" class="text-[10px] text-warmTaupe uppercase tracking-widest">WIB</div>
+                <!-- Cyber HUD Clock -->
+                <div class="text-right pl-2 border-l border-neonCyan/20">
+                    <div id="liveClock" class="text-base sm:text-lg font-bold font-monoTech text-neonCyan tracking-widest drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]">00:00:00</div>
+                    <div id="liveDate" class="text-[9.5px] font-tech text-chromeSilver/70 uppercase tracking-widest">WIB • ONLINE</div>
                 </div>
             </div>
+
         </div>
     </header>
 
     <!-- Main Live Stage (Optimized for 12" Surface Pro 3) -->
-    <main class="relative z-10 max-w-6xl mx-auto px-6 py-3 w-full flex-1 flex flex-col justify-center">
+    <main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-2.5 w-full flex-1 flex flex-col justify-center">
         
-        <!-- Mode Indicator / Banner -->
-        <div class="flex items-center justify-between text-xs font-semibold text-warmTaupe px-2 mb-2">
-            <span id="displayModeBadge" class="flex items-center gap-2 text-champagne uppercase tracking-wider text-[11px]">
-                <span class="w-2.5 h-2.5 rounded-full bg-champagne animate-ping"></span>
-                <span id="displayModeTitle">Selamat Datang Rekan Mitra & Tamu Kehormatan</span>
+        <!-- Mode Telemetry Tag -->
+        <div class="flex items-center justify-between text-xs font-semibold px-2 mb-2">
+            <span id="displayModeBadge" class="flex items-center gap-2 text-neonCyan font-cyber uppercase tracking-wider text-[11px]">
+                <span class="w-2.5 h-2.5 rounded-full bg-neonCyan shadow-[0_0_8px_#00F0FF] animate-ping"></span>
+                <span id="displayModeTitle" class="tracking-widest">HOLOGRAPHIC SPOTLIGHT // MENYAMBUT TAMU KEHORMATAN</span>
             </span>
-            <span id="spotlightTimestamp" class="text-warmTaupe font-mono text-[11px]">-</span>
+            <span id="spotlightTimestamp" class="text-neonPurple font-monoTech text-[11px] tracking-widest">[SYSTEM READY]</span>
         </div>
 
-        <!-- The Hero Card (Shared by Spotlight Arrival & Hall of Fame Carousel) -->
-        <div id="spotlightCard" class="surface-card p-6 sm:p-7 rounded-3xl relative overflow-hidden transition-all duration-700">
-            <!-- Top Gradient Bar -->
-            <div id="spotlightAccentBar" class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sapphire via-warmTaupe to-champagne"></div>
+        <!-- The Futuristic Hero Card (Spotlight Arrival & Hall of Fame Carousel) -->
+        <div id="spotlightCard" class="hud-card p-6 sm:p-7 rounded-2xl relative overflow-hidden transition-all duration-700 cyber-clip">
+            
+            <!-- Animated Cyber Scanning Laser Line -->
+            <div class="cyber-laser-line"></div>
 
-            <div class="space-y-3.5">
-                <!-- Institution Header & Badge -->
+            <!-- Top Cyber Neon Gradient Accent Bar -->
+            <div id="spotlightAccentBar" class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-neonCyan via-neonBlue to-neonPurple"></div>
+
+            <!-- Corner Sci-Fi Tech Reticles -->
+            <div class="corner-reticle corner-tl"></div>
+            <div class="corner-reticle corner-tr"></div>
+            <div class="corner-reticle corner-bl"></div>
+            <div class="corner-reticle corner-br"></div>
+
+            <div class="space-y-4 relative z-10">
+                <!-- Institution Header & Glowing Tech Avatar -->
                 <div class="flex items-start justify-between gap-4">
-                    <div class="space-y-1">
-                        <span id="spotCategory" class="inline-block px-3 py-0.5 rounded-full text-xs font-bold bg-sapphire text-champagne border border-champagne/40 uppercase tracking-wider">
-                            MITRA RESMI KOTA MADIUN
-                        </span>
-                        <h2 id="spotInstitution" class="text-3xl sm:text-4xl font-extrabold text-ivory tracking-wide font-luxury mt-1.5">
+                    <div class="space-y-1.5 flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span id="spotCategory" class="inline-block px-3 py-0.5 rounded text-[10px] font-cyber font-bold bg-neonCyan/15 text-neonCyan border border-neonCyan/50 uppercase tracking-widest shadow-[0_0_10px_rgba(0,240,255,0.25)]">
+                                MITRA RESMI KOTA MADIUN
+                            </span>
+                            <span class="text-[9px] font-monoTech text-neonPurple border border-neonPurple/40 px-2 py-0.5 rounded bg-neonPurple/10">
+                                <i class="fa-solid fa-microchip mr-1"></i>NODE ACTIVE
+                            </span>
+                        </div>
+                        
+                        <h2 id="spotInstitution" class="text-2xl sm:text-4xl font-extrabold font-cyber tracking-wide text-gradient-chrome mt-1 leading-tight">
                             Selamat Datang di Waroeng Latte
                         </h2>
-                        <p id="spotSubtext" class="text-xs sm:text-sm text-champagne font-medium">
-                            Menembus Batas Digital : Kolaborasi Talenta Muda & AI
+                        
+                        <p id="spotSubtext" class="text-xs sm:text-sm font-tech font-semibold text-neonCyan tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-sparkles text-neonPurple"></i>
+                            Digital Work AI Exhibition : Menembus Batas Digital
                         </p>
                     </div>
 
-                    <div id="spotAvatar" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sapphire to-champagne flex items-center justify-center text-navy text-2xl font-black shadow-lg shrink-0">
-                        AI
+                    <!-- Glowing Hologram AI Avatar with Rotating Ring -->
+                    <div class="relative shrink-0">
+                        <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-neonCyan via-neonBlue to-neonPurple p-0.5 shadow-[0_0_25px_rgba(0,240,255,0.4)] flex items-center justify-center relative overflow-hidden">
+                            <div class="w-full h-full bg-cyberDark rounded-[14px] flex items-center justify-center relative">
+                                <!-- Rotating Ring -->
+                                <div class="absolute inset-1 rounded-xl border border-neonCyan/30 border-dashed animate-spin-slow"></div>
+                                <span id="spotAvatar" class="text-2xl font-black font-cyber text-gradient-cyan-purple relative z-10">
+                                    AI
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Guest Message Quote Block -->
-                <div class="p-4 rounded-2xl bg-navy/85 border border-warmTaupe/25 relative">
-                    <i class="fa-solid fa-quote-left text-champagne/20 text-3xl absolute top-3 left-3"></i>
-                    <p id="spotMessage" class="text-base sm:text-lg text-ivory font-medium italic relative z-10 pl-6 leading-relaxed">
+                <!-- Guest Message / Aspiration Console Box -->
+                <div class="p-4 rounded-xl bg-cyberBlack/80 border border-neonCyan/30 relative shadow-inner">
+                    <i class="fa-solid fa-quote-left text-neonCyan/20 text-3xl absolute top-3 left-3"></i>
+                    <p id="spotMessage" class="text-sm sm:text-base text-chromeWhite font-tech font-medium italic relative z-10 pl-6 leading-relaxed">
                         "Menembus Batas Digital : Kolaborasi Talenta Muda dan Artificial Intelligence"
                     </p>
                 </div>
 
                 <!-- AI Sentiment Metrics & Keywords Stream -->
-                <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-neonCyan/15">
                     <div class="flex items-center gap-2">
-                        <span class="text-xs text-warmTaupe">Sentimen AI:</span>
-                        <span id="spotEmotion" class="px-3 py-1 rounded-xl text-xs font-bold bg-champagne/20 text-champagne border border-champagne/40 flex items-center gap-1.5">
-                            <i class="fa-solid fa-sparkles"></i> Inspiratif
+                        <span class="text-[11px] font-cyber text-chromeSilver/70">SENTIMEN AI:</span>
+                        <span id="spotEmotion" class="px-3 py-1 rounded-lg text-xs font-cyber font-bold bg-neonPurple/20 text-neonMagenta border border-neonPurple/50 flex items-center gap-1.5 shadow-[0_0_12px_rgba(189,0,255,0.3)]">
+                            <i class="fa-solid fa-bolt-lightning text-neonCyan"></i> Inspiratif
                         </span>
                     </div>
 
                     <!-- Extracted Keyword Pills -->
                     <div id="spotKeywords" class="flex flex-wrap items-center gap-1.5">
-                        <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-sapphire/40 text-champagne border border-warmTaupe/25">#MADIUN</span>
-                        <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-sapphire/40 text-champagne border border-warmTaupe/25">#INOVASI</span>
-                        <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-sapphire/40 text-champagne border border-warmTaupe/25">#TALENTA_MUDA</span>
+                        <span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/40">#MADIUN</span>
+                        <span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/40">#INOVASI</span>
+                        <span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/40">#TALENTA_MUDA</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- REFINED SMOOTH MARQUEE TICKER (NO UGLY SCROLLBAR) -->
-        <div class="mt-3.5 luxury-panel p-2 px-3 rounded-2xl border border-warmTaupe/25 flex items-center gap-3 overflow-hidden">
-            <!-- Left Fixed Tag -->
-            <div class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sapphire/80 text-champagne font-bold text-[11px] uppercase tracking-wider border border-champagne/30 shadow-sm">
-                <i class="fa-solid fa-award text-champagne"></i>
-                <span>Terkini Hadir</span>
+        <!-- REFINED SMOOTH MARQUEE TICKER (NO SCROLLBAR, SCI-FI TELEMETRY) -->
+        <div class="mt-3 cyber-panel p-2 px-3 rounded-xl border border-neonCyan/30 flex items-center gap-3 overflow-hidden shadow-lg">
+            <!-- Left Fixed Sci-Fi Tag -->
+            <div class="shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-neonCyan/20 to-neonPurple/20 text-neonCyan font-cyber font-bold text-[10px] uppercase tracking-wider border border-neonCyan/40 shadow-sm">
+                <i class="fa-solid fa-satellite-dish text-neonCyan animate-pulse"></i>
+                <span>TERKINI HADIR</span>
             </div>
 
             <!-- Auto-Scrolling Marquee Track (Smooth, Endless, Zero Scrollbar) -->
             <div class="marquee-container flex-1 py-1">
                 <div id="marqueeTrack" class="marquee-inner">
-                    <span class="text-warmTaupe text-xs italic py-0.5">Menunggu kehadiran mitra pertama di Waroeng Latte Madiun...</span>
+                    <span class="text-chromeSilver/60 font-tech text-xs italic py-0.5">Menunggu sinyal kehadiran mitra pertama di Waroeng Latte Madiun...</span>
                 </div>
             </div>
         </div>
@@ -220,10 +286,10 @@
     </main>
 
     <!-- Footer Wall -->
-    <footer class="relative z-10 border-t border-warmTaupe/25 bg-navy/90 backdrop-blur py-2 px-6 text-xs text-warmTaupe flex flex-wrap justify-between items-center gap-2">
-        <p>Surface Pro 3 Desk Display • Meja Registrasi Waroeng Latte Madiun</p>
-        <p class="font-mono text-[11px] text-warmTaupe">
-            Hotkeys: <span class="text-champagne font-bold">[M]</span> Mute/Unmute • <span class="text-champagne font-bold">[F11]</span> Fullscreen
+    <footer class="relative z-10 border-t border-neonCyan/20 bg-cyberDark/90 backdrop-blur py-2 px-6 text-xs text-chromeSilver/70 flex flex-wrap justify-between items-center gap-2">
+        <p class="font-tech tracking-wider">Surface Pro 3 Desk Display • Meja Registrasi Waroeng Latte Madiun</p>
+        <p class="font-monoTech text-[11px] text-chromeSilver/80">
+            KONTROL: <span class="text-neonCyan font-bold">[M]</span> Mute/Unmute • <span class="text-neonCyan font-bold">[F11]</span> Fullscreen
         </p>
     </footer>
 
@@ -246,17 +312,18 @@
             if (isAudioMuted) return;
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const notes = [587.33, 880, 1174.66, 1760];
+                // Futuristic synthesizer chord progression
+                const notes = [659.25, 880, 1318.51, 1760]; // E5, A5, E6, A6
                 notes.forEach((freq, idx) => {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.value = freq;
-                    gain.gain.setValueAtTime(0.12, ctx.currentTime + (idx * 0.08));
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime + (idx * 0.07));
+                    gain.gain.setValueAtTime(0.09, ctx.currentTime + (idx * 0.07));
                     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
                     osc.connect(gain);
                     gain.connect(ctx.destination);
-                    osc.start(ctx.currentTime + (idx * 0.08));
+                    osc.start(ctx.currentTime + (idx * 0.07));
                     osc.stop(ctx.currentTime + 1.3);
                 });
             } catch (e) {}
@@ -266,11 +333,11 @@
             if (isAudioMuted || !('speechSynthesis' in window)) return;
             try {
                 window.speechSynthesis.cancel();
-                const text = `Selamat datang kepada perwakilan ${institutionName} di Exhibition Menembus Batas Digital, Waroeng Latte Madiun.`;
+                const text = `Selamat datang kepada perwakilan ${institutionName} di Digital Work AI Exhibition Menembus Batas Digital, Waroeng Latte Madiun.`;
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'id-ID';
                 utterance.rate = 0.95;
-                utterance.pitch = 1.0;
+                utterance.pitch = 1.05;
                 window.speechSynthesis.speak(utterance);
             } catch (e) {}
         }
@@ -283,12 +350,12 @@
 
             if (isAudioMuted) {
                 icon.className = 'fa-solid fa-volume-xmark text-[9px]';
-                text.innerText = 'Audio Hening';
-                pill.className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1 cursor-pointer';
+                text.innerText = 'AUDIO HENING';
+                pill.className = 'px-2 py-0.5 rounded text-[9.5px] font-tech font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1 cursor-pointer';
             } else {
                 icon.className = 'fa-solid fa-volume-high text-[9px]';
-                text.innerText = 'Audio AI Aktif';
-                pill.className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 cursor-pointer';
+                text.innerText = 'AI AUDIO ONLINE';
+                pill.className = 'px-2 py-0.5 rounded text-[9.5px] font-tech font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 cursor-pointer';
                 playSciFiChime();
             }
         }
@@ -341,23 +408,23 @@
             const track = document.getElementById('marqueeTrack');
             if (!list || list.length === 0) {
                 track.className = 'marquee-inner';
-                track.innerHTML = `<span class="text-warmTaupe text-xs italic py-0.5">Menunggu kehadiran mitra pertama di Waroeng Latte Madiun...</span>`;
+                track.innerHTML = `<span class="text-chromeSilver/60 font-tech text-xs italic py-0.5">Menunggu sinyal kehadiran mitra pertama di Waroeng Latte Madiun...</span>`;
                 return;
             }
 
-            // Create pill markup
+            // Create pill markup with cyber styling
             const makePills = () => list.map(g => `
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-navy/90 border border-champagne/40 shadow-sm shrink-0">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                    <span class="font-bold text-champagne text-xs">${g.institution}</span>
-                    <span class="text-warmTaupe text-[10px] font-medium border-l border-warmTaupe/30 pl-1.5">${g.category || 'Mitra'}</span>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-cyberDark/90 border border-neonCyan/40 shadow-sm shrink-0">
+                    <span class="w-1.5 h-1.5 rounded-full bg-neonCyan shadow-[0_0_6px_#00F0FF] animate-pulse"></span>
+                    <span class="font-cyber font-bold text-neonCyan text-xs">${g.institution}</span>
+                    <span class="text-chromeSilver/70 text-[10px] font-tech font-medium border-l border-neonCyan/25 pl-1.5">${g.category || 'Mitra'}</span>
                 </div>
             `).join('');
 
-            // If there are more than 2 items, duplicate for infinite seamless loop & animate
-            if (list.length > 2) {
+            // If there are items, animate smooth infinite loop
+            if (list.length >= 2) {
                 track.className = 'marquee-inner marquee-scroll';
-                track.innerHTML = makePills() + makePills(); // double items for seamless infinite loop
+                track.innerHTML = makePills() + makePills() + makePills();
             } else {
                 track.className = 'marquee-inner';
                 track.innerHTML = makePills();
@@ -374,8 +441,8 @@
             const initials = g.institution.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
             document.getElementById('spotAvatar').innerText = initials || 'AI';
 
-            document.getElementById('spotMessage').innerText = `"${m.text || 'Selamat & Sukses untuk Pameran AI di Waroeng Latte!'}"`;
-            document.getElementById('spotEmotion').innerHTML = `<i class="fa-solid fa-sparkles"></i> ${m.emotion || 'Inspiratif'}`;
+            document.getElementById('spotMessage').innerText = `"${m.text || 'Selamat & Sukses untuk Digital Work AI Exhibition di Waroeng Latte!'}"`;
+            document.getElementById('spotEmotion').innerHTML = `<i class="fa-solid fa-bolt-lightning text-neonCyan"></i> ${m.emotion || 'Inspiratif'}`;
 
             // Keywords
             const kwContainer = document.getElementById('spotKeywords');
@@ -386,13 +453,13 @@
             if (kwList.length === 0) kwList = ['MADIUN', 'INOVASI', 'AI'];
 
             kwContainer.innerHTML = kwList.map(kw => `
-                <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-sapphire/50 text-champagne border border-warmTaupe/30">
-                    #${kw}
+                <span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/30">
+                    #${String(kw).toUpperCase()}
                 </span>
             `).join('');
 
             const time = g.checked_in_at ? new Date(g.checked_in_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB' : 'Baru Saja';
-            document.getElementById('spotlightTimestamp').innerText = `HADIR: ${time}`;
+            document.getElementById('spotlightTimestamp').innerText = `[TERVERIFIKASI: ${time}]`;
 
             const badgeTitle = document.getElementById('displayModeTitle');
             const card = document.getElementById('spotlightCard');
@@ -440,14 +507,15 @@
 
                         if (typeof confetti === 'function') {
                             confetti({
-                                particleCount: 90,
-                                spread: 85,
+                                particleCount: 110,
+                                spread: 90,
                                 origin: { y: 0.6 },
-                                colors: ['#E7E2CE', '#BEB7A7', '#3B507D']
+                                colors: ['#00F0FF', '#BD00FF', '#0077FE', '#FFFFFF']
                             });
                         }
 
                         loadStats();
+
                         lockTimer = setTimeout(() => {
                             isSpotlightLocked = false;
                             startCarousel();

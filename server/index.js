@@ -532,7 +532,7 @@ if (!process.env.VERCEL) {
     app.listen(PORT, '0.0.0.0', () => {
         const localIp = getLocalIpAddress();
         console.log(`================================================================`);
-        console.log(`  MENEMBUS BATAS DIGITAL - EXHIBITION GUESTBOOK & INVITATION    `);
+        console.log(`  Digital Work AI Exhibition : MENEMBUS BATAS DIGITAL           `);
         console.log(`  Waroeng Latte Madiun • 11 November 2026, 10.00 WIB            `);
         console.log(`================================================================`);
         console.log(`  💻 Akses Laptop Admin : http://localhost:${PORT}`);

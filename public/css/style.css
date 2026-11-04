@@ -1,53 +1,142 @@
-/* Luxury Navy & Champagne Theme for Menembus Batas Digital */
-/* Official Palette:
-   - Navy Blue:   #112250
-   - Sapphire:    #3B507D
-   - Warm Taupe:  #BEB7A7
-   - Champagne:   #E7E2CE
-   - Ivory:       #F5F4F0
-*/
+/* ==========================================================================
+   FUTURISTIC CYBERPUNK / SCI-FI DESIGN SYSTEM
+   Official Theme for: Digital Work AI Exhibition: MENEMBUS BATAS DIGITAL
+   Colors: Neon Cyan (#00F0FF), Neon Blue (#0077FE), Neon Purple (#BD00FF), 
+           Deep Cyber Void (#050814), Chrome Silver (#E2E8F0)
+   ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --navy-blue: #112250;
-    --navy-dark: #0a1432;
-    --sapphire: #3B507D;
-    --warm-taupe: #BEB7A7;
-    --champagne: #E7E2CE;
-    --ivory: #F5F4F0;
-    --card-surface: rgba(27, 45, 93, 0.75);
-    --border-champagne: rgba(231, 226, 206, 0.3);
+    --cyber-black: #050814;
+    --cyber-dark: #080e21;
+    --cyber-card: rgba(10, 18, 42, 0.85);
+    --cyber-surface: rgba(13, 24, 56, 0.88);
+    --neon-cyan: #00F0FF;
+    --neon-cyan-glow: rgba(0, 240, 255, 0.4);
+    --neon-blue: #0077FE;
+    --neon-purple: #BD00FF;
+    --neon-purple-glow: rgba(189, 0, 255, 0.35);
+    --neon-magenta: #E056FD;
+    --neon-emerald: #00FF9D;
+    --chrome-white: #FFFFFF;
+    --chrome-silver: #CBD5E1;
+    --tech-dim: #64748B;
+    --border-cyan: rgba(0, 240, 255, 0.35);
+    --border-purple: rgba(189, 0, 255, 0.35);
 }
 
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    background-color: var(--navy-blue);
-    color: var(--ivory);
+    background-color: var(--cyber-black);
+    color: var(--chrome-white);
+    background-image: 
+        radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(189, 0, 255, 0.09) 0%, transparent 45%),
+        linear-gradient(to right, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
 }
 
-h1, h2, h3, .font-heading, .font-luxury {
-    font-family: 'Cinzel', serif;
+/* Typography Classes */
+.font-cyber {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.06em;
+}
+
+.font-tech {
+    font-family: 'Rajdhani', sans-serif;
     letter-spacing: 0.04em;
 }
 
-/* Glass Panels with Luxury Champagne & Sapphire Glow */
-.luxury-panel {
-    background: var(--card-surface);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid var(--border-champagne);
-    box-shadow: 0 10px 30px rgba(10, 20, 50, 0.5);
+.font-mono-tech {
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 0.05em;
 }
 
-.luxury-panel-glow {
-    background: rgba(27, 45, 93, 0.9);
-    backdrop-filter: blur(14px);
-    border: 1px solid rgba(231, 226, 206, 0.45);
-    box-shadow: 0 0 35px rgba(59, 80, 125, 0.5), inset 0 0 15px rgba(231, 226, 206, 0.08);
+h1, h2, h3, .font-heading, .font-luxury {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.05em;
 }
 
-/* Hide Scrollbars cleanly */
+/* Gradient Text */
+.text-gradient-cyan-purple {
+    background: linear-gradient(135deg, #00F0FF 10%, #38BDF8 40%, #C084FC 75%, #BD00FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-chrome {
+    background: linear-gradient(180deg, #FFFFFF 0%, #E2E8F0 50%, #94A3B8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 8px rgba(0, 240, 255, 0.2));
+}
+
+.neon-glow-cyan {
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.7), 0 0 25px rgba(0, 240, 255, 0.4);
+}
+
+.neon-glow-purple {
+    text-shadow: 0 0 10px rgba(189, 0, 255, 0.7), 0 0 25px rgba(189, 0, 255, 0.4);
+}
+
+/* Cyber Panels & Glassmorphism */
+.cyber-panel, .luxury-panel {
+    background: var(--cyber-card);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--border-cyan);
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.65), 0 0 20px rgba(0, 240, 255, 0.12);
+}
+
+.cyber-panel-purple {
+    background: var(--cyber-card);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid var(--border-purple);
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.65), 0 0 20px rgba(189, 0, 255, 0.15);
+}
+
+.cyber-panel-glow, .luxury-panel-glow {
+    background: var(--cyber-surface);
+    backdrop-filter: blur(20px);
+    border: 1.5px solid rgba(0, 240, 255, 0.6);
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.35), inset 0 0 20px rgba(189, 0, 255, 0.15);
+}
+
+/* Chamfered Sci-Fi Cut Corners */
+.cyber-clip {
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+}
+
+.cyber-clip-sm {
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+
+.cyber-clip-tr {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+}
+
+/* Subtle Animated Cyber Scanline */
+.cyber-scanline {
+    position: relative;
+    overflow: hidden;
+}
+
+.cyber-scanline::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 240, 255, 0.04) 50%);
+    background-size: 100% 4px;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* Hide Scrollbars Cleanly */
 .no-scrollbar::-webkit-scrollbar {
     display: none !important;
     width: 0 !important;
@@ -63,8 +152,8 @@ h1, h2, h3, .font-heading, .font-luxury {
 .ticker-mask {
     overflow: hidden;
     position: relative;
-    mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
 }
 
 .ticker-track {
@@ -79,28 +168,25 @@ h1, h2, h3, .font-heading, .font-luxury {
 }
 
 @keyframes marqueeAnimation {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(-50%);
-    }
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
 }
 
-/* Scanner HUD */
+/* HUD Scanner Laser */
 .scanner-hud-container {
     position: relative;
     overflow: hidden;
     border-radius: 1rem;
-    border: 2px solid var(--sapphire);
+    border: 2px solid var(--neon-cyan);
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.35);
 }
 
 .scanner-laser {
     position: absolute;
     width: 100%;
     height: 3px;
-    background: linear-gradient(90deg, transparent, var(--warm-taupe), var(--champagne), transparent);
-    box-shadow: 0 0 15px var(--champagne), 0 0 25px var(--warm-taupe);
+    background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-purple), transparent);
+    box-shadow: 0 0 15px var(--neon-cyan), 0 0 25px var(--neon-purple);
     top: 0;
     animation: scanAnim 2.2s ease-in-out infinite alternate;
     z-index: 10;
@@ -112,37 +198,47 @@ h1, h2, h3, .font-heading, .font-luxury {
     100% { top: 95%; opacity: 0.3; }
 }
 
-/* Corner Reticle */
+/* Corner Reticles */
 .corner-reticle {
     position: absolute;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     z-index: 12;
 }
-.corner-tl { top: 12px; left: 12px; border-top: 3px solid var(--champagne); border-left: 3px solid var(--champagne); }
-.corner-tr { top: 12px; right: 12px; border-top: 3px solid var(--champagne); border-right: 3px solid var(--champagne); }
-.corner-bl { bottom: 12px; left: 12px; border-bottom: 3px solid var(--champagne); border-left: 3px solid var(--champagne); }
-.corner-br { bottom: 12px; right: 12px; border-bottom: 3px solid var(--champagne); border-right: 3px solid var(--champagne); }
+.corner-tl { top: 10px; left: 10px; border-top: 2px solid var(--neon-cyan); border-left: 2px solid var(--neon-cyan); }
+.corner-tr { top: 10px; right: 10px; border-top: 2px solid var(--neon-cyan); border-right: 2px solid var(--neon-cyan); }
+.corner-bl { bottom: 10px; left: 10px; border-bottom: 2px solid var(--neon-purple); border-left: 2px solid var(--neon-purple); }
+.corner-br { bottom: 10px; right: 10px; border-bottom: 2px solid var(--neon-purple); border-right: 2px solid var(--neon-purple); }
 
-/* Pulse Glow Keyframe */
-@keyframes luxuryPulse {
+/* Sci-Fi Pulse Animation */
+@keyframes cyberPulse {
     0%, 100% {
-        box-shadow: 0 0 20px rgba(231, 226, 206, 0.2), inset 0 0 15px rgba(231, 226, 206, 0.1);
+        box-shadow: 0 0 25px rgba(0, 240, 255, 0.25), inset 0 0 15px rgba(189, 0, 255, 0.15);
     }
     50% {
-        box-shadow: 0 0 45px rgba(231, 226, 206, 0.45), inset 0 0 30px rgba(231, 226, 206, 0.25);
+        box-shadow: 0 0 55px rgba(0, 240, 255, 0.6), inset 0 0 35px rgba(189, 0, 255, 0.35);
     }
 }
 
 .pulse-glow {
-    animation: luxuryPulse 2.8s infinite;
+    animation: cyberPulse 2.8s infinite;
+}
+
+/* Rotating Sci-Fi Ring */
+@keyframes spinSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+    animation: spinSlow 20s linear infinite;
 }
 
 /* Print Specific Rules */
 @media print {
     body {
-        background: #ffffff !important;
-        color: #112250 !important;
+        background: #050814 !important;
+        color: #ffffff !important;
     }
     .no-print {
         display: none !important;

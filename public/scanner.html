@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner Verifikasi Barcode • Menembus Batas Digital</title>
+    <title>Scanner Verifikasi • Digital Work AI Exhibition: MENEMBUS BATAS DIGITAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -14,41 +14,49 @@
             theme: {
                 extend: {
                     colors: {
-                        navy: '#112250',
-                        sapphire: '#3B507D',
-                        warmTaupe: '#BEB7A7',
-                        champagne: '#E7E2CE',
-                        ivory: '#F5F4F0'
+                        cyberBlack: '#050814',
+                        cyberDark: '#080E21',
+                        neonCyan: '#00F0FF',
+                        neonBlue: '#0077FE',
+                        neonPurple: '#BD00FF',
+                        chromeWhite: '#FFFFFF',
+                        chromeSilver: '#CBD5E1'
+                    },
+                    fontFamily: {
+                        cyber: ['Orbitron', 'sans-serif'],
+                        tech: ['Rajdhani', 'sans-serif'],
+                        monoTech: ['Share Tech Mono', 'monospace']
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="min-h-screen bg-navy text-ivory flex flex-col selection:bg-champagne selection:text-navy">
+<body class="min-h-screen bg-cyberBlack text-chromeWhite flex flex-col selection:bg-neonCyan selection:text-cyberBlack font-tech">
 
     <!-- Header -->
-    <header class="border-b border-warmTaupe/25 bg-navy/90 backdrop-blur sticky top-0 z-40">
-        <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
+    <header class="border-b border-neonCyan/25 bg-cyberDark/90 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center space-x-3.5">
-                <a href="/" class="w-9 h-9 rounded-xl bg-sapphire/50 hover:bg-sapphire border border-warmTaupe/30 flex items-center justify-center text-ivory transition" title="Dashboard">
-                    <i class="fa-solid fa-arrow-left"></i>
+                <a href="/" class="w-8 h-8 rounded-lg bg-cyberDark hover:bg-neonCyan/20 border border-neonCyan/40 flex items-center justify-center text-neonCyan transition" title="Dashboard">
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
                 </a>
+                <img src="/images/logo-header.png" alt="Digital Work AI Exhibition" class="h-8 w-auto object-contain hidden sm:block" />
                 <div>
-                    <h1 class="text-sm font-bold tracking-wider text-ivory font-luxury flex items-center gap-2">
-                        MEJA VERIFIKASI BARCODE
-                        <span class="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full bg-champagne/15 text-champagne border border-champagne/30">Active Desk</span>
+                    <h1 class="text-xs sm:text-sm font-bold tracking-wider text-neonCyan font-cyber flex items-center gap-2">
+                        SCANNER MEJA VERIFIKASI
+                        <span class="text-[9px] font-monoTech font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">ONLINE</span>
                     </h1>
-                    <p class="text-[11px] text-warmTaupe">Pindai Barcode / QR Kartu Undangan Tamu</p>
+                    <p class="text-[11px] text-chromeSilver/70">Digital Work AI Exhibition : Menembus Batas Digital</p>
                 </div>
             </div>
 
-            <div class="flex items-center space-x-3">
-                <span id="scannerStatusText" class="text-xs text-champagne flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-champagne animate-ping"></span> Scanner Siaga
+            <div class="flex items-center space-x-3 font-cyber">
+                <span id="scannerStatusText" class="text-xs text-neonCyan flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-neonCyan animate-ping"></span> Scanner Siaga
                 </span>
-                <a href="/live" target="_blank" class="px-3 py-1 rounded-xl text-xs font-semibold bg-sapphire/60 hover:bg-sapphire text-champagne border border-champagne/30 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-display"></i> Buka Live Wall
+                <a href="/live" target="_blank" class="px-3 py-1 rounded-lg text-xs font-semibold bg-cyberDark hover:bg-neonCyan/20 text-neonCyan border border-neonCyan/40 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-display"></i> Live Wall
                 </a>
             </div>
         </div>

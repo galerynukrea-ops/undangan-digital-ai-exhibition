@@ -26,42 +26,38 @@
 </head>
 <body class="min-h-screen bg-navy text-ivory flex flex-col selection:bg-champagne selection:text-navy">
 
-    <!-- Luxury Header Navbar -->
-    <header class="border-b border-warmTaupe/25 bg-navy/90 backdrop-blur sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap justify-between items-center gap-4">
+    <!-- Futuristic Cyber Header Navbar -->
+    <header class="border-b border-neonCyan/25 bg-cyberDark/90 backdrop-blur sticky top-0 z-40 shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center space-x-3.5">
-                <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-sapphire to-champagne p-0.5 shadow-lg shadow-navy/60">
-                    <div class="w-full h-full bg-navy rounded-[10px] flex items-center justify-center">
-                        <i class="fa-solid fa-gem text-champagne text-lg"></i>
-                    </div>
-                </div>
+                <img src="/images/logo-header.png" alt="Digital Work AI Exhibition" class="h-10 sm:h-12 w-auto object-contain drop-shadow-[0_0_12px_rgba(0,240,255,0.4)]" />
                 <div>
-                    <h1 class="text-base sm:text-lg font-bold tracking-wider text-ivory font-luxury flex items-center gap-2">
-                        MENEMBUS BATAS DIGITAL
-                        <span class="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full bg-champagne/15 text-champagne border border-champagne/30">
-                            Exhibition 2026
+                    <h1 class="text-xs sm:text-sm font-bold tracking-wider text-neonCyan font-cyber flex items-center gap-2">
+                        PANEL ADMINISTRASI & KONTROL
+                        <span class="text-[9px] font-monoTech font-semibold px-2 py-0.5 rounded bg-neonPurple/20 text-neonMagenta border border-neonPurple/40">
+                            AI v2.0
                         </span>
                     </h1>
-                    <p class="text-xs text-warmTaupe">Buku Tamu Digital & Verifikasi Kehadiran 10 Instansi Mitra</p>
+                    <p class="text-[11px] font-tech text-chromeSilver/80">Digital Work AI Exhibition : Menembus Batas Digital • Waroeng Latte</p>
                 </div>
             </div>
 
             <!-- Quick Navigation -->
-            <nav class="flex flex-wrap items-center gap-2 text-xs">
-                <a href="/" class="px-3 py-1.5 rounded-xl font-semibold bg-champagne text-navy flex items-center gap-1.5 shadow-md">
+            <nav class="flex flex-wrap items-center gap-2 text-xs font-tech">
+                <a href="/" class="px-3 py-1.5 rounded-lg font-bold bg-gradient-to-r from-neonCyan to-neonPurple text-cyberBlack flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
                     <i class="fa-solid fa-gauge"></i> Dashboard
                 </a>
-                <a href="/standee" target="_blank" class="px-3 py-1.5 rounded-xl font-bold bg-sapphire text-champagne border border-champagne/40 flex items-center gap-1.5 transition hover:bg-sapphire/80">
-                    <i class="fa-solid fa-qrcode text-champagne"></i> 1 Barcode Depan Venue
+                <a href="/standee" target="_blank" class="px-3 py-1.5 rounded-lg font-bold bg-cyberDark text-neonCyan border border-neonCyan/40 flex items-center gap-1.5 transition hover:bg-neonCyan/20">
+                    <i class="fa-solid fa-qrcode text-neonCyan"></i> 1 Barcode Depan Venue
                 </a>
-                <a href="/checkin" target="_blank" class="px-3 py-1.5 rounded-xl font-medium bg-sapphire/50 hover:bg-sapphire text-ivory border border-warmTaupe/30 flex items-center gap-1.5 transition">
-                    <i class="fa-solid fa-mobile-screen text-champagne"></i> Buku Tamu Digital
+                <a href="/checkin" target="_blank" class="px-3 py-1.5 rounded-lg font-medium bg-cyberDark hover:bg-neonPurple/20 text-chromeWhite border border-neonPurple/40 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-mobile-screen text-neonPurple"></i> Buku Tamu Digital
                 </a>
-                <a href="/live" target="_blank" class="px-3 py-1.5 rounded-xl font-medium bg-sapphire/50 hover:bg-sapphire text-ivory border border-warmTaupe/30 flex items-center gap-1.5 transition">
-                    <i class="fa-solid fa-display text-champagne"></i> Live Wall Proyektor
+                <a href="/live" target="_blank" class="px-3 py-1.5 rounded-lg font-medium bg-cyberDark hover:bg-neonCyan/20 text-chromeWhite border border-neonCyan/40 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-display text-neonCyan"></i> Live Wall Proyektor
                 </a>
-                <a href="/print" target="_blank" class="px-3 py-1.5 rounded-xl font-medium bg-sapphire/50 hover:bg-sapphire text-ivory border border-warmTaupe/30 flex items-center gap-1.5 transition">
-                    <i class="fa-solid fa-envelope-open text-warmTaupe"></i> Kartu Undangan (Tanpa Barcode)
+                <a href="/print" target="_blank" class="px-3 py-1.5 rounded-lg font-medium bg-cyberDark hover:bg-chromeSilver/20 text-chromeSilver border border-chromeSilver/30 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-envelope-open text-chromeSilver"></i> Kartu Undangan Cetak
                 </a>
             </nav>
         </div>
@@ -71,25 +67,25 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
 
         <!-- Standee Highlight Banner -->
-        <div class="luxury-panel p-5 rounded-2xl border border-champagne/50 bg-gradient-to-r from-sapphire/40 via-navy to-sapphire/30 flex flex-wrap items-center justify-between gap-4">
+        <div class="cyber-panel p-5 rounded-2xl border border-neonCyan/50 bg-gradient-to-r from-cyberDark via-cyberBlack to-cyberDark flex flex-wrap items-center justify-between gap-4 cyber-clip">
             <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 rounded-2xl bg-champagne/20 border border-champagne/40 flex items-center justify-center text-champagne text-2xl shrink-0">
+                <div class="w-12 h-12 rounded-xl bg-neonCyan/15 border border-neonCyan/50 flex items-center justify-center text-neonCyan text-2xl shrink-0 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
                     <i class="fa-solid fa-qrcode"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm sm:text-base font-bold text-champagne font-luxury">
+                    <h3 class="text-sm sm:text-base font-bold text-neonCyan font-cyber">
                         1 Master Barcode Kedatangan di Depan Venue
                     </h3>
-                    <p class="text-xs text-ivory/80">
-                        Undangan fisik dicetak bersih tanpa barcode. Tamu memindai 1 barcode yang dipasang di meja depan/standing banner dengan bantuan petugas penerima tamu.
+                    <p class="text-xs font-tech text-chromeSilver/80">
+                        Undangan fisik dicetak bersih tanpa barcode. Tamu memindai 1 barcode yang dipasang di standing tablet / meja depan Waroeng Latte Madiun.
                     </p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <a href="/standee" target="_blank" class="px-4 py-2 rounded-xl text-xs font-bold bg-champagne hover:bg-champagne/90 text-navy flex items-center gap-2 shadow-lg transition">
-                    <i class="fa-solid fa-print"></i> Buka / Cetak Standee Barcode
+            <div class="flex items-center gap-2 font-cyber text-xs">
+                <a href="/standee" target="_blank" class="px-4 py-2 rounded-xl font-extrabold bg-gradient-to-r from-neonCyan to-neonPurple hover:opacity-95 text-cyberBlack flex items-center gap-2 shadow-[0_0_20px_rgba(0,240,255,0.4)] transition">
+                    <i class="fa-solid fa-print"></i> Buka Standee Barcode
                 </a>
-                <a href="/api/venue/standee/pdf" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-sapphire hover:bg-sapphire/80 text-champagne border border-champagne/30 flex items-center gap-1.5 transition">
+                <a href="/api/venue/standee/pdf" class="px-3.5 py-2 rounded-xl font-bold bg-cyberDark hover:bg-neonCyan/20 text-neonCyan border border-neonCyan/40 flex items-center gap-1.5 transition">
                     <i class="fa-solid fa-download"></i> PDF Standee A4
                 </a>
             </div>
