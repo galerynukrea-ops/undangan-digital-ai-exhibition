@@ -287,7 +287,7 @@
 
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera(36, width / height, 0.1, 100);
-        camera.position.set(0, 1.45, 4.3);
+        camera.position.set(0, 1.38, 4.3);
 
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -614,8 +614,8 @@
                 : 2.0 + Math.sin(elapsed * 3) * 0.3;
         }
 
-        // Float Hover & Flight Kinematics
-        const hoverY = 0.28 + Math.sin(elapsed * 2.4) * 0.055;
+        // Float Hover & Flight Kinematics (Calibrated with top floating emblem)
+        const hoverY = 0.16 + Math.sin(elapsed * 2.4) * 0.045;
         robotRoot.position.y = THREE.MathUtils.damp(robotRoot.position.y, hoverY, 6, delta);
 
         // Smooth horizontal flight (Fly to right on check-in greeting, return to center on idle)

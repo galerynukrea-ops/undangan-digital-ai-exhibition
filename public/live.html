@@ -117,6 +117,23 @@
         .animate-progress {
             animation: countdownProgress 15s linear forwards;
         }
+
+        /* 3D Floating Event Emblem */
+        @keyframes emblemFloat {
+            0%, 100% {
+                transform: translate(-50%, 0px);
+                filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.55)) drop-shadow(0 0 32px rgba(189, 0, 255, 0.35));
+            }
+            50% {
+                transform: translate(-50%, -7px);
+                filter: drop-shadow(0 0 28px rgba(0, 240, 255, 0.8)) drop-shadow(0 0 50px rgba(189, 0, 255, 0.5));
+            }
+        }
+
+        .emblem-floating {
+            animation: emblemFloat 5.5s ease-in-out infinite;
+            will-change: transform, filter;
+        }
     </style>
 </head>
 <body class="w-screen h-screen bg-[#050814] cyber-grid-fullscreen relative overflow-hidden flex flex-col justify-between selection:bg-neonCyan selection:text-black font-tech">
@@ -193,6 +210,13 @@
         
         <!-- Full-Viewport WebGL 3D Canvas -->
         <div id="robotCanvas" class="absolute inset-0 w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing"></div>
+
+        <!-- 2b. FLOATING 3D EVENT EMBLEM (Tepat di Tengah Atas Layar, di Atas Kepala Robot) -->
+        <div class="absolute left-1/2 top-3 sm:top-5 z-20 pointer-events-none select-none emblem-floating w-[290px] sm:w-[360px] md:w-[410px] lg:w-[460px] max-w-[92vw]">
+            <img src="/images/logo-menembus-batas-digital.png" 
+                 alt="Digital Work AI Exhibition : MENEMBUS BATAS DIGITAL - Kolaborasi Talenta Muda & Artificial Intelligence" 
+                 class="w-full h-auto object-contain drop-shadow-[0_0_20px_rgba(0,240,255,0.4)]" />
+        </div>
 
         <!-- 3. POP-UP UCAPAN SELAMAT DATANG (Muncul di Sebelah Kiri Selama 15 Detik) -->
         <div id="welcomePopup" class="absolute left-6 sm:left-10 lg:left-16 top-1/2 -translate-y-1/2 z-20 w-[90%] sm:w-[480px] lg:w-[520px] hologram-popup rounded-3xl p-6 sm:p-7 shadow-[0_0_50px_rgba(0,240,255,0.5)] transform -translate-x-[150%] opacity-0 pointer-events-none transition-all duration-700 ease-out">
