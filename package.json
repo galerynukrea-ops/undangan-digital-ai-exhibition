@@ -12,6 +12,9 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": ">=22.x"
+  },
   "dependencies": {
     "cors": "^2.8.6",
     "csv-parser": "^3.2.1",

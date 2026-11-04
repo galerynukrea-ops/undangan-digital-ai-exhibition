@@ -2,6 +2,34 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/checkin",
+      "destination": "/self-checkin.html"
+    },
+    {
+      "source": "/standee",
+      "destination": "/standee.html"
+    },
+    {
+      "source": "/live",
+      "destination": "/live.html"
+    },
+    {
+      "source": "/print",
+      "destination": "/print-preview.html"
+    },
+    {
+      "source": "/scanner",
+      "destination": "/scanner.html"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/api/index"
     }
