@@ -121,6 +121,17 @@
 </head>
 <body class="w-screen h-screen bg-[#050814] cyber-grid-fullscreen relative overflow-hidden flex flex-col justify-between selection:bg-neonCyan selection:text-black font-tech">
 
+    <!-- AUDIO UNLOCK OVERLAY (Browser wajib 1x klik sebelum suara boleh diputar) -->
+    <div id="audioUnlockOverlay" class="fixed inset-0 z-[100] bg-cyberBlack/85 backdrop-blur-md flex items-center justify-center cursor-pointer" onclick="enableAudioFromOverlay()">
+        <div class="text-center px-8 py-7 rounded-3xl border-2 border-neonCyan/70 bg-cyberDark/90 shadow-[0_0_50px_rgba(0,240,255,0.45)] max-w-md">
+            <div class="w-16 h-16 mx-auto rounded-full bg-neonCyan/15 border border-neonCyan/60 flex items-center justify-center mb-4 animate-pulse">
+                <i class="fa-solid fa-volume-high text-neonCyan text-2xl"></i>
+            </div>
+            <h2 class="font-cyber font-bold text-lg sm:text-xl text-chromeWhite tracking-wider">KETUK UNTUK MENGAKTIFKAN SUARA AI</h2>
+            <p class="mt-2 text-sm text-chromeSilver/80 font-tech">Browser mewajibkan satu kali klik / sentuh / tekan tombol apa saja sebelum robot boleh berbicara.</p>
+        </div>
+    </div>
+
     <!-- FLOATING GLOWING DOTS (Pendaran Titik-Titik Beterbangan) -->
     <div class="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         <div class="cyber-dot w-2 h-2 bg-neonCyan shadow-[0_0_12px_#00F0FF]" style="top: 15%; left: 10%; animation-duration: 9s;"></div>
@@ -289,6 +300,7 @@
         }
 
         window.addEventListener('keydown', (e) => {
+            enableAudioFromOverlay(true);
             if (e.key === 'm' || e.key === 'M') toggleAudio();
             if (e.key === 'F11') {
                 if (!document.fullscreenElement) {
@@ -298,6 +310,19 @@
                 }
             }
         });
+
+        // Audio unlock (autoplay policy): first click/tap/key enables speech
+        function enableAudioFromOverlay(silent) {
+            const overlay = document.getElementById('audioUnlockOverlay');
+            if (!overlay || overlay.dataset.done === '1') return;
+            overlay.dataset.done = '1';
+            if (window.Robot3D && window.Robot3D.unlockAudio) window.Robot3D.unlockAudio();
+            overlay.remove();
+            if (!silent && !isAudioMuted && window.Robot3D) {
+                setTimeout(() => window.Robot3D.speakText('Sistem suara AI aktif. Siap menyambut tamu.'), 400);
+            }
+        }
+        document.addEventListener('pointerdown', () => enableAudioFromOverlay(), { once: false });
 
         // Initialize 3D Robot
         function init3DRobot() {

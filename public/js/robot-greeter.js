@@ -138,13 +138,17 @@
             if (typeof onComplete === 'function') onComplete();
         };
 
-        // 1. Try Gemini TTS Endpoint
+        // 1. Try Gemini TTS Endpoint (hard 3s timeout so fallback voice is never delayed)
         try {
+            const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            const abortTimer = controller ? setTimeout(() => controller.abort(), 3000) : null;
             const res = await fetch('/api/tts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text })
+                body: JSON.stringify({ text }),
+                signal: controller ? controller.signal : undefined
             });
+            if (abortTimer) clearTimeout(abortTimer);
             if (res.ok) {
                 const json = await res.json();
                 if (!json.fallback && json.audioBase64) {
@@ -168,36 +172,86 @@
         speakWithBrowser(text, estimatedDuration, finish);
     }
 
-    function speakWithBrowser(text, estimatedDuration, onDone) {
-        if ('speechSynthesis' in window) {
-            try {
-                window.speechSynthesis.cancel();
-                const utter = new SpeechSynthesisUtterance(text);
-                utter.lang = 'id-ID';
-                utter.rate = 0.94; // Warm, articulate, natural tempo
-                utter.pitch = 1.02; // Friendly natural female pitch
-
-                const bestVoice = cachedFemaleVoice || getBestIndonesianFemaleVoice();
-                if (bestVoice) {
-                    utter.voice = bestVoice;
-                }
-
-                let done = false;
-                const wrap = () => {
-                    if (done) return;
-                    done = true;
-                    if (speechTimer) clearTimeout(speechTimer);
-                    onDone();
-                };
-
-                utter.onend = wrap;
-                utter.onerror = wrap;
-                speechTimer = setTimeout(wrap, estimatedDuration + 1500);
-                window.speechSynthesis.speak(utter);
-                return;
-            } catch (e) {}
+    function buildUtterance(text, useSelectedVoice) {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'id-ID';
+        utter.rate = 0.94; // Warm, articulate, natural tempo
+        utter.pitch = 1.02; // Friendly natural female pitch
+        utter.volume = 1;
+        if (useSelectedVoice) {
+            const bestVoice = cachedFemaleVoice || getBestIndonesianFemaleVoice();
+            if (bestVoice) utter.voice = bestVoice;
         }
-        speechTimer = setTimeout(onDone, estimatedDuration);
+        return utter;
+    }
+
+    function speakWithBrowser(text, estimatedDuration, onDone) {
+        if (!('speechSynthesis' in window)) {
+            speechTimer = setTimeout(onDone, estimatedDuration);
+            return;
+        }
+
+        let done = false;
+        let retried = false;
+        const wrap = () => {
+            if (done) return;
+            done = true;
+            if (speechTimer) clearTimeout(speechTimer);
+            onDone();
+        };
+
+        const attempt = (useSelectedVoice) => {
+            try {
+                const utter = buildUtterance(text, useSelectedVoice);
+                utter.onend = wrap;
+                utter.onerror = (ev) => {
+                    const reason = ev && ev.error ? ev.error : '';
+                    // Selected (online/natural) voice failed -> retry once with system default Indonesian voice
+                    if (!retried && reason !== 'interrupted' && reason !== 'canceled') {
+                        retried = true;
+                        window.speechSynthesis.cancel();
+                        setTimeout(() => attempt(false), 120);
+                        return;
+                    }
+                    wrap();
+                };
+                window.speechSynthesis.resume();
+                window.speechSynthesis.speak(utter);
+            } catch (e) {
+                wrap();
+            }
+        };
+
+        window.speechSynthesis.cancel();
+        speechTimer = setTimeout(wrap, estimatedDuration + 4000);
+        // Chrome/Edge bug: speak() immediately after cancel() can be silently dropped
+        setTimeout(() => attempt(true), 150);
+    }
+
+    // Unlock audio after first user gesture (browser autoplay policy)
+    let audioUnlocked = false;
+    function unlockAudio() {
+        if (audioUnlocked) return true;
+        audioUnlocked = true;
+        try {
+            const ctx = getAudioContext();
+            if (ctx) {
+                const buf = ctx.createBuffer(1, 1, 22050);
+                const src = ctx.createBufferSource();
+                src.buffer = buf;
+                src.connect(ctx.destination);
+                src.start(0);
+            }
+        } catch (e) {}
+        try {
+            if ('speechSynthesis' in window) {
+                cachedFemaleVoice = getBestIndonesianFemaleVoice();
+                const warm = new SpeechSynthesisUtterance(' ');
+                warm.volume = 0;
+                window.speechSynthesis.speak(warm);
+            }
+        } catch (e) {}
+        return true;
     }
 
     function setAction(state) {
@@ -647,6 +701,8 @@
         setSpeaking,
         speakText,
         stopActiveSpeech,
+        unlockAudio,
+        isAudioUnlocked: () => audioUnlocked,
         flyToRight: (x = 1.35) => {
             targetPosX = x;
             setAction('greeting');
