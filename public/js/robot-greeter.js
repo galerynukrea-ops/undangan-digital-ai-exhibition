@@ -10,6 +10,9 @@
     let voiceBars = [], wavingArm, restingArm, leftEar, rightEar;
     let instancedNodes, nodeOrbits = [];
     let glowingCyanMat, contactShadowMesh;
+    // Animation & Position Targets
+    let targetPosX = 0;
+    let targetPosY = 0.28;
     let isSpeaking = false;
     let currentAction = 'idle';
     let animFrameId = null;
@@ -27,6 +30,48 @@
     let audioCtx = null;
     let activeAudio = null;
     let speechTimer = null;
+
+    // Cache best Indonesian female voice
+    let cachedFemaleVoice = null;
+
+    function getBestIndonesianFemaleVoice() {
+        if (!('speechSynthesis' in window)) return null;
+        const voices = window.speechSynthesis.getVoices() || [];
+        if (!voices.length) return null;
+
+        // 1. First priority: Microsoft Gadis / Ayu Online Natural (Standard on Windows 10/11 & Edge)
+        const naturalFemale = voices.find(v => 
+            (v.name.includes('Gadis') || v.name.includes('Ayu')) && 
+            (v.lang.includes('id') || v.lang.includes('ID'))
+        );
+        if (naturalFemale) return naturalFemale;
+
+        // 2. Second priority: Google Bahasa Indonesia Female (Chrome/Android)
+        const googleId = voices.find(v => 
+            (v.name.includes('Google') || v.name.includes('Natural')) && 
+            (v.lang.includes('id') || v.lang.includes('ID'))
+        );
+        if (googleId) return googleId;
+
+        // 3. Third priority: Any voice marked female in ID
+        const idFemale = voices.find(v => 
+            (v.lang.toLowerCase().includes('id')) && 
+            (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('wanita') || v.name.toLowerCase().includes('gadis'))
+        );
+        if (idFemale) return idFemale;
+
+        // 4. Any Indonesian voice
+        const anyId = voices.find(v => v.lang.toLowerCase().includes('id'));
+        if (anyId) return anyId;
+
+        return null;
+    }
+
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            cachedFemaleVoice = getBestIndonesianFemaleVoice();
+        };
+    }
 
     function getAudioContext() {
         if (!audioCtx) {
@@ -129,12 +174,13 @@
                 window.speechSynthesis.cancel();
                 const utter = new SpeechSynthesisUtterance(text);
                 utter.lang = 'id-ID';
-                utter.rate = 1.0;
-                utter.pitch = 1.05;
+                utter.rate = 0.94; // Warm, articulate, natural tempo
+                utter.pitch = 1.02; // Friendly natural female pitch
 
-                const voices = window.speechSynthesis.getVoices();
-                const idVoice = voices.find(v => v.lang.toLowerCase().includes('id') || v.name.toLowerCase().includes('indonesia'));
-                if (idVoice) utter.voice = idVoice;
+                const bestVoice = cachedFemaleVoice || getBestIndonesianFemaleVoice();
+                if (bestVoice) {
+                    utter.voice = bestVoice;
+                }
 
                 let done = false;
                 const wrap = () => {
@@ -514,12 +560,29 @@
                 : 2.0 + Math.sin(elapsed * 3) * 0.3;
         }
 
-        // Float Hover
+        // Float Hover & Flight Kinematics
         const hoverY = 0.28 + Math.sin(elapsed * 2.4) * 0.055;
         robotRoot.position.y = THREE.MathUtils.damp(robotRoot.position.y, hoverY, 6, delta);
 
-        const shadowScale = 1.0 - Math.sin(elapsed * 2.4) * 0.06;
-        contactShadowMesh.scale.set(shadowScale, shadowScale, 1);
+        // Smooth horizontal flight (Fly to right on check-in greeting, return to center on idle)
+        let dynamicTargetX = targetPosX;
+        if (Math.abs(targetPosX) < 0.05) {
+            // Gentle organic sway when in center
+            dynamicTargetX = Math.sin(elapsed * 0.75) * 0.04;
+        }
+        robotRoot.position.x = THREE.MathUtils.damp(robotRoot.position.x, dynamicTargetX, 3.2, delta);
+
+        // Agile Banking Roll when flying
+        const velocityX = dynamicTargetX - robotRoot.position.x;
+        const targetRollZ = -velocityX * 0.22;
+        robotRoot.rotation.z = THREE.MathUtils.damp(robotRoot.rotation.z, targetRollZ, 4.5, delta);
+
+        // Sync contact shadow position
+        if (contactShadowMesh) {
+            contactShadowMesh.position.x = robotRoot.position.x;
+            const shadowScale = (1.0 - Math.sin(elapsed * 2.4) * 0.06);
+            contactShadowMesh.scale.set(shadowScale, shadowScale, 1);
+        }
 
         // Kinematics Targets
         let targetTorsoZ = 0.04;
@@ -583,6 +646,15 @@
         setAction,
         setSpeaking,
         speakText,
-        stopActiveSpeech
+        stopActiveSpeech,
+        flyToRight: (x = 1.35) => {
+            targetPosX = x;
+            setAction('greeting');
+        },
+        flyToCenter: () => {
+            targetPosX = 0;
+            setAction('idle');
+        },
+        isAtRight: () => targetPosX > 0.5
     };
 })();
