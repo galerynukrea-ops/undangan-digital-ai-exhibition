@@ -314,9 +314,6 @@ function seedDatabase() {
     console.log('[DB] Database dibersihkan (0 tamu terdaftar). Dashboard siap menerima registrasi tamu.');
 }
 
-// Dikosongkan di awal sesuai permintaan: "mending kosongin aja dulu nama& instansi didashboard"
-seedDatabase();
-
 module.exports = {
     db: dbInstance,
     generateToken,

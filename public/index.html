@@ -350,7 +350,24 @@
 
         function renderTable(guests) {
             const tbody = document.getElementById('guestTableBody');
-            if (guests.length === 0) {
+
+            // Sinkronisasi otomatis angka statistik di kartu atas secara instan
+            const total = guests ? guests.length : 0;
+            const checkedIn = guests ? guests.filter(g => g.status === 'checked_in').length : 0;
+            const pending = guests ? guests.filter(g => g.status !== 'checked_in').length : 0;
+            const rate = total > 0 ? Math.round((checkedIn / total) * 100) : 0;
+
+            const elTotal = document.getElementById('statTotal');
+            const elChecked = document.getElementById('statCheckedIn');
+            const elPending = document.getElementById('statPending');
+            const elRate = document.getElementById('statRate');
+
+            if (elTotal) elTotal.innerText = total;
+            if (elChecked) elChecked.innerText = checkedIn;
+            if (elPending) elPending.innerText = pending;
+            if (elRate) elRate.innerHTML = `<i class="fa-solid fa-chart-pie"></i> ${rate}% Kehadiran`;
+
+            if (!guests || guests.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="7" class="text-center py-10 text-warmTaupe">

@@ -457,56 +457,73 @@ app.get('/api/checkin/lookup/:token', (req, res) => {
 
 app.get('/api/stats', (req, res) => {
     try {
-        const totalGuests = db.prepare('SELECT COUNT(*) as count FROM guests').get().count;
-        const checkedInCount = db.prepare("SELECT COUNT(*) as count FROM guests WHERE status = 'checked_in'").get().count;
+        const allGuests = db.prepare('SELECT * FROM guests').all() || [];
+        const totalGuests = allGuests.length;
+        const checkedInCount = allGuests.filter(g => g.status === 'checked_in').length;
         const pendingCount = totalGuests - checkedInCount;
         const attendanceRate = totalGuests > 0 ? Math.round((checkedInCount / totalGuests) * 100) : 0;
 
         // Breakdown by category
-        const categories = db.prepare(`
-            SELECT category, 
-                   COUNT(*) as total, 
-                   SUM(CASE WHEN status = 'checked_in' THEN 1 ELSE 0 END) as checked_in
-            FROM guests 
-            GROUP BY category
-        `).all();
+        const catMap = {};
+        allGuests.forEach(g => {
+            const cat = g.category || 'Mitra / Instansi';
+            if (!catMap[cat]) catMap[cat] = { category: cat, total: 0, checked_in: 0 };
+            catMap[cat].total++;
+            if (g.status === 'checked_in') catMap[cat].checked_in++;
+        });
+        const categories = Object.values(catMap);
 
-        // Emotions breakdown
-        const emotions = db.prepare(`
-            SELECT emotion, COUNT(*) as count 
-            FROM guest_messages 
-            GROUP BY emotion
-            ORDER BY count DESC
-        `).all();
+        // Emotions breakdown & keywords from messages
+        let allMessages = [];
+        try {
+            allMessages = db.prepare('SELECT * FROM guest_messages').all() || [];
+        } catch (e) {}
 
-        // Recent checked-in institutions
-        const recentCheckins = db.prepare(`
-            SELECT g.id, g.name, g.institution, g.category, g.checked_in_at,
-                   m.message, m.sentiment, m.score, m.emotion, m.keywords
-            FROM guests g
-            INNER JOIN guest_messages m ON g.id = m.guest_id
-            WHERE g.status = 'checked_in'
-            ORDER BY g.checked_in_at DESC
-            LIMIT 10
-        `).all();
-
-        // Aggregate keywords
-        const allKeywordsRaw = db.prepare('SELECT keywords FROM guest_messages').all();
+        const emoMap = {};
         const keywordCounts = {};
-        for (const row of allKeywordsRaw) {
+
+        for (const m of allMessages) {
+            if (m.emotion) {
+                emoMap[m.emotion] = (emoMap[m.emotion] || 0) + 1;
+            }
             try {
-                const kws = JSON.parse(row.keywords || '[]');
+                const kws = JSON.parse(m.keywords || '[]');
                 for (const kw of kws) {
-                    const clean = kw.toUpperCase();
+                    const clean = String(kw).toUpperCase();
                     keywordCounts[clean] = (keywordCounts[clean] || 0) + 1;
                 }
             } catch (e) {}
         }
 
+        const emotions = Object.entries(emoMap)
+            .map(([emotion, count]) => ({ emotion, count }))
+            .sort((a, b) => b.count - a.count);
+
         const sortedKeywords = Object.entries(keywordCounts)
             .map(([word, count]) => ({ word, count }))
             .sort((a, b) => b.count - a.count)
             .slice(0, 12);
+
+        // Recent checked-in institutions
+        const recentCheckins = allGuests
+            .filter(g => g.status === 'checked_in')
+            .sort((a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0))
+            .slice(0, 10)
+            .map(g => {
+                const m = allMessages.find(x => x.guest_id === g.id) || {};
+                return {
+                    id: g.id,
+                    name: g.name,
+                    institution: g.institution,
+                    category: g.category,
+                    checked_in_at: g.checked_in_at,
+                    message: m.message || null,
+                    sentiment: m.sentiment || null,
+                    score: m.score !== undefined ? m.score : null,
+                    emotion: m.emotion || null,
+                    keywords: m.keywords || null
+                };
+            });
 
         res.json({
             success: true,
