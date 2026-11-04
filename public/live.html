@@ -108,14 +108,14 @@
                 inset 0 0 30px rgba(189, 0, 255, 0.2);
         }
 
-        /* 6s Countdown Progress Bar */
+        /* 15s Countdown Progress Bar */
         @keyframes countdownProgress {
             0% { width: 100%; }
             100% { width: 0%; }
         }
 
         .animate-progress {
-            animation: countdownProgress 6s linear forwards;
+            animation: countdownProgress 15s linear forwards;
         }
     </style>
 </head>
@@ -183,7 +183,7 @@
         <!-- Full-Viewport WebGL 3D Canvas -->
         <div id="robotCanvas" class="absolute inset-0 w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing"></div>
 
-        <!-- 3. POP-UP UCAPAN SELAMAT DATANG (Muncul di Sebelah Kiri Selama 6 Detik) -->
+        <!-- 3. POP-UP UCAPAN SELAMAT DATANG (Muncul di Sebelah Kiri Selama 15 Detik) -->
         <div id="welcomePopup" class="absolute left-6 sm:left-10 lg:left-16 top-1/2 -translate-y-1/2 z-20 w-[90%] sm:w-[480px] lg:w-[520px] hologram-popup rounded-3xl p-6 sm:p-7 shadow-[0_0_50px_rgba(0,240,255,0.5)] transform -translate-x-[150%] opacity-0 pointer-events-none transition-all duration-700 ease-out">
             
             <!-- Corner Accents -->
@@ -212,7 +212,7 @@
             </div>
 
             <p id="popMsg" class="mt-4 text-xs sm:text-sm text-chromeSilver leading-relaxed border-t border-neonCyan/25 pt-3 italic font-tech">
-                "Selamat datang dan terima kasih atas kehadirannya. Silakan memasuki ruang pameran Waroeng Latte Madiun!"
+                "Selamat datang dan terima kasih atas kehadirannya di Waroeng Latte Madiun!"
             </p>
 
             <!-- 6-Second Linear Countdown Glowing Bar -->
@@ -222,7 +222,7 @@
 
             <div class="flex items-center justify-between mt-2 text-[10px] text-chromeSilver/60 font-monoTech">
                 <span>WAROENG LATTE MADIUN</span>
-                <span>TAMPIL 6 DETIK</span>
+                <span>TAMPIL 15 DETIK</span>
             </div>
 
         </div>
@@ -370,14 +370,14 @@
             document.getElementById('bottomMarqueeTrack').innerHTML = fullTrackHtml;
         }
 
-        // TRIGGER CHECK-IN WELCOME SEQUENCE (Robot Terbang ke Kanan, Muncul Pop-up di Kiri Selama 6 Detik)
+        // TRIGGER CHECK-IN WELCOME SEQUENCE (Robot Terbang ke Kanan, Muncul Pop-up di Kiri Selama 15 Detik)
         function triggerGuestArrivalSequence(guestData) {
             const guest = guestData.guest || guestData;
             const guestName = guest.name || guest.institution || 'Tamu Kehormatan';
             const guestInst = guest.institution || 'Mitra Kehormatan';
             const guestMsg = (guest.message && guest.message.trim())
                 ? `“${guest.message}”`
-                : `“Selamat datang dan terima kasih atas kehadirannya. Silakan memasuki ruang pameran Waroeng Latte Madiun!”`;
+                : `“Selamat datang dan terima kasih atas kehadirannya di Waroeng Latte Madiun!”`;
 
             // 1. Robot terbang ke kanan (Smooth Flight & Bank into turn)
             if (window.Robot3D) {
@@ -390,7 +390,7 @@
             document.getElementById('popInst').innerHTML = `<i class="fa-solid fa-building-columns text-neonPurple"></i><span>${guestInst}</span>`;
             document.getElementById('popMsg').innerText = guestMsg;
 
-            // Reset and start 6s progress bar
+            // Reset and start 15s progress bar
             const bar = document.getElementById('popProgressBar');
             bar.className = 'h-full bg-gradient-to-r from-neonCyan via-neonBlue to-neonPurple shadow-[0_0_10px_#00F0FF]';
             // Trigger reflow
@@ -402,7 +402,7 @@
             popup.classList.add('translate-x-0', 'opacity-100', 'pointer-events-auto');
 
             // 3. Suara sapaan alami perempuan
-            const speechText = `Selamat datang ${guestName} dari ${guestInst}! Terima kasih atas kehadirannya di pameran Menembus Batas Digital. Silakan memasuki ruang pameran Waroeng Latte Madiun.`;
+            const speechText = `Selamat datang ${guestName} dari ${guestInst}! Terima kasih atas kehadirannya di acara Menembus Batas Digital.`;
             
             if (!isAudioMuted && window.Robot3D) {
                 window.Robot3D.speakText(speechText);
@@ -421,7 +421,7 @@
             // 5. Update data list hadir & marquee bawah
             loadStats();
 
-            // 6. TEPAT SETELAH 6 DETIK: Sembunyikan Pop-Up, Robot Kembali ke Tengah
+            // 6. TEPAT SETELAH 15 DETIK: Sembunyikan Pop-Up, Robot Kembali ke Tengah
             if (popupDismissTimer) clearTimeout(popupDismissTimer);
             popupDismissTimer = setTimeout(() => {
                 // Sembunyikan Pop-up
@@ -432,7 +432,7 @@
                 if (window.Robot3D) {
                     window.Robot3D.flyToCenter();
                 }
-            }, 6000);
+            }, 15000);
         }
 
         // SSE Real-time Listener
