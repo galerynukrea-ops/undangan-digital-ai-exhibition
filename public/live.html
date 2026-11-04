@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Display Meja Registrasi • Surface Pro 3 Display</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#112250',
+                        sapphire: '#3B507D',
+                        warmTaupe: '#BEB7A7',
+                        champagne: '#E7E2CE',
+                        ivory: '#F5F4F0'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+        }
+
+        .surface-card {
+            background: rgba(27, 45, 93, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1.5px solid rgba(231, 226, 206, 0.45);
+            box-shadow: 0 15px 40px rgba(10, 20, 50, 0.7);
+        }
+
+        @keyframes cardPulse {
+            0%, 100% {
+                box-shadow: 0 0 25px rgba(231, 226, 206, 0.25), inset 0 0 15px rgba(231, 226, 206, 0.1);
+            }
+            50% {
+                box-shadow: 0 0 55px rgba(231, 226, 206, 0.55), inset 0 0 35px rgba(231, 226, 206, 0.3);
+            }
+        }
+
+        .spotlight-active {
+            animation: cardPulse 2.5s infinite;
+        }
+
+        /* Running Ticker */
+        .marquee-container {
+            overflow: hidden;
+            position: relative;
+            mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+            -webkit-mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+        }
+
+        .marquee-inner {
+            display: inline-flex;
+            gap: 12px;
+            white-space: nowrap;
+        }
+
+        .marquee-scroll {
+            animation: marqueeSlide 30s linear infinite;
+        }
+
+        @keyframes marqueeSlide {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-navy text-ivory flex flex-col justify-between selection:bg-champagne selection:text-navy">
+
+    <!-- Ambient Glowing Orbs Background -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-sapphire/25 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute top-1/2 -right-40 w-96 h-96 bg-champagne/15 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+        <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-sapphire/25 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+    </div>
+
+    <!-- Header Wall (Surface Pro 3 Desk Display) -->
+    <header class="relative z-10 border-b border-warmTaupe/25 bg-navy/90 backdrop-blur-md px-6 py-3">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            <div class="flex items-center space-x-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sapphire via-warmTaupe to-champagne p-0.5 shadow-xl">
+                    <div class="w-full h-full bg-navy rounded-[12px] flex items-center justify-center">
+                        <i class="fa-solid fa-gem text-champagne text-xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <h1 class="text-lg sm:text-xl font-bold tracking-wider text-champagne font-luxury">
+                            MENEMBUS BATAS DIGITAL
+                        </h1>
+                        <span id="audioStatusPill" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 cursor-pointer" onclick="toggleAudio()" title="Klik atau tekan M untuk Mute/Unmute">
+                            <i id="audioIcon" class="fa-solid fa-volume-high text-[9px]"></i> <span id="audioText">Audio AI Aktif</span>
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-warmTaupe tracking-wide flex items-center gap-2 mt-0.5">
+                        <span><i class="fa-solid fa-location-dot text-champagne"></i> Waroeng Latte, Jl. Cokroaminoto No.88, Madiun</span>
+                        <span>•</span>
+                        <span>11 November 2026, 10.00 WIB</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Stats & Clock -->
+            <div class="flex items-center space-x-4">
+                <!-- Attendance Counter -->
+                <div class="flex items-center space-x-2.5 bg-sapphire/35 border border-warmTaupe/30 px-3.5 py-1.5 rounded-2xl">
+                    <div class="w-8 h-8 rounded-xl bg-champagne/15 border border-champagne/30 flex items-center justify-center text-champagne text-xs">
+                        <i class="fa-solid fa-building-circle-check"></i>
+                    </div>
+                    <div>
+                        <div class="text-[9px] uppercase font-bold text-warmTaupe tracking-wider">Mitra Hadir</div>
+                        <div class="text-sm font-bold text-ivory flex items-center gap-1 font-luxury">
+                            <span id="counterChecked" class="text-champagne">0</span>
+                            <span class="text-warmTaupe text-xs">/</span>
+                            <span id="counterTotal">10</span>
+                            <span id="counterRate" class="text-[11px] font-normal text-warmTaupe ml-1">(0%)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clock -->
+                <div class="text-right pl-1">
+                    <div id="liveClock" class="text-base sm:text-lg font-bold font-mono text-champagne tracking-wider">00:00:00</div>
+                    <div id="liveDate" class="text-[10px] text-warmTaupe uppercase tracking-widest">WIB</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Live Stage (Optimized for 12" Surface Pro 3) -->
+    <main class="relative z-10 max-w-6xl mx-auto px-6 py-3 w-full flex-1 flex flex-col justify-center">
+        
+        <!-- Mode Indicator / Banner -->
+        <div class="flex items-center justify-between text-xs font-semibold text-warmTaupe px-2 mb-2">
+            <span id="displayModeBadge" class="flex items-center gap-2 text-champagne uppercase tracking-wider text-[11px]">
+                <span class="w-2.5 h-2.5 rounded-full bg-champagne animate-ping"></span>
+                <span id="displayModeTitle">Selamat Datang Rekan Mitra & Tamu Kehormatan</span>
+            </span>
+            <span id="spotlightTimestamp" class="text-warmTaupe font-mono text-[11px]">-</span>
+        </div>
+
+        <!-- The Hero Card (Shared by Spotlight Arrival & Hall of Fame Carousel) -->
+        <div id="spotlightCard" class="surface-card p-6 sm:p-7 rounded-3xl relative overflow-hidden transition-all duration-700">
+            <!-- Top Gradient Bar -->
+            <div id="spotlightAccentBar" class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sapphire via-warmTaupe to-champagne"></div>
+
+            <div class="space-y-3.5">
+                <!-- Institution Header & Badge -->
+                <div class="flex items-start justify-between gap-4">
+                    <div class="space-y-1">
+                        <span id="spotCategory" class="inline-block px-3 py-0.5 rounded-full text-xs font-bold bg-sapphire text-champagne border border-champagne/40 uppercase tracking-wider">
+                            MITRA RESMI KOTA MADIUN
+                        </span>
+                        <h2 id="spotInstitution" class="text-3xl sm:text-4xl font-extrabold text-ivory tracking-wide font-luxury mt-1.5">
+                            Selamat Datang di Waroeng Latte
+                        </h2>
+                        <p id="spotSubtext" class="text-xs sm:text-sm text-champagne font-medium">
+                            Menembus Batas Digital : Kolaborasi Talenta Muda & AI
+                        </p>
+                    </div>
+
+                    <div id="spotAvatar" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sapphire to-champagne flex items-center justify-center text-navy text-2xl font-black shadow-lg shrink-0">
+                        AI
+                    </div>
+                </div>
+
+                <!-- Guest Message Quote Block -->
+                <div class="p-4 rounded-2xl bg-navy/85 border border-warmTaupe/25 relative">
+                    <i class="fa-solid fa-quote-left text-champagne/20 text-3xl absolute top-3 left-3"></i>
+                    <p id="spotMessage" class="text-base sm:text-lg text-ivory font-medium italic relative z-10 pl-6 leading-relaxed">
+                        "Menembus Batas Digital : Kolaborasi Talenta Muda dan Artificial Intelligence"
+                    </p>
+                </div>
+
+                <!-- AI Sentiment Metrics & Keywords Stream -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-warmTaupe">Sentimen AI:</span>
+                        <span id="spotEmotion" class="px-3 py-1 rounded-xl text-xs font-bold bg-champagne/20 text-champagne border border-champagne/40 flex items-center gap-1.5">
+                            <i class="fa-solid fa-sparkles"></i> Inspiratif
+                        </span>
+                    </div>
+
+                    <!-- Extracted Keyword Pills -->
+                    <div id="spotKeywords" class="flex flex-wrap items-center gap-1.5">
+                        <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-sapphire/40 text-champagne border border-warmTaupe/25">#MADIUN</span>
+                        <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-sapphire/40 text-champagne border border-warmTaupe/25">#INOVASI</span>
+                        <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-sapphire/40 text-champagne border border-warmTaupe/25">#TALENTA_MUDA</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REFINED SMOOTH MARQUEE TICKER (NO UGLY SCROLLBAR) -->
+        <div class="mt-3.5 luxury-panel p-2 px-3 rounded-2xl border border-warmTaupe/25 flex items-center gap-3 overflow-hidden">
+            <!-- Left Fixed Tag -->
+            <div class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sapphire/80 text-champagne font-bold text-[11px] uppercase tracking-wider border border-champagne/30 shadow-sm">
+                <i class="fa-solid fa-award text-champagne"></i>
+                <span>Terkini Hadir</span>
+            </div>
+
+            <!-- Auto-Scrolling Marquee Track (Smooth, Endless, Zero Scrollbar) -->
+            <div class="marquee-container flex-1 py-1">
+                <div id="marqueeTrack" class="marquee-inner">
+                    <span class="text-warmTaupe text-xs italic py-0.5">Menunggu kehadiran mitra pertama di Waroeng Latte Madiun...</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Wall -->
+    <footer class="relative z-10 border-t border-warmTaupe/25 bg-navy/90 backdrop-blur py-2 px-6 text-xs text-warmTaupe flex flex-wrap justify-between items-center gap-2">
+        <p>Surface Pro 3 Desk Display • Meja Registrasi Waroeng Latte Madiun</p>
+        <p class="font-mono text-[11px] text-warmTaupe">
+            Hotkeys: <span class="text-champagne font-bold">[M]</span> Mute/Unmute • <span class="text-champagne font-bold">[F11]</span> Fullscreen
+        </p>
+    </footer>
+
+    <script>
+        // Real-time Clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('liveClock').innerText = now.toLocaleTimeString('id-ID', { hour12: false });
+            document.getElementById('liveDate').innerText = now.toLocaleDateString('id-ID', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Audio System
+        let isAudioMuted = false;
+
+        function playSciFiChime() {
+            if (isAudioMuted) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const notes = [587.33, 880, 1174.66, 1760];
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.12, ctx.currentTime + (idx * 0.08));
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + (idx * 0.08));
+                    osc.stop(ctx.currentTime + 1.3);
+                });
+            } catch (e) {}
+        }
+
+        function speakWelcome(institutionName) {
+            if (isAudioMuted || !('speechSynthesis' in window)) return;
+            try {
+                window.speechSynthesis.cancel();
+                const text = `Selamat datang kepada perwakilan ${institutionName} di Exhibition Menembus Batas Digital, Waroeng Latte Madiun.`;
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID';
+                utterance.rate = 0.95;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            } catch (e) {}
+        }
+
+        function toggleAudio() {
+            isAudioMuted = !isAudioMuted;
+            const icon = document.getElementById('audioIcon');
+            const text = document.getElementById('audioText');
+            const pill = document.getElementById('audioStatusPill');
+
+            if (isAudioMuted) {
+                icon.className = 'fa-solid fa-volume-xmark text-[9px]';
+                text.innerText = 'Audio Hening';
+                pill.className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1 cursor-pointer';
+            } else {
+                icon.className = 'fa-solid fa-volume-high text-[9px]';
+                text.innerText = 'Audio AI Aktif';
+                pill.className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 cursor-pointer';
+                playSciFiChime();
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'm' || e.key === 'M') {
+                toggleAudio();
+            }
+        });
+
+        // Data & Carousel Management
+        let arrivedList = [];
+        let carouselInterval = null;
+        let carouselIndex = 0;
+        let isSpotlightLocked = false;
+        let lockTimer = null;
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const json = await res.json();
+                if (json.success) {
+                    renderStats(json.data);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderStats(data) {
+            document.getElementById('counterChecked').innerText = data.checkedInCount;
+            document.getElementById('counterTotal').innerText = data.totalGuests;
+            document.getElementById('counterRate').innerText = `(${data.attendanceRate}%)`;
+
+            arrivedList = data.recentCheckins || [];
+
+            // Update smooth marquee ticker
+            renderMarquee(arrivedList);
+
+            // Start idle carousel if not locked
+            if (!isSpotlightLocked) {
+                if (arrivedList.length > 0) {
+                    displayCard(arrivedList[0], false);
+                    startCarousel();
+                }
+            }
+        }
+
+        function renderMarquee(list) {
+            const track = document.getElementById('marqueeTrack');
+            if (!list || list.length === 0) {
+                track.className = 'marquee-inner';
+                track.innerHTML = `<span class="text-warmTaupe text-xs italic py-0.5">Menunggu kehadiran mitra pertama di Waroeng Latte Madiun...</span>`;
+                return;
+            }
+
+            // Create pill markup
+            const makePills = () => list.map(g => `
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-navy/90 border border-champagne/40 shadow-sm shrink-0">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span class="font-bold text-champagne text-xs">${g.institution}</span>
+                    <span class="text-warmTaupe text-[10px] font-medium border-l border-warmTaupe/30 pl-1.5">${g.category || 'Mitra'}</span>
+                </div>
+            `).join('');
+
+            // If there are more than 2 items, duplicate for infinite seamless loop & animate
+            if (list.length > 2) {
+                track.className = 'marquee-inner marquee-scroll';
+                track.innerHTML = makePills() + makePills(); // double items for seamless infinite loop
+            } else {
+                track.className = 'marquee-inner';
+                track.innerHTML = makePills();
+            }
+        }
+
+        function displayCard(item, isNewArrival = false) {
+            const g = item.guest || item;
+            const m = item.message ? (typeof item.message === 'string' ? { text: item.message, emotion: item.emotion, keywords: item.keywords } : item.message) : { text: item.message || 'Selamat atas terselenggaranya pameran!', emotion: item.emotion || 'Inspiratif', keywords: item.keywords };
+
+            document.getElementById('spotInstitution').innerText = g.institution;
+            document.getElementById('spotCategory').innerText = (g.category || 'MITRA MADIUN').toUpperCase();
+
+            const initials = g.institution.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+            document.getElementById('spotAvatar').innerText = initials || 'AI';
+
+            document.getElementById('spotMessage').innerText = `"${m.text || 'Selamat & Sukses untuk Pameran AI di Waroeng Latte!'}"`;
+            document.getElementById('spotEmotion').innerHTML = `<i class="fa-solid fa-sparkles"></i> ${m.emotion || 'Inspiratif'}`;
+
+            // Keywords
+            const kwContainer = document.getElementById('spotKeywords');
+            let kwList = [];
+            try {
+                kwList = typeof m.keywords === 'string' ? JSON.parse(m.keywords) : (m.keywords || []);
+            } catch (e) {}
+            if (kwList.length === 0) kwList = ['MADIUN', 'INOVASI', 'AI'];
+
+            kwContainer.innerHTML = kwList.map(kw => `
+                <span class="px-2.5 py-0.5 rounded-lg text-[10px] font-semibold bg-sapphire/50 text-champagne border border-warmTaupe/30">
+                    #${kw}
+                </span>
+            `).join('');
+
+            const time = g.checked_in_at ? new Date(g.checked_in_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB' : 'Baru Saja';
+            document.getElementById('spotlightTimestamp').innerText = `HADIR: ${time}`;
+
+            const badgeTitle = document.getElementById('displayModeTitle');
+            const card = document.getElementById('spotlightCard');
+
+            if (isNewArrival) {
+                badgeTitle.innerText = `✨ BARU SAJA HADIR DI MEJA DEPAN`;
+                card.classList.add('spotlight-active');
+            } else {
+                badgeTitle.innerText = `HALL OF PARTNERS • MITRA TERVERIFIKASI`;
+                card.classList.remove('spotlight-active');
+            }
+        }
+
+        function startCarousel() {
+            clearInterval(carouselInterval);
+            if (arrivedList.length <= 1) return;
+
+            carouselIndex = 0;
+            carouselInterval = setInterval(() => {
+                if (isSpotlightLocked || arrivedList.length === 0) return;
+                carouselIndex = (carouselIndex + 1) % arrivedList.length;
+                displayCard(arrivedList[carouselIndex], false);
+            }, 6000);
+        }
+
+        function initSSE() {
+            const eventSource = new EventSource('/api/live/stream');
+
+            eventSource.onmessage = (event) => {
+                try {
+                    const parsed = JSON.parse(event.data);
+                    if (parsed.type === 'guest_checked_in') {
+                        const checkinData = parsed.data;
+
+                        isSpotlightLocked = true;
+                        clearTimeout(lockTimer);
+                        clearInterval(carouselInterval);
+
+                        displayCard(checkinData, true);
+
+                        playSciFiChime();
+                        setTimeout(() => {
+                            speakWelcome(checkinData.guest.institution);
+                        }, 500);
+
+                        if (typeof confetti === 'function') {
+                            confetti({
+                                particleCount: 90,
+                                spread: 85,
+                                origin: { y: 0.6 },
+                                colors: ['#E7E2CE', '#BEB7A7', '#3B507D']
+                            });
+                        }
+
+                        loadStats();
+                        lockTimer = setTimeout(() => {
+                            isSpotlightLocked = false;
+                            startCarousel();
+                        }, 10000);
+                    }
+                } catch (err) {
+                    console.error('SSE error:', err);
+                }
+            };
+
+            eventSource.onerror = () => {
+                eventSource.close();
+                setTimeout(initSSE, 5000);
+            };
+        }
+
+        window.addEventListener('load', () => {
+            loadStats();
+            initSSE();
+        });
+    </script>
+</body>
+</html>

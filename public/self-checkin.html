@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buku Tamu Digital • Waroeng Latte Madiun</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#112250',
+                        sapphire: '#3B507D',
+                        warmTaupe: '#BEB7A7',
+                        champagne: '#E7E2CE',
+                        ivory: '#F5F4F0'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-navy text-ivory flex flex-col justify-between selection:bg-champagne selection:text-navy px-4 py-6">
+
+    <!-- Card Container -->
+    <div class="max-w-md mx-auto w-full luxury-panel p-6 sm:p-8 rounded-3xl border border-champagne/40 space-y-6 shadow-2xl relative overflow-hidden">
+        
+        <!-- Header Banner -->
+        <div class="text-center space-y-2 pb-4 border-b border-warmTaupe/20">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-sapphire to-champagne p-0.5 shadow-lg mx-auto">
+                <div class="w-full h-full bg-navy rounded-[14px] flex items-center justify-center">
+                    <i class="fa-solid fa-gem text-champagne text-2xl"></i>
+                </div>
+            </div>
+            <div class="text-[10px] font-bold tracking-widest text-warmTaupe uppercase mt-2">BUKU TAMU DIGITAL RESMI</div>
+            <h1 class="text-xl font-extrabold text-champagne font-luxury tracking-wide">MENEMBUS BATAS DIGITAL</h1>
+            <p class="text-xs text-ivory/80">Kolaborasi Talenta Muda & Artificial Intelligence</p>
+            
+            <div class="p-2.5 rounded-xl bg-sapphire/30 border border-warmTaupe/25 text-[11px] text-champagne space-y-0.5 mt-2">
+                <p class="font-bold"><i class="fa-regular fa-calendar-check mr-1"></i> Rabu, 11 November 2026 • 10.00 WIB</p>
+                <p class="text-ivory"><i class="fa-solid fa-location-dot text-champagne mr-1"></i> Waroeng Latte, Jl. Cokroaminoto No.88, Madiun</p>
+            </div>
+        </div>
+
+        <!-- Form Verification -->
+        <form id="selfCheckinForm" onsubmit="submitSelfCheckin(event)" class="space-y-4 text-xs">
+            
+            <!-- Mode Toggle Tabs (Daftar / Tambahan Baru) -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between text-ivory font-semibold">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-building text-champagne"></i> Asal Instansi / Perusahaan *</span>
+                    <button type="button" onclick="toggleCustomMode()" id="btnToggleMode" class="text-[10px] text-champagne hover:underline flex items-center gap-1">
+                        <i class="fa-solid fa-plus-circle"></i> Undangan Tambahan?
+                    </button>
+                </div>
+
+                <!-- 1. Dropdown Selection for Pre-registered Institutions -->
+                <div id="dropdownContainer">
+                    <select id="selectInstitution" onchange="handleSelectChange()" class="w-full px-3.5 py-3 bg-navy border border-warmTaupe/40 rounded-xl text-ivory focus:outline-none focus:border-champagne text-xs font-semibold">
+                        <option value="">-- Pilih Instansi / Perusahaan --</option>
+                    </select>
+                </div>
+
+                <!-- 2. Manual Input for Additional / Unlisted Institutions -->
+                <div id="customInstitutionBox" class="hidden space-y-2.5 p-3.5 rounded-2xl bg-sapphire/30 border border-champagne/40">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-champagne flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-circle-plus"></i> Input Instansi / Perusahaan Tambahan
+                        </span>
+                        <button type="button" onclick="toggleCustomMode(false)" class="text-[10px] text-warmTaupe hover:text-ivory">
+                            <i class="fa-solid fa-arrow-rotate-left mr-0.5"></i> Pilih dari daftar
+                        </button>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] text-ivory mb-1">Nama Instansi / Perusahaan *</label>
+                        <input type="text" id="customInstitutionInput" placeholder="Contoh: Radar Madiun / Diskominfo / PT XYZ" class="w-full px-3 py-2.5 bg-navy border border-warmTaupe/40 rounded-xl text-ivory placeholder-warmTaupe/50 focus:outline-none focus:border-champagne text-xs font-semibold">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] text-ivory mb-1">Kategori / Sektor Usaha (Opsional)</label>
+                        <input type="text" id="customCategoryInput" placeholder="Contoh: Media / Pemerintahan / Swasta / Komunitas" class="w-full px-3 py-2 bg-navy border border-warmTaupe/40 rounded-xl text-ivory placeholder-warmTaupe/50 focus:outline-none focus:border-champagne text-xs">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message / Impression -->
+            <div>
+                <label class="block text-ivory font-semibold mb-1.5 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-pen-fancy text-champagne"></i> Ucapan / Harapan untuk Talenta AI</span>
+                    <span class="text-[10px] text-warmTaupe">Dianalisis AI</span>
+                </label>
+                <textarea id="selfMessage" rows="3" required placeholder="Tuliskan ucapan apresiasi dari instansi Anda untuk pameran ini..." class="w-full p-3 bg-navy border border-warmTaupe/40 rounded-xl text-ivory placeholder-warmTaupe/50 focus:outline-none focus:border-champagne text-xs"></textarea>
+            </div>
+
+            <!-- Quick tag suggestions -->
+            <div class="space-y-1">
+                <p class="text-[10px] text-warmTaupe">Pilihan ucapan cepat:</p>
+                <div class="flex flex-wrap gap-1.5">
+                    <button type="button" onclick="setMsg('Selamat dan sukses atas pameran AI talenta muda di Waroeng Latte!')" class="px-2 py-1 rounded-lg bg-sapphire/40 hover:bg-sapphire text-champagne text-[10px] border border-warmTaupe/25 transition">
+                        ✨ Selamat & Sukses
+                    </button>
+                    <button type="button" onclick="setMsg('Inovasi luar biasa untuk kemajuan ekosistem digital Madiun!')" class="px-2 py-1 rounded-lg bg-sapphire/40 hover:bg-sapphire text-champagne text-[10px] border border-warmTaupe/25 transition">
+                        🚀 Maju Madiun Digital
+                    </button>
+                    <button type="button" onclick="setMsg('Bangga bermitra dan melihat karya talenta AI muda Indonesia!')" class="px-2 py-1 rounded-lg bg-sapphire/40 hover:bg-sapphire text-champagne text-[10px] border border-warmTaupe/25 transition">
+                        🔥 Bangga Talenta Muda
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" id="btnSubmitSelf" class="w-full py-3.5 rounded-xl bg-champagne hover:bg-champagne/90 text-navy font-bold text-xs shadow-xl transition flex items-center justify-center gap-2 mt-2">
+                <i class="fa-solid fa-check-double"></i> Konfirmasi Kehadiran Saya
+            </button>
+        </form>
+
+        <!-- Success Notice -->
+        <div id="selfSuccess" class="p-6 rounded-2xl bg-sapphire/30 border border-champagne/60 text-center space-y-3 hidden">
+            <div class="w-12 h-12 rounded-full bg-champagne/20 text-champagne flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h3 id="successInstTitle" class="text-base font-bold text-champagne font-luxury">Terima Kasih!</h3>
+            <p class="text-xs text-ivory">Kedatangan Anda telah terverifikasi dan sambutan resmi telah tampil di Layar Utama Waroeng Latte.</p>
+            <button onclick="resetForm()" class="px-4 py-2 bg-navy border border-warmTaupe/40 text-warmTaupe hover:text-champagne rounded-xl text-xs transition">
+                Kembali ke Formulir
+            </button>
+        </div>
+
+    </div>
+
+    <footer class="text-center text-[10px] text-warmTaupe/80 py-4">
+        Exhibition Menembus Batas Digital • Waroeng Latte, Kota Madiun
+    </footer>
+
+    <script>
+        let guestList = [];
+        let isCustomMode = false;
+
+        async function loadInstitutions() {
+            try {
+                const res = await fetch('/api/guests');
+                const json = await res.json();
+                if (json.success) {
+                    guestList = json.data;
+                    const select = document.getElementById('selectInstitution');
+                    select.innerHTML = '<option value="">-- Pilih Instansi / Perusahaan --</option>' +
+                        '<option value="__NEW__" class="text-champagne font-bold">➕ Instansi Lainnya (Undangan Tambahan / Belum Terdaftar)</option>' +
+                        guestList.map(g => {
+                            const isChecked = g.status === 'checked_in';
+                            return `<option value="${g.institution}">${g.institution} • (${g.category}) ${isChecked ? '• [Sudah Hadir]' : ''}</option>`;
+                        }).join('');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function handleSelectChange() {
+            const val = document.getElementById('selectInstitution').value;
+            if (val === '__NEW__') {
+                toggleCustomMode(true);
+            }
+        }
+
+        function toggleCustomMode(force) {
+            isCustomMode = typeof force === 'boolean' ? force : !isCustomMode;
+            const dropdown = document.getElementById('dropdownContainer');
+            const customBox = document.getElementById('customInstitutionBox');
+            const toggleBtn = document.getElementById('btnToggleMode');
+
+            if (isCustomMode) {
+                dropdown.classList.add('hidden');
+                customBox.classList.remove('hidden');
+                toggleBtn.innerHTML = `<i class="fa-solid fa-list"></i> Pilih dari daftar`;
+                document.getElementById('customInstitutionInput').focus();
+            } else {
+                dropdown.classList.remove('hidden');
+                customBox.classList.add('hidden');
+                toggleBtn.innerHTML = `<i class="fa-solid fa-plus-circle"></i> Undangan Tambahan?`;
+                document.getElementById('selectInstitution').value = '';
+            }
+        }
+
+        function setMsg(text) {
+            document.getElementById('selfMessage').value = text;
+        }
+
+        async function submitSelfCheckin(e) {
+            e.preventDefault();
+            
+            let institutionName = '';
+            let customCategory = '';
+
+            if (isCustomMode) {
+                institutionName = document.getElementById('customInstitutionInput').value.trim();
+                customCategory = document.getElementById('customCategoryInput').value.trim();
+                if (!institutionName) return alert('Silakan masukkan nama instansi/perusahaan Anda');
+            } else {
+                institutionName = document.getElementById('selectInstitution').value;
+                if (!institutionName || institutionName === '__NEW__') {
+                    return alert('Silakan pilih instansi atau masukkan nama instansi tambahan');
+                }
+            }
+
+            const message = document.getElementById('selfMessage').value;
+
+            const btn = document.getElementById('btnSubmitSelf');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memverifikasi Kehadiran...`;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/checkin/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        institution: institutionName,
+                        category: customCategory || 'Mitra Tambahan',
+                        message: message
+                    })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    document.getElementById('selfCheckinForm').classList.add('hidden');
+                    const succ = document.getElementById('selfSuccess');
+                    succ.classList.remove('hidden');
+                    document.getElementById('successInstTitle').innerText = `Selamat Datang, ${json.data.guest.institution}!`;
+                } else {
+                    alert(json.error || 'Gagal memverifikasi');
+                }
+            } catch (err) {
+                alert('Terjadi kesalahan jaringan.');
+            } finally {
+                btn.innerHTML = `<i class="fa-solid fa-check-double"></i> Konfirmasi Kehadiran Saya`;
+                btn.disabled = false;
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('selfSuccess').classList.add('hidden');
+            document.getElementById('selfCheckinForm').classList.remove('hidden');
+            document.getElementById('selfCheckinForm').reset();
+            toggleCustomMode(false);
+            loadInstitutions();
+        }
+
+        window.addEventListener('load', loadInstitutions);
+    </script>
+</body>
+</html>

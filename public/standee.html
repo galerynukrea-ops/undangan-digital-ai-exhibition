@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standee Barcode Kedatangan • Samsung Tab S6 Lite Desk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#112250',
+                        sapphire: '#3B507D',
+                        warmTaupe: '#BEB7A7',
+                        champagne: '#E7E2CE',
+                        ivory: '#F5F4F0'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .standee-frame {
+            width: 100%;
+            max-width: 530px;
+            background: #112250;
+            color: #F5F4F0;
+            border: 2px solid #E7E2CE;
+            box-shadow: 0 15px 45px rgba(17, 34, 80, 0.6);
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .standee-frame::before {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border: 1px solid #BEB7A7;
+            border-radius: 14px;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        @media print {
+            body {
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .standee-container {
+                padding: 0 !important;
+                margin: 0 auto !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                height: 100vh !important;
+            }
+            .standee-frame {
+                border: 2px solid #112250 !important;
+                box-shadow: none !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-navy text-ivory min-h-screen flex flex-col justify-between selection:bg-champagne selection:text-navy">
+
+    <!-- Top Toolbar (Hidden on print) -->
+    <header class="no-print sticky top-0 z-40 bg-navy/95 backdrop-blur border-b border-warmTaupe/30 p-3">
+        <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center space-x-2.5">
+                <a href="/" class="w-8 h-8 rounded-xl bg-sapphire/50 hover:bg-sapphire border border-warmTaupe/30 flex items-center justify-center text-ivory transition" title="Dashboard">
+                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                </a>
+                <div>
+                    <h1 class="text-xs sm:text-sm font-bold text-champagne font-luxury flex items-center gap-1.5">
+                        MEJA REGISTRASI • TAB S6 LITE
+                        <span class="text-[9px] font-sans font-semibold px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            Touch Active
+                        </span>
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="promptChangeIp()" class="px-2.5 py-1 bg-navy border border-warmTaupe/40 text-champagne hover:bg-sapphire rounded-lg text-[11px] font-semibold transition">
+                    <i class="fa-solid fa-network-wired"></i> IP Wi-Fi
+                </button>
+                <a id="btnPdfDownload" href="/api/venue/standee/pdf" class="px-2.5 py-1 bg-sapphire text-champagne border border-champagne/40 rounded-lg text-[11px] font-semibold transition">
+                    <i class="fa-solid fa-file-pdf"></i> Cetak A4
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Standee Showcase (Optimized for Samsung Tab S6 Lite) -->
+    <main class="standee-container flex-1 flex items-center justify-center p-4 sm:p-6">
+        
+        <div class="standee-frame p-6 sm:p-8 flex flex-col justify-between text-center space-y-4">
+            
+            <!-- Header Badge -->
+            <div class="space-y-1 z-10">
+                <div class="text-[8.5px] font-bold tracking-widest text-warmTaupe uppercase">OFFICIAL GUESTBOOK REGISTRATION</div>
+                <h1 class="text-xl sm:text-2xl font-extrabold text-champagne font-luxury tracking-wide">
+                    MENEMBUS BATAS DIGITAL
+                </h1>
+                <p class="text-[11px] text-ivory/80">Kolaborasi Talenta Muda & Artificial Intelligence</p>
+                
+                <div class="pt-1">
+                    <span class="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sapphire text-champagne border border-champagne/40 inline-block shadow">
+                        Waroeng Latte Madiun • 11 November 2026
+                    </span>
+                </div>
+            </div>
+
+            <!-- Call to action text -->
+            <div class="space-y-0.5 z-10">
+                <h2 class="text-sm sm:text-base font-bold text-ivory font-luxury">
+                    1. PINDAI BARCODE DENGAN HP ANDA
+                </h2>
+                <p class="text-[11px] text-warmTaupe max-w-xs mx-auto">
+                    Arahkan kamera smartphone ke barcode di bawah ini untuk konfirmasi kehadiran instansi Anda.
+                </p>
+            </div>
+
+            <!-- Large Master Barcode Centerpiece -->
+            <div class="my-auto z-10 py-0.5">
+                <div class="bg-ivory p-3 rounded-2xl inline-block shadow-2xl border-2 border-champagne mx-auto">
+                    <img id="standeeBarcodeImg" src="/api/venue/barcode/png" alt="Master Barcode Depan Venue" class="w-48 h-48 sm:w-56 sm:h-56 mx-auto" />
+                </div>
+                
+                <div class="mt-2">
+                    <div id="checkinUrlText" class="text-[11px] font-mono font-bold tracking-wider text-champagne bg-navy/80 px-3 py-0.5 rounded-lg border border-warmTaupe/30 inline-block">
+                        Memuat IP laptop...
+                    </div>
+                </div>
+            </div>
+
+            <!-- INTERACTIVE BUTTON FOR TAB S6 LITE TOUCHSCREEN -->
+            <div class="z-10 pt-1 space-y-2">
+                <div class="flex items-center justify-center gap-2">
+                    <div class="h-px bg-warmTaupe/30 flex-1"></div>
+                    <span class="text-[10px] uppercase font-bold text-warmTaupe tracking-widest">ATAU OPSI LANGSUNG</span>
+                    <div class="h-px bg-warmTaupe/30 flex-1"></div>
+                </div>
+
+                <button onclick="openQuickCheckinModal()" class="w-full py-3 rounded-xl bg-gradient-to-r from-champagne via-champagne to-warmTaupe hover:opacity-95 text-navy font-bold text-xs shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-hand-pointer text-sm animate-bounce"></i> Sentuh di Sini untuk Check-In Langsung di Tablet
+                </button>
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t border-warmTaupe/25 pt-2 z-10 text-[8.5px] text-warmTaupe space-y-0.5">
+                <p class="font-bold text-champagne">PETUGAS PENERIMA TAMU KAMI SIAP MEMBANTU ANDA</p>
+                <p>Digital Artificial Intelligence Exhibition • Waroeng Latte Madiun</p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Modal Quick Check-In on Tab S6 Lite (For Direct Touchscreen Checkin) -->
+    <div id="quickCheckinModal" class="fixed inset-0 z-50 bg-navy/90 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="luxury-panel rounded-3xl border border-champagne/50 max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b border-warmTaupe/20">
+                <div>
+                    <h3 class="text-sm font-bold text-champagne font-luxury flex items-center gap-2">
+                        <i class="fa-solid fa-id-card text-champagne"></i> Check-In Meja Registrasi
+                    </h3>
+                    <p class="text-[10px] text-warmTaupe">Sentuh nama instansi untuk menyambut di layar Surface sebelah</p>
+                </div>
+                <button onclick="closeQuickCheckinModal()" class="text-warmTaupe hover:text-ivory text-sm p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="quickForm" onsubmit="submitQuickCheckin(event)" class="space-y-3.5 text-xs">
+                <!-- Dropdown / Custom Switcher -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between font-semibold">
+                        <label class="text-ivory">Pilih Instansi / Perusahaan *</label>
+                        <button type="button" onclick="toggleQuickCustom()" id="btnQuickMode" class="text-[10px] text-champagne hover:underline">
+                            + Instansi Tambahan?
+                        </button>
+                    </div>
+
+                    <div id="quickSelectBox">
+                        <select id="quickSelectInst" class="w-full px-3 py-2.5 bg-navy border border-warmTaupe/40 rounded-xl text-ivory font-semibold text-xs focus:outline-none focus:border-champagne">
+                            <option value="">-- Pilih Instansi --</option>
+                        </select>
+                    </div>
+
+                    <div id="quickInputBox" class="hidden space-y-2">
+                        <input type="text" id="quickCustomInput" placeholder="Ketik nama instansi baru..." class="w-full px-3 py-2 bg-navy border border-warmTaupe/40 rounded-xl text-ivory font-semibold text-xs focus:outline-none focus:border-champagne">
+                    </div>
+                </div>
+
+                <!-- Ucapan Singkat -->
+                <div>
+                    <label class="block text-ivory font-semibold mb-1">Pesan Apresiasi untuk Talenta AI</label>
+                    <textarea id="quickMessage" rows="2" placeholder="Tulis ucapan singkat..." class="w-full p-2.5 bg-navy border border-warmTaupe/40 rounded-xl text-ivory placeholder-warmTaupe/50 text-xs focus:outline-none focus:border-champagne"></textarea>
+                    
+                    <div class="flex flex-wrap gap-1 mt-1.5">
+                        <button type="button" onclick="setQuickMsg('Selamat dan sukses atas pameran AI talenta muda!')" class="px-2 py-0.5 rounded bg-sapphire/40 text-[9.5px] text-champagne border border-warmTaupe/25">
+                            ✨ Sukses & Menginspirasi
+                        </button>
+                        <button type="button" onclick="setQuickMsg('Bangga dengan inovasi digital anak muda Madiun!')" class="px-2 py-0.5 rounded bg-sapphire/40 text-[9.5px] text-champagne border border-warmTaupe/25">
+                            🚀 Bangga Madiun AI
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeQuickCheckinModal()" class="px-3.5 py-2 rounded-xl bg-sapphire/40 text-warmTaupe text-xs">
+                        Batal
+                    </button>
+                    <button type="submit" id="btnSubmitQuick" class="px-5 py-2 rounded-xl bg-champagne text-navy font-bold text-xs shadow-md">
+                        Konfirmasi & Sambut di Layar Sebelah
+                    </button>
+                </div>
+            </form>
+
+            <div id="quickSuccessNotice" class="hidden p-4 rounded-2xl bg-sapphire/50 border border-champagne/60 text-center space-y-2">
+                <i class="fa-solid fa-circle-check text-champagne text-2xl"></i>
+                <h4 id="quickSuccName" class="text-sm font-bold text-champagne font-luxury">Terverifikasi!</h4>
+                <p class="text-[11px] text-ivory">Lihat layar Surface Pro di samping Anda, sambutan resmi telah tampil!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentIp = '192.168.18.10';
+        let isQuickCustom = false;
+        let guestList = [];
+
+        async function fetchNetworkInfo() {
+            try {
+                const res = await fetch('/api/network-info');
+                const json = await res.json();
+                if (json.success) {
+                    currentIp = json.localIp;
+                    updateBarcodeDisplay(currentIp);
+                }
+            } catch (e) {
+                updateBarcodeDisplay(currentIp);
+            }
+        }
+
+        function updateBarcodeDisplay(ip) {
+            const url = `http://${ip}:3000/checkin`;
+            document.getElementById('checkinUrlText').innerText = url;
+            
+            const img = document.getElementById('standeeBarcodeImg');
+            img.src = `/api/venue/barcode/png?ip=${encodeURIComponent(ip)}&t=${Date.now()}`;
+
+            const pdfBtn = document.getElementById('btnPdfDownload');
+            pdfBtn.href = `/api/venue/standee/pdf?ip=${encodeURIComponent(ip)}`;
+        }
+
+        function promptChangeIp() {
+            const newIp = prompt('Masukkan IP Laptop saat terhubung ke Wi-Fi Venue:', currentIp);
+            if (newIp && newIp.trim() !== '') {
+                currentIp = newIp.trim();
+                updateBarcodeDisplay(currentIp);
+            }
+        }
+
+        // Quick Modal logic on Tab S6 Lite
+        async function openQuickCheckinModal() {
+            document.getElementById('quickCheckinModal').classList.remove('hidden');
+            document.getElementById('quickForm').classList.remove('hidden');
+            document.getElementById('quickSuccessNotice').classList.add('hidden');
+
+            try {
+                const res = await fetch('/api/guests');
+                const json = await res.json();
+                if (json.success) {
+                    guestList = json.data;
+                    const select = document.getElementById('quickSelectInst');
+                    select.innerHTML = '<option value="">-- Pilih Instansi / Perusahaan --</option>' +
+                        guestList.map(g => {
+                            const isChecked = g.status === 'checked_in';
+                            return `<option value="${g.institution}">${g.institution} • (${g.category}) ${isChecked ? '• [Sudah Hadir]' : ''}</option>`;
+                        }).join('');
+                }
+            } catch (e) {}
+        }
+
+        function closeQuickCheckinModal() {
+            document.getElementById('quickCheckinModal').classList.add('hidden');
+        }
+
+        function toggleQuickCustom() {
+            isQuickCustom = !isQuickCustom;
+            const selectBox = document.getElementById('quickSelectBox');
+            const inputBox = document.getElementById('quickInputBox');
+            const btn = document.getElementById('btnQuickMode');
+
+            if (isQuickCustom) {
+                selectBox.classList.add('hidden');
+                inputBox.classList.remove('hidden');
+                btn.innerText = 'Pilih dari daftar';
+                document.getElementById('quickCustomInput').focus();
+            } else {
+                selectBox.classList.remove('hidden');
+                inputBox.classList.add('hidden');
+                btn.innerText = '+ Instansi Tambahan?';
+            }
+        }
+
+        function setQuickMsg(text) {
+            document.getElementById('quickMessage').value = text;
+        }
+
+        async function submitQuickCheckin(e) {
+            e.preventDefault();
+            let targetInst = '';
+            if (isQuickCustom) {
+                targetInst = document.getElementById('quickCustomInput').value.trim();
+                if (!targetInst) return alert('Ketik nama instansi terlebih dahulu');
+            } else {
+                targetInst = document.getElementById('quickSelectInst').value;
+                if (!targetInst) return alert('Silakan pilih nama instansi');
+            }
+
+            const msg = document.getElementById('quickMessage').value;
+            const btn = document.getElementById('btnSubmitQuick');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyambung...`;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/checkin/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ institution: targetInst, message: msg })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    document.getElementById('quickForm').classList.add('hidden');
+                    const succ = document.getElementById('quickSuccessNotice');
+                    succ.classList.remove('hidden');
+                    document.getElementById('quickSuccName').innerText = `Selamat Datang, ${json.data.guest.institution}!`;
+
+                    setTimeout(() => {
+                        closeQuickCheckinModal();
+                        document.getElementById('quickForm').reset();
+                    }, 3500);
+                } else {
+                    alert(json.error || 'Gagal memverifikasi');
+                }
+            } catch (err) {
+                alert('Gagal menghubungi server.');
+            } finally {
+                btn.innerHTML = `Konfirmasi & Sambut di Layar Sebelah`;
+                btn.disabled = false;
+            }
+        }
+
+        window.addEventListener('load', fetchNetworkInfo);
+    </script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+/* Luxury Navy & Champagne Theme for Menembus Batas Digital */
+/* Official Palette:
+   - Navy Blue:   #112250
+   - Sapphire:    #3B507D
+   - Warm Taupe:  #BEB7A7
+   - Champagne:   #E7E2CE
+   - Ivory:       #F5F4F0
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --navy-blue: #112250;
+    --navy-dark: #0a1432;
+    --sapphire: #3B507D;
+    --warm-taupe: #BEB7A7;
+    --champagne: #E7E2CE;
+    --ivory: #F5F4F0;
+    --card-surface: rgba(27, 45, 93, 0.75);
+    --border-champagne: rgba(231, 226, 206, 0.3);
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--navy-blue);
+    color: var(--ivory);
+}
+
+h1, h2, h3, .font-heading, .font-luxury {
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.04em;
+}
+
+/* Glass Panels with Luxury Champagne & Sapphire Glow */
+.luxury-panel {
+    background: var(--card-surface);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border-champagne);
+    box-shadow: 0 10px 30px rgba(10, 20, 50, 0.5);
+}
+
+.luxury-panel-glow {
+    background: rgba(27, 45, 93, 0.9);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(231, 226, 206, 0.45);
+    box-shadow: 0 0 35px rgba(59, 80, 125, 0.5), inset 0 0 15px rgba(231, 226, 206, 0.08);
+}
+
+/* Hide Scrollbars cleanly */
+.no-scrollbar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+
+/* Smooth Auto-scrolling Ticker */
+.ticker-mask {
+    overflow: hidden;
+    position: relative;
+    mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+}
+
+.ticker-track {
+    display: inline-flex;
+    white-space: nowrap;
+    will-change: transform;
+    animation: marqueeAnimation 28s linear infinite;
+}
+
+.ticker-track:hover {
+    animation-play-state: paused;
+}
+
+@keyframes marqueeAnimation {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* Scanner HUD */
+.scanner-hud-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 2px solid var(--sapphire);
+}
+
+.scanner-laser {
+    position: absolute;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--warm-taupe), var(--champagne), transparent);
+    box-shadow: 0 0 15px var(--champagne), 0 0 25px var(--warm-taupe);
+    top: 0;
+    animation: scanAnim 2.2s ease-in-out infinite alternate;
+    z-index: 10;
+}
+
+@keyframes scanAnim {
+    0% { top: 5%; opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { top: 95%; opacity: 0.3; }
+}
+
+/* Corner Reticle */
+.corner-reticle {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    z-index: 12;
+}
+.corner-tl { top: 12px; left: 12px; border-top: 3px solid var(--champagne); border-left: 3px solid var(--champagne); }
+.corner-tr { top: 12px; right: 12px; border-top: 3px solid var(--champagne); border-right: 3px solid var(--champagne); }
+.corner-bl { bottom: 12px; left: 12px; border-bottom: 3px solid var(--champagne); border-left: 3px solid var(--champagne); }
+.corner-br { bottom: 12px; right: 12px; border-bottom: 3px solid var(--champagne); border-right: 3px solid var(--champagne); }
+
+/* Pulse Glow Keyframe */
+@keyframes luxuryPulse {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(231, 226, 206, 0.2), inset 0 0 15px rgba(231, 226, 206, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 45px rgba(231, 226, 206, 0.45), inset 0 0 30px rgba(231, 226, 206, 0.25);
+    }
+}
+
+.pulse-glow {
+    animation: luxuryPulse 2.8s infinite;
+}
+
+/* Print Specific Rules */
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #112250 !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+    .print-card {
+        page-break-after: always;
+        break-inside: avoid;
+        box-shadow: none !important;
+        margin: 0 auto;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

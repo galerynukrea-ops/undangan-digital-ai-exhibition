@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Verifikasi Barcode • Menembus Batas Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Local Offline Camera Scanner -->
+    <script src="/vendor/html5-qrcode.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: '#112250',
+                        sapphire: '#3B507D',
+                        warmTaupe: '#BEB7A7',
+                        champagne: '#E7E2CE',
+                        ivory: '#F5F4F0'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-navy text-ivory flex flex-col selection:bg-champagne selection:text-navy">
+
+    <!-- Header -->
+    <header class="border-b border-warmTaupe/25 bg-navy/90 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between">
+            <div class="flex items-center space-x-3.5">
+                <a href="/" class="w-9 h-9 rounded-xl bg-sapphire/50 hover:bg-sapphire border border-warmTaupe/30 flex items-center justify-center text-ivory transition" title="Dashboard">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="text-sm font-bold tracking-wider text-ivory font-luxury flex items-center gap-2">
+                        MEJA VERIFIKASI BARCODE
+                        <span class="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full bg-champagne/15 text-champagne border border-champagne/30">Active Desk</span>
+                    </h1>
+                    <p class="text-[11px] text-warmTaupe">Pindai Barcode / QR Kartu Undangan Tamu</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <span id="scannerStatusText" class="text-xs text-champagne flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-champagne animate-ping"></span> Scanner Siaga
+                </span>
+                <a href="/live" target="_blank" class="px-3 py-1 rounded-xl text-xs font-semibold bg-sapphire/60 hover:bg-sapphire text-champagne border border-champagne/30 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-display"></i> Buka Live Wall
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Scanner Container -->
+    <main class="max-w-4xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left: Camera Viewport (7 cols) -->
+        <div class="md:col-span-7 space-y-4">
+            <div class="luxury-panel p-4 rounded-2xl border border-warmTaupe/25 space-y-3">
+                <div class="flex items-center justify-between text-xs text-warmTaupe">
+                    <span class="flex items-center gap-1.5 font-medium text-ivory">
+                        <i class="fa-solid fa-camera text-champagne"></i> Viewport Kamera Pemindai
+                    </span>
+                    <button onclick="toggleCamera()" id="btnToggleCamera" class="text-[11px] text-champagne hover:underline">
+                        Mulai / Ganti Kamera
+                    </button>
+                </div>
+
+                <!-- Scanner Viewport Frame -->
+                <div class="scanner-hud-container bg-navy-dark aspect-square max-h-[380px] w-full relative flex items-center justify-center overflow-hidden">
+                    <div id="qr-reader" class="w-full h-full"></div>
+                    <div class="scanner-laser"></div>
+                    <div class="corner-reticle corner-tl"></div>
+                    <div class="corner-reticle corner-tr"></div>
+                    <div class="corner-reticle corner-bl"></div>
+                    <div class="corner-reticle corner-br"></div>
+                </div>
+
+                <!-- Manual Token Fallback -->
+                <div class="pt-2 border-t border-warmTaupe/20">
+                    <p class="text-[11px] text-warmTaupe mb-1.5">Jika kamera terhalang, input kode token manual:</p>
+                    <div class="flex gap-2">
+                        <input id="manualTokenInput" type="text" placeholder="Contoh: MBD-A1B2-C3D4" class="flex-1 px-3 py-2 bg-navy border border-warmTaupe/30 rounded-xl text-xs text-ivory placeholder-warmTaupe/50 font-mono uppercase focus:outline-none focus:border-champagne">
+                        <button onclick="handleManualToken()" class="px-4 py-2 bg-champagne hover:bg-champagne/90 text-navy font-bold text-xs rounded-xl shadow-md transition">
+                            Cek Instansi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Guest Verification & Message Form (5 cols) -->
+        <div class="md:col-span-5 space-y-4">
+            <!-- Idle Placeholder -->
+            <div id="idleBox" class="luxury-panel p-8 rounded-2xl border border-warmTaupe/25 text-center space-y-4 py-16">
+                <div class="w-16 h-16 rounded-2xl bg-sapphire/30 border border-warmTaupe/30 flex items-center justify-center mx-auto text-champagne text-2xl">
+                    <i class="fa-solid fa-barcode"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-champagne font-luxury">Arahkan Barcode Tamu</h3>
+                    <p class="text-xs text-warmTaupe mt-1 max-w-xs mx-auto">
+                        Posisikan barcode pada kartu undangan fisik tamu ke dalam kotak pandu pemindai.
+                    </p>
+                </div>
+                <div class="text-[11px] text-warmTaupe bg-navy/80 py-2 px-3 rounded-xl border border-warmTaupe/20">
+                    <i class="fa-solid fa-gem text-champagne mr-1"></i> Verifikasi kehadiran instansi & live display aktif otomatis.
+                </div>
+            </div>
+
+            <!-- Active Guest Card -->
+            <div id="guestActiveCard" class="luxury-panel p-5 rounded-2xl border border-champagne/50 shadow-2xl space-y-4 hidden">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <span id="guestCategoryBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-champagne/20 text-champagne border border-champagne/40">
+                            MITRA
+                        </span>
+                        <h2 id="guestInstitution" class="text-lg font-bold text-ivory font-luxury mt-2">Nama Instansi</h2>
+                        <p class="text-xs text-warmTaupe">Tamu Undangan Resmi</p>
+                    </div>
+                    <div class="text-right">
+                        <span id="guestStatusPill" class="text-[10px] font-semibold text-champagne bg-champagne/15 px-2 py-0.5 rounded border border-champagne/30">
+                            Siap Verifikasi
+                        </span>
+                        <p id="guestToken" class="text-[10px] font-mono text-warmTaupe mt-1">MBD-0000</p>
+                    </div>
+                </div>
+
+                <div class="border-t border-warmTaupe/20 pt-3 space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-ivory mb-1 flex items-center justify-between">
+                            <span><i class="fa-solid fa-pen-fancy text-champagne mr-1"></i> Pesan / Kesan untuk Talenta AI</span>
+                            <span class="text-[10px] text-warmTaupe">Dianalisis AI</span>
+                        </label>
+                        <textarea id="guestMessageInput" rows="3" placeholder="Tuliskan ucapan atau harapan dari instansi Anda untuk pameran ini..." class="w-full p-2.5 bg-navy border border-warmTaupe/30 rounded-xl text-xs text-ivory placeholder-warmTaupe/50 focus:outline-none focus:border-champagne"></textarea>
+                    </div>
+
+                    <!-- Quick Pre-made Impression Chips -->
+                    <div class="space-y-1">
+                        <p class="text-[10px] text-warmTaupe">Pilihan pesan cepat:</p>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button type="button" onclick="setQuickMessage('Karya talenta mudanya sangat inovatif dan berdaya saing tinggi!')" class="px-2.5 py-1 rounded-lg bg-sapphire/40 hover:bg-sapphire/70 text-champagne text-[10px] border border-warmTaupe/25 transition">
+                                ✨ Inovatif & Berdaya Saing
+                            </button>
+                            <button type="button" onclick="setQuickMessage('Bangga melihat sinergi luar biasa talenta muda dan AI!')" class="px-2.5 py-1 rounded-lg bg-sapphire/40 hover:bg-sapphire/70 text-champagne text-[10px] border border-warmTaupe/25 transition">
+                                🚀 Sinergi Luar Biasa
+                            </button>
+                            <button type="button" onclick="setQuickMessage('Menembus batas digital untuk kemajuan industri masa depan!')" class="px-2.5 py-1 rounded-lg bg-sapphire/40 hover:bg-sapphire/70 text-champagne text-[10px] border border-warmTaupe/25 transition">
+                                🌟 Maju Terus Talenta AI
+                            </button>
+                        </div>
+                    </div>
+
+                    <button id="btnConfirmCheckIn" onclick="submitCheckIn()" class="w-full py-2.5 rounded-xl bg-champagne hover:bg-champagne/90 text-navy font-bold text-xs shadow-lg transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check-double"></i> Verifikasi Kedatangan & Kirim ke Layar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Success Splash -->
+            <div id="successNotice" class="luxury-panel p-5 rounded-2xl border border-champagne/60 bg-sapphire/40 text-center space-y-2 hidden">
+                <div class="w-12 h-12 rounded-full bg-champagne/20 text-champagne flex items-center justify-center mx-auto text-xl">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h4 id="successTitle" class="text-sm font-bold text-champagne font-luxury">Kedatangan Terverifikasi!</h4>
+                <p id="successDesc" class="text-xs text-ivory">Instansi telah dicatat hadir dan ucapan diproyeksikan ke Live Wall.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        let html5QrCode = null;
+        let isScanning = false;
+        let currentGuest = null;
+
+        function playBeep(freq = 880, duration = 0.12) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        async function initScanner() {
+            try {
+                html5QrCode = new Html5Qrcode("qr-reader");
+                const cameras = await Html5Qrcode.getCameras();
+                if (cameras && cameras.length) {
+                    const cameraId = cameras[cameras.length - 1].id;
+                    startScanning(cameraId);
+                }
+            } catch (err) {
+                console.warn('Camera error or permission denied:', err);
+                document.getElementById('scannerStatusText').innerHTML = `<span class="text-champagne">Gunakan input token manual</span>`;
+            }
+        }
+
+        function startScanning(cameraId) {
+            html5QrCode.start(
+                cameraId,
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText) => {
+                    handleScannedCode(decodedText);
+                },
+                (errorMessage) => {}
+            ).then(() => {
+                isScanning = true;
+            }).catch(err => {
+                console.error("Start scanning failed", err);
+            });
+        }
+
+        let isCooldown = false;
+        async function handleScannedCode(code) {
+            if (isCooldown) return;
+            isCooldown = true;
+            setTimeout(() => { isCooldown = false; }, 2000);
+
+            playBeep(940, 0.15);
+            lookupGuest(code.trim());
+        }
+
+        function handleManualToken() {
+            const token = document.getElementById('manualTokenInput').value.trim();
+            if (!token) return alert('Masukkan token barcode terlebih dahulu');
+            lookupGuest(token);
+        }
+
+        async function lookupGuest(token) {
+            try {
+                const res = await fetch(`/api/checkin/lookup/${encodeURIComponent(token)}`);
+                const json = await res.json();
+                if (json.success) {
+                    showGuestCard(json.data);
+                } else {
+                    alert(json.error || 'Token barcode tidak ditemukan');
+                }
+            } catch (err) {
+                alert('Gagal memeriksa data instansi');
+            }
+        }
+
+        function showGuestCard(guest) {
+            currentGuest = guest;
+            document.getElementById('idleBox').classList.add('hidden');
+            document.getElementById('successNotice').classList.add('hidden');
+            const card = document.getElementById('guestActiveCard');
+            card.classList.remove('hidden');
+
+            document.getElementById('guestInstitution').innerText = guest.institution;
+            document.getElementById('guestToken').innerText = guest.qr_token;
+            
+            const badge = document.getElementById('guestCategoryBadge');
+            badge.innerText = guest.category || 'MITRA';
+
+            const isAlready = guest.status === 'checked_in';
+            const statusPill = document.getElementById('guestStatusPill');
+            if (isAlready) {
+                statusPill.innerText = 'Sudah Pernah Hadir';
+                statusPill.className = 'text-[10px] font-semibold text-warmTaupe bg-sapphire/40 px-2 py-0.5 rounded border border-warmTaupe/30';
+            } else {
+                statusPill.innerText = 'Siap Verifikasi';
+                statusPill.className = 'text-[10px] font-semibold text-champagne bg-champagne/15 px-2 py-0.5 rounded border border-champagne/30';
+            }
+
+            if (guest.existingMessage) {
+                document.getElementById('guestMessageInput').value = guest.existingMessage.message;
+            } else {
+                document.getElementById('guestMessageInput').value = '';
+            }
+        }
+
+        function setQuickMessage(text) {
+            document.getElementById('guestMessageInput').value = text;
+        }
+
+        async function submitCheckIn() {
+            if (!currentGuest) return;
+            const btn = document.getElementById('btnConfirmCheckIn');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memproses & Menganalisis AI...`;
+            btn.disabled = true;
+
+            const message = document.getElementById('guestMessageInput').value;
+
+            try {
+                const res = await fetch('/api/checkin/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: currentGuest.qr_token,
+                        message: message
+                    })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    playBeep(1200, 0.25);
+                    document.getElementById('guestActiveCard').classList.add('hidden');
+                    const notice = document.getElementById('successNotice');
+                    notice.classList.remove('hidden');
+                    document.getElementById('successTitle').innerText = `Selamat Datang, ${currentGuest.institution}!`;
+                    document.getElementById('successDesc').innerText = `Pesan ucapan: "${json.data.message.text}" (${json.data.message.emotion})`;
+
+                    setTimeout(() => {
+                        notice.classList.add('hidden');
+                        document.getElementById('idleBox').classList.remove('hidden');
+                        document.getElementById('manualTokenInput').value = '';
+                        currentGuest = null;
+                    }, 4000);
+                } else {
+                    alert(json.error || 'Gagal memproses verifikasi kedatangan');
+                }
+            } catch (err) {
+                alert('Gagal menghubungi server.');
+            } finally {
+                btn.innerHTML = `<i class="fa-solid fa-check-double"></i> Verifikasi Kedatangan & Kirim ke Layar`;
+                btn.disabled = false;
+            }
+        }
+
+        window.addEventListener('load', () => {
+            initScanner();
+        });
+    </script>
+</body>
+</html>
