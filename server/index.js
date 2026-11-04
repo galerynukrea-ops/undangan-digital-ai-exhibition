@@ -7,7 +7,8 @@ const os = require('node:os');
 const multer = require('multer');
 const csv = require('csv-parser');
 const QRCode = require('qrcode');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('node:crypto');
+const uuidv4 = () => crypto.randomUUID();
 
 const { db, generateToken } = require('./db');
 const { analyzeSentiment } = require('./aiService');

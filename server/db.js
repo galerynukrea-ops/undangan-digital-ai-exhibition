@@ -1,7 +1,7 @@
 const path = require('node:path');
 const fs = require('node:fs');
-const { v4: uuidv4 } = require('uuid');
 const crypto = require('node:crypto');
+const uuidv4 = () => crypto.randomUUID();
 
 function generateToken() {
     const randomHex = crypto.randomBytes(4).toString('hex').toUpperCase();
