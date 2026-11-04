@@ -8,18 +8,12 @@ function generateToken() {
     return `MBD-${randomHex.slice(0, 4)}-${randomHex.slice(4)}`;
 }
 
-// 10 Real Verified Institutions in Madiun
-const sampleInstitutions = [
-    { institution: 'Dinas KUKM', category: 'Instansi Pemerintah (Pembina UMKM)' },
-    { institution: 'Votel Kartika', category: 'Hospitality & Hotel' },
-    { institution: 'Bluder Cokro', category: 'Industri Kuliner Khas Madiun' },
-    { institution: 'Jiwan Oli', category: 'Bengkel Otomotif & Perawatan Mobil' },
-    { institution: 'MPOINT', category: 'Bengkel & Servis Motor' },
-    { institution: 'Kelurahan Josenan', category: 'Pemerintahan Daerah (Kelurahan)' },
-    { institution: 'Maju Hardware', category: 'Pusat Retail Komputer & Gadget IT' },
-    { institution: 'Hotel Setia Budi', category: 'Hospitality & Hotel' },
-    { institution: 'Yessles (Yesless)', category: 'Lembaga Bimbingan Belajar & Les Privat' },
-    { institution: 'Neo Kramik', category: 'Pusat Grosir Granit Keramik & Bangunan' }
+// 4 Realistic Sample Guests for Madiun Exhibition (Name + Institution)
+const sampleGuests = [
+    { name: 'Bpk. Bambang Sutrisno', institution: 'Dinas KUKM Kota Madiun', category: 'Instansi Pemerintah (Pembina UMKM)' },
+    { name: 'Ibu Rina Wijaya', institution: 'Bluder Cokro Madiun', category: 'Industri Kuliner Khas Madiun' },
+    { name: 'Bpk. Hendro Gunawan', institution: 'Maju Hardware Madiun', category: 'Pusat Retail Komputer & Gadget IT' },
+    { name: 'Dr. Irfan Mahendra', institution: 'Politeknik Negeri Madiun', category: 'Akademisi & Praktisi AI' }
 ];
 
 let dbInstance = null;
@@ -46,6 +40,7 @@ try {
     sqliteDb.exec(`
         CREATE TABLE IF NOT EXISTS guests (
             id TEXT PRIMARY KEY,
+            name TEXT DEFAULT '',
             institution TEXT NOT NULL,
             category TEXT NOT NULL DEFAULT 'Mitra / Instansi',
             qr_token TEXT UNIQUE NOT NULL,
@@ -66,6 +61,11 @@ try {
             FOREIGN KEY(guest_id) REFERENCES guests(id) ON DELETE CASCADE
         );
     `);
+
+    // Ensure 'name' column exists in case table was created previously without it
+    try {
+        sqliteDb.exec("ALTER TABLE guests ADD COLUMN name TEXT DEFAULT ''");
+    } catch (e) {}
 
     dbInstance = sqliteDb;
     console.log('[DB] Using native node:sqlite DatabaseSync.');
@@ -135,9 +135,15 @@ try {
                         return { changes: store.guests.length };
                     }
                     if (s.startsWith('INSERT INTO GUESTS')) {
-                        const [id, institution, category, qr_token] = params;
+                        const id = params[0];
+                        const name = params.length >= 5 ? params[1] : '';
+                        const institution = params.length >= 5 ? params[2] : params[1];
+                        const category = params.length >= 5 ? params[3] : params[2];
+                        const qr_token = params.length >= 5 ? params[4] : params[3];
+
                         store.guests.push({
                             id,
+                            name: name || '',
                             institution,
                             category: category || 'Mitra / Instansi',
                             qr_token,
@@ -296,19 +302,19 @@ function seedDatabase() {
     dbInstance.prepare('DELETE FROM guests').run();
 
     const insertStmt = dbInstance.prepare(`
-        INSERT INTO guests (id, institution, category, qr_token, status, created_at)
-        VALUES (?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)
+        INSERT INTO guests (id, name, institution, category, qr_token, status, created_at)
+        VALUES (?, ?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)
     `);
 
-    for (const g of sampleInstitutions) {
-        insertStmt.run(uuidv4(), g.institution, g.category, generateToken());
+    for (const g of sampleGuests) {
+        insertStmt.run(uuidv4(), g.name, g.institution, g.category, generateToken());
     }
-    console.log(`[DB] Berhasil memperbarui database dengan 10 instansi terverifikasi di Kota Madiun.`);
+    console.log(`[DB] Berhasil memperbarui database dengan 4 contoh tamu realistis di Kota Madiun.`);
 }
 
 try {
     const res = dbInstance.prepare('SELECT COUNT(*) as count FROM guests').get();
-    if (!res || res.count < 10) {
+    if (!res || res.count === 0 || res.count > 4) {
         seedDatabase();
     }
 } catch (e) {

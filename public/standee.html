@@ -167,6 +167,12 @@
             </div>
 
             <form id="quickForm" onsubmit="submitQuickCheckin(event)" class="space-y-3.5 text-xs">
+                <!-- Nama Lengkap / PIC -->
+                <div>
+                    <label class="block text-chromeWhite font-tech font-semibold mb-1">Nama Lengkap Tamu / PIC *</label>
+                    <input type="text" id="quickNameInput" required placeholder="Contoh: Bpk. Bambang Sutrisno" class="w-full px-3 py-2.5 bg-cyberDark border border-neonCyan/40 rounded-xl text-chromeWhite font-tech font-semibold text-xs focus:outline-none focus:border-neonCyan">
+                </div>
+
                 <!-- Dropdown / Custom Switcher -->
                 <div class="space-y-1.5">
                     <div class="flex items-center justify-between font-semibold font-tech">
@@ -327,6 +333,9 @@
                 if (!targetInst) return alert('Silakan pilih nama instansi');
             }
 
+            const name = document.getElementById('quickNameInput').value.trim();
+            if (!name) return alert('Silakan masukkan nama lengkap Anda.');
+
             const msg = document.getElementById('quickMessage').value;
             const btn = document.getElementById('btnSubmitQuick');
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Menyambung...`;
@@ -336,14 +345,15 @@
                 const res = await fetch('/api/checkin/submit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ institution: targetInst, message: msg })
+                    body: JSON.stringify({ name, institution: targetInst, message: msg })
                 });
                 const json = await res.json();
                 if (json.success) {
                     document.getElementById('quickForm').classList.add('hidden');
                     const succ = document.getElementById('quickSuccessNotice');
                     succ.classList.remove('hidden');
-                    document.getElementById('quickSuccName').innerText = `Selamat Datang, ${json.data.guest.institution}!`;
+                    const displayName = json.data.guest.name ? `${json.data.guest.name} (${json.data.guest.institution})` : json.data.guest.institution;
+                    document.getElementById('quickSuccName').innerText = `Selamat Datang, ${displayName}!`;
 
                     setTimeout(() => {
                         closeQuickCheckinModal();

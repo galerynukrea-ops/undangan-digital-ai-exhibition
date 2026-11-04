@@ -58,6 +58,15 @@
         <!-- Form Verification -->
         <form id="selfCheckinForm" onsubmit="submitSelfCheckin(event)" class="space-y-4 text-xs font-tech">
             
+            <!-- Nama Lengkap / PIC -->
+            <div>
+                <label class="block text-chromeWhite font-semibold mb-1 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-user-astronaut text-neonCyan"></i> Nama Lengkap Anda / PIC *</span>
+                    <span class="text-[10px] text-neonCyan font-monoTech">Disapa Robot AI</span>
+                </label>
+                <input type="text" id="selfName" required placeholder="Contoh: Bpk. Bambang Sutrisno / Rina Wijaya" class="w-full px-3.5 py-3 bg-cyberDark border border-neonCyan/40 rounded-xl text-chromeWhite placeholder-chromeSilver/40 focus:outline-none focus:border-neonCyan focus:ring-1 focus:ring-neonCyan text-xs font-semibold">
+            </div>
+
             <!-- Mode Toggle Tabs (Daftar / Tambahan Baru) -->
             <div class="space-y-2">
                 <div class="flex items-center justify-between text-chromeWhite font-semibold">
@@ -201,6 +210,9 @@
         async function submitSelfCheckin(e) {
             e.preventDefault();
             
+            const guestName = document.getElementById('selfName').value.trim();
+            if (!guestName) return alert('Silakan masukkan nama lengkap Anda.');
+
             let institutionName = '';
             let customCategory = '';
 
@@ -226,6 +238,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        name: guestName,
                         institution: institutionName,
                         category: customCategory || 'Mitra Tambahan',
                         message: message
@@ -236,7 +249,8 @@
                     document.getElementById('selfCheckinForm').classList.add('hidden');
                     const succ = document.getElementById('selfSuccess');
                     succ.classList.remove('hidden');
-                    document.getElementById('successInstTitle').innerText = `Selamat Datang, ${json.data.guest.institution}!`;
+                    const display = json.data.guest.name ? `${json.data.guest.name} (${json.data.guest.institution})` : json.data.guest.institution;
+                    document.getElementById('successInstTitle').innerText = `Selamat Datang, ${display}!`;
                 } else {
                     alert(json.error || 'Gagal memverifikasi');
                 }

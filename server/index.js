@@ -134,10 +134,10 @@ app.get('/api/guests', (req, res) => {
     }
 });
 
-// 2. Add single institution
+// 2. Add single institution / guest
 app.post('/api/guests', (req, res) => {
     try {
-        const { institution, category } = req.body;
+        const { name, institution, category } = req.body;
         if (!institution || institution.trim() === '') {
             return res.status(400).json({ success: false, error: 'Nama instansi/perusahaan wajib diisi' });
         }
@@ -145,16 +145,17 @@ app.post('/api/guests', (req, res) => {
         const id = uuidv4();
         const token = generateToken();
         const finalCategory = category && category.trim() !== '' ? category.trim() : 'Mitra Tambahan';
+        const finalName = name ? name.trim() : '';
 
         const stmt = db.prepare(`
-            INSERT INTO guests (id, institution, category, qr_token, status)
-            VALUES (?, ?, ?, ?, 'pending')
+            INSERT INTO guests (id, name, institution, category, qr_token, status)
+            VALUES (?, ?, ?, ?, ?, 'pending')
         `);
 
-        stmt.run(id, institution.trim(), finalCategory, token);
+        stmt.run(id, finalName, institution.trim(), finalCategory, token);
 
         const newGuest = db.prepare('SELECT * FROM guests WHERE id = ?').get(id);
-        res.status(201).json({ success: true, message: 'Instansi berhasil ditambahkan', data: newGuest });
+        res.status(201).json({ success: true, message: 'Tamu / Instansi berhasil ditambahkan', data: newGuest });
     } catch (err) {
         console.error('[API] Error create guest:', err.message);
         res.status(500).json({ success: false, error: 'Gagal menambahkan data instansi' });
@@ -307,7 +308,7 @@ app.get('/api/venue/barcode/png', async (req, res) => {
 
 app.post('/api/checkin/submit', async (req, res) => {
     try {
-        const { token, institution, newInstitution, category, message } = req.body;
+        const { token, name, institution, newInstitution, category, message } = req.body;
 
         let guest = null;
         if (token) {
@@ -333,16 +334,24 @@ app.post('/api/checkin/submit', async (req, res) => {
                 const newToken = generateToken();
                 const finalCategory = (category && category.trim()) ? category.trim() : 'Mitra Tambahan';
                 db.prepare(`
-                    INSERT INTO guests (id, institution, category, qr_token, status, created_at)
-                    VALUES (?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)
-                `).run(id, targetName, finalCategory, newToken);
+                    INSERT INTO guests (id, name, institution, category, qr_token, status, created_at)
+                    VALUES (?, ?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)
+                `).run(id, (name || '').trim(), targetName, finalCategory, newToken);
                 guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(id);
                 console.log(`[CHECKIN] Instansi baru otomatis terdaftar di venue: ${targetName}`);
             }
         }
 
-        // 1. Mark as checked in
+        // 1. Mark as checked in and update person name if provided
         const now = new Date().toISOString();
+        const personName = (name && name.trim()) || guest.name || '';
+        if (personName) {
+            try {
+                db.prepare(`UPDATE guests SET name = ? WHERE id = ?`).run(personName, guest.id);
+                guest.name = personName;
+            } catch (e) {}
+        }
+
         db.prepare(`
             UPDATE guests 
             SET status = 'checked_in', checked_in_at = ? 
@@ -373,6 +382,7 @@ app.post('/api/checkin/submit', async (req, res) => {
         const payload = {
             guest: {
                 id: guest.id,
+                name: guest.name || personName || '',
                 institution: guest.institution,
                 category: guest.category,
                 checked_in_at: now
@@ -392,7 +402,7 @@ app.post('/api/checkin/submit', async (req, res) => {
 
         res.json({
             success: true,
-            message: `Verifikasi kedatangan berhasil untuk ${guest.institution}`,
+            message: `Verifikasi kedatangan berhasil untuk ${guest.name ? guest.name + ' - ' : ''}${guest.institution}`,
             data: payload
         });
     } catch (err) {
@@ -455,7 +465,7 @@ app.get('/api/stats', (req, res) => {
 
         // Recent checked-in institutions
         const recentCheckins = db.prepare(`
-            SELECT g.id, g.institution, g.category, g.checked_in_at,
+            SELECT g.id, g.name, g.institution, g.category, g.checked_in_at,
                    m.message, m.sentiment, m.score, m.emotion, m.keywords
             FROM guests g
             INNER JOIN guest_messages m ON g.id = m.guest_id
@@ -498,6 +508,112 @@ app.get('/api/stats', (req, res) => {
     } catch (err) {
         console.error('[API] Stats error:', err.message);
         res.status(500).json({ success: false, error: 'Gagal mengambil data statistik' });
+    }
+});
+
+// Dual-Engine TTS: Gemini 3.8 Flash Lite TTS with fallback
+app.post('/api/tts', async (req, res) => {
+    try {
+        const { text } = req.body || {};
+        if (!text || !text.trim()) {
+            return res.status(400).json({ error: 'Teks suara wajib diisi' });
+        }
+
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            return res.json({
+                fallback: true,
+                reason: 'GEMINI_API_KEY belum dikonfigurasi, menggunakan Web Speech API.'
+            });
+        }
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    role: 'user',
+                    parts: [{
+                        text: text.trim(),
+                        speechMetadata: {
+                            style: 'Warm, articulate Indonesian exhibition host'
+                        }
+                    }]
+                }],
+                generationConfig: {
+                    responseModalities: ['AUDIO'],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: 'Kore' }
+                        }
+                    }
+                }
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const base64Audio = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+            if (base64Audio) {
+                return res.json({
+                    fallback: false,
+                    audioBase64: base64Audio,
+                    mimeType: 'audio/wav'
+                });
+            }
+        }
+
+        res.json({
+            fallback: true,
+            reason: 'Gemini audio format fallback'
+        });
+    } catch (err) {
+        console.warn('[TTS] Fallback to browser speech synthesis:', err.message);
+        res.json({
+            fallback: true,
+            reason: err.message
+        });
+    }
+});
+
+// Admin re-greet trigger for Robot Greeter
+app.post('/api/admin/greet', (req, res) => {
+    try {
+        const { guestId } = req.body;
+        const guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(guestId);
+        if (!guest) {
+            return res.status(404).json({ success: false, error: 'Data tamu tidak ditemukan' });
+        }
+
+        const msgRecord = db.prepare('SELECT * FROM guest_messages WHERE guest_id = ?').get(guest.id);
+        const payload = {
+            guest: {
+                id: guest.id,
+                name: guest.name || '',
+                institution: guest.institution,
+                category: guest.category,
+                checked_in_at: guest.checked_in_at || new Date().toISOString()
+            },
+            message: msgRecord ? {
+                text: msgRecord.message,
+                sentiment: msgRecord.sentiment,
+                score: msgRecord.score,
+                emotion: msgRecord.emotion,
+                keywords: msgRecord.keywords ? JSON.parse(msgRecord.keywords) : []
+            } : {
+                text: 'Selamat dan sukses atas pameran karya kolaborasi talenta muda AI di Waroeng Latte!',
+                sentiment: 'neutral',
+                score: 0.5,
+                emotion: 'Inspiratif',
+                keywords: ['AI', 'MADIUN']
+            }
+        };
+
+        broadcastEvent('guest_checked_in', payload);
+        res.json({ success: true, message: `Robot menyapa ulang ${guest.name ? guest.name + ' - ' : ''}${guest.institution}` });
+    } catch (err) {
+        console.error('[API] Re-greet error:', err.message);
+        res.status(500).json({ success: false, error: 'Gagal memicu sapaan robot' });
     }
 });
 

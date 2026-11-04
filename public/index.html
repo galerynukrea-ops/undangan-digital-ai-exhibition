@@ -185,12 +185,13 @@
                     <thead>
                         <tr class="border-b border-warmTaupe/20 bg-sapphire/30 text-champagne font-semibold uppercase tracking-wider">
                             <th class="py-3.5 px-4 w-12 text-center">No</th>
+                            <th class="py-3.5 px-4">Nama Lengkap / PIC</th>
                             <th class="py-3.5 px-4">Instansi / Perusahaan</th>
                             <th class="py-3.5 px-4">Kategori / Sektor</th>
                             <th class="py-3.5 px-4">Status Kedatangan</th>
                             <th class="py-3.5 px-4">Waktu Verifikasi</th>
                             <th class="py-3.5 px-4">Pesan & Analisis Sentimen AI</th>
-                            <th class="py-3.5 px-4 text-center w-24">Aksi</th>
+                            <th class="py-3.5 px-4 text-center w-28">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="guestTableBody" class="divide-y divide-warmTaupe/15 text-ivory">
@@ -219,6 +220,11 @@
             </div>
 
             <form id="addGuestForm" onsubmit="submitAddGuest(event)" class="space-y-3.5 text-xs">
+                <div>
+                    <label class="block text-ivory font-medium mb-1">Nama Lengkap Tamu / PIC</label>
+                    <input type="text" id="addName" placeholder="Contoh: Bpk. Bambang Sutrisno / Ibu Rina Wijaya" class="w-full px-3 py-2 bg-navy border border-warmTaupe/30 rounded-xl text-ivory placeholder-warmTaupe/50 focus:outline-none focus:border-champagne">
+                </div>
+
                 <div>
                     <label class="block text-ivory font-medium mb-1">Nama Instansi / Perusahaan *</label>
                     <input type="text" id="addInstitution" required placeholder="Contoh: Bluder Cokro / Dinas KUKM" class="w-full px-3 py-2 bg-navy border border-warmTaupe/30 rounded-xl text-ivory placeholder-warmTaupe/50 focus:outline-none focus:border-champagne">
@@ -372,7 +378,8 @@
                 return `
                     <tr class="hover:bg-sapphire/20 transition">
                         <td class="py-3 px-4 text-center text-warmTaupe">${idx + 1}</td>
-                        <td class="py-3 px-4 font-bold text-ivory text-sm">${g.institution}</td>
+                        <td class="py-3 px-4 font-bold text-ivory text-sm">${g.name || '<span class="text-warmTaupe/60 italic font-normal">-</span>'}</td>
+                        <td class="py-3 px-4 font-semibold text-champagne text-xs">${g.institution}</td>
                         <td class="py-3 px-4">
                             <span class="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-sapphire/40 text-warmTaupe border border-warmTaupe/25">
                                 ${g.category}
@@ -382,9 +389,14 @@
                         <td class="py-3 px-4 text-warmTaupe font-mono text-[11px]">${timeStr}</td>
                         <td class="py-3 px-4">${sentimentHtml}</td>
                         <td class="py-3 px-4 text-center">
-                            <button onclick="deleteGuest('${g.id}', '${g.institution}')" class="p-1.5 text-warmTaupe hover:text-rose-400 transition" title="Hapus Instansi">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="reGreetGuest('${g.id}', '${g.name || g.institution}')" class="p-1.5 text-warmTaupe hover:text-neonCyan transition" title="Sapa Ulang Robot 3D di Layar Live">
+                                    <i class="fa-solid fa-robot"></i>
+                                </button>
+                                <button onclick="deleteGuest('${g.id}', '${g.name || g.institution}')" class="p-1.5 text-warmTaupe hover:text-rose-400 transition" title="Hapus Instansi">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -440,8 +452,27 @@
             }
         }
 
+        async function reGreetGuest(id, name) {
+            try {
+                const res = await fetch('/api/admin/greet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ guestId: id })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    alert(`Robot 3D di layar live sedang menyapa ${name}!`);
+                } else {
+                    alert(json.error || 'Gagal memicu sapaan robot');
+                }
+            } catch (e) {
+                alert('Gagal menghubungi server.');
+            }
+        }
+
         async function submitAddGuest(e) {
             e.preventDefault();
+            const name = document.getElementById('addName').value.trim();
             const institution = document.getElementById('addInstitution').value;
             const category = document.getElementById('addCategory').value;
 
@@ -449,7 +480,7 @@
                 const res = await fetch('/api/guests', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ institution, category })
+                    body: JSON.stringify({ name, institution, category })
                 });
                 const json = await res.json();
                 if (json.success) {

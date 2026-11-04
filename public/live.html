@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <!-- Three.js for 3D Procedural Robot -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="/js/robot-greeter.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -45,21 +48,6 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1.5px solid rgba(0, 240, 255, 0.4);
             box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 240, 255, 0.2), inset 0 0 20px rgba(189, 0, 255, 0.12);
-        }
-
-        @keyframes cyberPulseActive {
-            0%, 100% {
-                border-color: rgba(0, 240, 255, 0.5);
-                box-shadow: 0 0 35px rgba(0, 240, 255, 0.35), inset 0 0 25px rgba(189, 0, 255, 0.2);
-            }
-            50% {
-                border-color: rgba(189, 0, 255, 0.8);
-                box-shadow: 0 0 65px rgba(189, 0, 255, 0.55), inset 0 0 45px rgba(0, 240, 255, 0.35);
-            }
-        }
-
-        .spotlight-active {
-            animation: cyberPulseActive 2s infinite ease-in-out;
         }
 
         /* Marquee styles */
@@ -104,7 +92,6 @@
             100% { top: 98%; opacity: 0.2; }
         }
 
-        /* Glowing Hex Grid Ambient */
         .cyber-grid {
             background-image: 
                 linear-gradient(to right, rgba(0, 240, 255, 0.05) 1px, transparent 1px),
@@ -129,7 +116,7 @@
             <!-- Left Branding with Official 3D Graphic Logo -->
             <div class="flex items-center space-x-4">
                 <div class="relative group shrink-0">
-                    <img src="/images/logo-header.png" alt="Digital Work AI Exhibition" class="h-12 sm:h-14 w-auto object-contain drop-shadow-[0_0_15px_rgba(0,240,255,0.45)] transition hover:scale-105 duration-300" />
+                    <img src="/images/logo-header.png" alt="Digital Work AI Exhibition" class="h-11 sm:h-13 w-auto object-contain drop-shadow-[0_0_15px_rgba(0,240,255,0.45)] transition hover:scale-105 duration-300" />
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
@@ -153,14 +140,14 @@
                 <!-- Verified Attendance HUD Meter -->
                 <div class="flex items-center space-x-2.5 bg-cyberDark/90 border border-neonCyan/40 px-3.5 py-1.5 rounded-xl shadow-[0_0_15px_rgba(0,240,255,0.15)] cyber-clip-sm">
                     <div class="w-8 h-8 rounded-lg bg-neonCyan/10 border border-neonCyan/40 flex items-center justify-center text-neonCyan text-xs shrink-0">
-                        <i class="fa-solid fa-shield-halved"></i>
+                        <i class="fa-solid fa-user-check"></i>
                     </div>
                     <div>
-                        <div class="text-[8.5px] font-cyber font-bold uppercase text-neonCyan tracking-wider">Mitra Terverifikasi</div>
+                        <div class="text-[8.5px] font-cyber font-bold uppercase text-neonCyan tracking-wider">Tamu Terverifikasi</div>
                         <div class="text-sm font-bold font-cyber text-chromeWhite flex items-center gap-1">
                             <span id="counterChecked" class="text-neonCyan text-base">0</span>
                             <span class="text-chromeSilver/50 text-xs">/</span>
-                            <span id="counterTotal">10</span>
+                            <span id="counterTotal">4</span>
                             <span id="counterRate" class="text-[11px] font-tech text-neonPurple ml-1 font-semibold">(0%)</span>
                         </div>
                     </div>
@@ -176,111 +163,150 @@
         </div>
     </header>
 
-    <!-- Main Live Stage (Optimized for 12" Surface Pro 3) -->
-    <main class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-2.5 w-full flex-1 flex flex-col justify-center">
+    <!-- Main Live Stage (Split-Stage: Left Info/Card & Right 3D Robot Greeter) -->
+    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-2.5 w-full flex-1 flex flex-col justify-center">
         
-        <!-- Mode Telemetry Tag -->
-        <div class="flex items-center justify-between text-xs font-semibold px-2 mb-2">
-            <span id="displayModeBadge" class="flex items-center gap-2 text-neonCyan font-cyber uppercase tracking-wider text-[11px]">
-                <span class="w-2.5 h-2.5 rounded-full bg-neonCyan shadow-[0_0_8px_#00F0FF] animate-ping"></span>
-                <span id="displayModeTitle" class="tracking-widest">HOLOGRAPHIC SPOTLIGHT // MENYAMBUT TAMU KEHORMATAN</span>
-            </span>
-            <span id="spotlightTimestamp" class="text-neonPurple font-monoTech text-[11px] tracking-widest">[SYSTEM READY]</span>
-        </div>
-
-        <!-- The Futuristic Hero Card (Spotlight Arrival & Hall of Fame Carousel) -->
-        <div id="spotlightCard" class="hud-card p-6 sm:p-7 rounded-2xl relative overflow-hidden transition-all duration-700 cyber-clip">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 w-full items-stretch">
             
-            <!-- Animated Cyber Scanning Laser Line -->
-            <div class="cyber-laser-line"></div>
+            <!-- LEFT COLUMN: Featured Card, Telemetry & Marquee (lg:col-span-7) -->
+            <div class="lg:col-span-7 flex flex-col justify-between space-y-3.5">
+                
+                <!-- Status Mode Header -->
+                <div class="flex items-center justify-between text-xs font-semibold px-1">
+                    <span id="displayModeBadge" class="flex items-center gap-2 text-neonCyan font-cyber uppercase tracking-wider text-[11px]">
+                        <span class="w-2.5 h-2.5 rounded-full bg-neonCyan shadow-[0_0_8px_#00F0FF] animate-ping"></span>
+                        <span id="displayModeTitle" class="tracking-widest">HOLOGRAPHIC RECEPTION // AI HOST ACTIVE</span>
+                    </span>
+                    <span id="spotlightTimestamp" class="text-neonPurple font-monoTech text-[11px] tracking-widest">[STANDBY TELEMETRY]</span>
+                </div>
 
-            <!-- Top Cyber Neon Gradient Accent Bar -->
-            <div id="spotlightAccentBar" class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-neonCyan via-neonBlue to-neonPurple"></div>
+                <!-- Spotlight Hero Card -->
+                <div id="spotlightCard" class="hud-card p-6 rounded-2xl relative overflow-hidden transition-all duration-700 cyber-clip flex-1 flex flex-col justify-between">
+                    <div class="cyber-laser-line"></div>
+                    <div id="spotlightAccentBar" class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-neonCyan via-neonBlue to-neonPurple"></div>
+                    
+                    <div class="corner-reticle corner-tl"></div>
+                    <div class="corner-reticle corner-tr"></div>
+                    <div class="corner-reticle corner-bl"></div>
+                    <div class="corner-reticle corner-br"></div>
 
-            <!-- Corner Sci-Fi Tech Reticles -->
-            <div class="corner-reticle corner-tl"></div>
-            <div class="corner-reticle corner-tr"></div>
-            <div class="corner-reticle corner-bl"></div>
-            <div class="corner-reticle corner-br"></div>
+                    <div class="space-y-3.5 relative z-10">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="space-y-1 flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span id="spotCategory" class="inline-block px-3 py-0.5 rounded text-[10px] font-cyber font-bold bg-neonCyan/15 text-neonCyan border border-neonCyan/50 uppercase tracking-widest shadow-[0_0_10px_rgba(0,240,255,0.25)]">
+                                        TAMU KEHORMATAN
+                                    </span>
+                                    <span class="text-[9px] font-monoTech text-neonPurple border border-neonPurple/40 px-2 py-0.5 rounded bg-neonPurple/10">
+                                        <i class="fa-solid fa-microchip mr-1"></i>NODE ACTIVE
+                                    </span>
+                                </div>
 
-            <div class="space-y-4 relative z-10">
-                <!-- Institution Header & Glowing Tech Avatar -->
-                <div class="flex items-start justify-between gap-4">
-                    <div class="space-y-1.5 flex-1">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span id="spotCategory" class="inline-block px-3 py-0.5 rounded text-[10px] font-cyber font-bold bg-neonCyan/15 text-neonCyan border border-neonCyan/50 uppercase tracking-widest shadow-[0_0_10px_rgba(0,240,255,0.25)]">
-                                MITRA RESMI KOTA MADIUN
-                            </span>
-                            <span class="text-[9px] font-monoTech text-neonPurple border border-neonPurple/40 px-2 py-0.5 rounded bg-neonPurple/10">
-                                <i class="fa-solid fa-microchip mr-1"></i>NODE ACTIVE
-                            </span>
+                                <h2 id="spotName" class="text-2xl sm:text-3xl font-extrabold font-cyber tracking-wide text-gradient-chrome mt-1 leading-tight">
+                                    Selamat Datang di Waroeng Latte
+                               </h2>
+
+                                <p id="spotInstitution" class="text-xs sm:text-sm font-tech font-bold text-neonCyan tracking-wider">
+                                    Digital Work AI Exhibition : Menembus Batas Digital
+                                </p>
+                            </div>
+
+                            <div class="relative shrink-0">
+                                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-neonCyan via-neonBlue to-neonPurple p-0.5 shadow-[0_0_20px_rgba(0,240,255,0.4)] flex items-center justify-center relative overflow-hidden">
+                                    <div class="w-full h-full bg-cyberDark rounded-[14px] flex items-center justify-center relative">
+                                        <div class="absolute inset-1 rounded-xl border border-neonCyan/30 border-dashed animate-spin-slow"></div>
+                                        <span id="spotAvatar" class="text-xl font-black font-cyber text-gradient-cyan-purple relative z-10">
+                                            AI
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <h2 id="spotInstitution" class="text-2xl sm:text-4xl font-extrabold font-cyber tracking-wide text-gradient-chrome mt-1 leading-tight">
-                            Selamat Datang di Waroeng Latte
-                        </h2>
-                        
-                        <p id="spotSubtext" class="text-xs sm:text-sm font-tech font-semibold text-neonCyan tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-sparkles text-neonPurple"></i>
-                            Digital Work AI Exhibition : Menembus Batas Digital
-                        </p>
-                    </div>
 
-                    <!-- Glowing Hologram AI Avatar with Rotating Ring -->
-                    <div class="relative shrink-0">
-                        <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-neonCyan via-neonBlue to-neonPurple p-0.5 shadow-[0_0_25px_rgba(0,240,255,0.4)] flex items-center justify-center relative overflow-hidden">
-                            <div class="w-full h-full bg-cyberDark rounded-[14px] flex items-center justify-center relative">
-                                <!-- Rotating Ring -->
-                                <div class="absolute inset-1 rounded-xl border border-neonCyan/30 border-dashed animate-spin-slow"></div>
-                                <span id="spotAvatar" class="text-2xl font-black font-cyber text-gradient-cyan-purple relative z-10">
-                                    AI
+                        <!-- Message Box -->
+                        <div class="p-3.5 rounded-xl bg-cyberBlack/80 border border-neonCyan/30 relative shadow-inner">
+                            <i class="fa-solid fa-quote-left text-neonCyan/20 text-2xl absolute top-2.5 left-2.5"></i>
+                            <p id="spotMessage" class="text-xs sm:text-sm text-chromeWhite font-tech font-medium italic relative z-10 pl-5 leading-relaxed">
+                                "Menghubungkan masa depan UMKM, teknologi, dan kecerdasan artifisial di Kota Pendekar Madiun."
+                            </p>
+                        </div>
+
+                        <!-- Sentiment & Keywords -->
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-neonCyan/15 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-cyber text-chromeSilver/70">SENTIMEN AI:</span>
+                                <span id="spotEmotion" class="px-2.5 py-0.5 rounded-md text-[10.5px] font-cyber font-bold bg-neonPurple/20 text-neonMagenta border border-neonPurple/50 flex items-center gap-1 shadow">
+                                    <i class="fa-solid fa-bolt-lightning text-neonCyan"></i> Menunggu Kehadiran
                                 </span>
+                            </div>
+
+                            <div id="spotKeywords" class="flex flex-wrap items-center gap-1.5">
+                                <span class="px-2 py-0.5 rounded text-[9.5px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/40">#AI</span>
+                                <span class="px-2 py-0.5 rounded text-[9.5px] font-monoTech font-bold bg-neonPurple/10 text-neonPurple border border-neonPurple/40">#MADIUN</span>
+                                <span class="px-2 py-0.5 rounded text-[9.5px] font-monoTech font-bold bg-emerald-400/10 text-emerald-300 border border-emerald-400/40">#EXHIBITION</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Guest Message / Aspiration Console Box -->
-                <div class="p-4 rounded-xl bg-cyberBlack/80 border border-neonCyan/30 relative shadow-inner">
-                    <i class="fa-solid fa-quote-left text-neonCyan/20 text-3xl absolute top-3 left-3"></i>
-                    <p id="spotMessage" class="text-sm sm:text-base text-chromeWhite font-tech font-medium italic relative z-10 pl-6 leading-relaxed">
-                        "Menembus Batas Digital : Kolaborasi Talenta Muda dan Artificial Intelligence"
+                <!-- Smooth Marquee Ticker -->
+                <div class="cyber-panel p-2 px-3 rounded-xl border border-neonCyan/30 flex items-center gap-3 overflow-hidden shadow-lg">
+                    <div class="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-neonCyan/20 to-neonPurple/20 text-neonCyan font-cyber font-bold text-[9.5px] uppercase tracking-wider border border-neonCyan/40 shadow-sm">
+                        <i class="fa-solid fa-satellite-dish text-neonCyan animate-pulse"></i>
+                        <span>TERKINI HADIR</span>
+                    </div>
+
+                    <div class="marquee-container flex-1 py-1">
+                        <div id="marqueeTrack" class="marquee-inner">
+                            <span class="text-chromeSilver/60 font-tech text-xs italic py-0.5">Menunggu sinyal kehadiran tamu pertama di Waroeng Latte Madiun...</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: 3D Robot Greeter Stage (lg:col-span-5) -->
+            <div class="lg:col-span-5 relative flex items-center justify-center min-h-[430px] lg:min-h-[490px] rounded-2xl border border-neonCyan/40 bg-gradient-to-b from-cyberDark/80 via-cyberBlack to-cyberDark/90 overflow-hidden shadow-[0_0_35px_rgba(0,240,255,0.2)] cyber-clip">
+                
+                <!-- Reticles -->
+                <div class="corner-reticle corner-tl"></div>
+                <div class="corner-reticle corner-tr"></div>
+                <div class="corner-reticle corner-bl"></div>
+                <div class="corner-reticle corner-br"></div>
+
+                <!-- Floating Label -->
+                <div class="absolute top-3 left-3 z-20 flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-[9px] font-cyber font-bold bg-neonCyan/15 text-neonCyan border border-neonCyan/40 flex items-center gap-1.5 backdrop-blur shadow">
+                        <span class="w-1.5 h-1.5 rounded-full bg-neonCyan animate-ping"></span>
+                        AI ROBOT GREETER 3D
+                    </span>
+                </div>
+
+                <!-- Interactive 3D Canvas -->
+                <div id="robotCanvas" class="w-full h-full min-h-[430px] lg:min-h-[490px] relative z-10 flex items-center justify-center cursor-grab active:cursor-grabbing"></div>
+
+                <!-- COMPACT POP-UP SAMBUTAN MINI (Auto-dismiss in 6s) -->
+                <div id="miniPopup" class="hidden absolute bottom-5 inset-x-4 sm:inset-x-6 z-30 bg-cyberDark/95 border-2 border-neonCyan rounded-2xl p-4 shadow-[0_0_40px_rgba(0,240,255,0.6)] cyber-clip-sm transition-all duration-500 transform translate-y-6 opacity-0">
+                    <button onclick="dismissMiniPopup()" class="absolute top-2.5 right-2.5 text-chromeSilver/70 hover:text-chromeWhite p-1" title="Tutup">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                    </button>
+                    <div class="flex items-center gap-1.5 text-[9.5px] font-cyber font-bold text-neonCyan uppercase tracking-widest">
+                        <i class="fa-solid fa-sparkles text-neonPurple animate-pulse"></i>
+                        <span>✨ SELAMAT DATANG DI VENUE</span>
+                    </div>
+                    <h3 id="popName" class="text-xl sm:text-2xl font-cyber font-extrabold text-chromeWhite mt-0.5 leading-tight text-gradient-chrome">
+                        Nama Tamu
+                    </h3>
+                    <p id="popInst" class="text-xs font-tech font-bold text-neonCyan">
+                        Instansi / Perusahaan
+                    </p>
+                    <p id="popMsg" class="text-[11px] font-tech text-chromeSilver/90 italic mt-2 border-t border-neonCyan/20 pt-1.5 line-clamp-2">
+                        "Pesan apresiasi..."
                     </p>
                 </div>
 
-                <!-- AI Sentiment Metrics & Keywords Stream -->
-                <div class="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-neonCyan/15">
-                    <div class="flex items-center gap-2">
-                        <span class="text-[11px] font-cyber text-chromeSilver/70">SENTIMEN AI:</span>
-                        <span id="spotEmotion" class="px-3 py-1 rounded-lg text-xs font-cyber font-bold bg-neonPurple/20 text-neonMagenta border border-neonPurple/50 flex items-center gap-1.5 shadow-[0_0_12px_rgba(189,0,255,0.3)]">
-                            <i class="fa-solid fa-bolt-lightning text-neonCyan"></i> Inspiratif
-                        </span>
-                    </div>
-
-                    <!-- Extracted Keyword Pills -->
-                    <div id="spotKeywords" class="flex flex-wrap items-center gap-1.5">
-                        <span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/40">#MADIUN</span>
-                        <span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/40">#INOVASI</span>
-                        <span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/40">#TALENTA_MUDA</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- REFINED SMOOTH MARQUEE TICKER (NO SCROLLBAR, SCI-FI TELEMETRY) -->
-        <div class="mt-3 cyber-panel p-2 px-3 rounded-xl border border-neonCyan/30 flex items-center gap-3 overflow-hidden shadow-lg">
-            <!-- Left Fixed Sci-Fi Tag -->
-            <div class="shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-neonCyan/20 to-neonPurple/20 text-neonCyan font-cyber font-bold text-[10px] uppercase tracking-wider border border-neonCyan/40 shadow-sm">
-                <i class="fa-solid fa-satellite-dish text-neonCyan animate-pulse"></i>
-                <span>TERKINI HADIR</span>
             </div>
 
-            <!-- Auto-Scrolling Marquee Track (Smooth, Endless, Zero Scrollbar) -->
-            <div class="marquee-container flex-1 py-1">
-                <div id="marqueeTrack" class="marquee-inner">
-                    <span class="text-chromeSilver/60 font-tech text-xs italic py-0.5">Menunggu sinyal kehadiran mitra pertama di Waroeng Latte Madiun...</span>
-                </div>
-            </div>
         </div>
 
     </main>
@@ -308,40 +334,6 @@
         // Audio System
         let isAudioMuted = false;
 
-        function playSciFiChime() {
-            if (isAudioMuted) return;
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                // Futuristic synthesizer chord progression
-                const notes = [659.25, 880, 1318.51, 1760]; // E5, A5, E6, A6
-                notes.forEach((freq, idx) => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(freq, ctx.currentTime + (idx * 0.07));
-                    gain.gain.setValueAtTime(0.09, ctx.currentTime + (idx * 0.07));
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(ctx.currentTime + (idx * 0.07));
-                    osc.stop(ctx.currentTime + 1.3);
-                });
-            } catch (e) {}
-        }
-
-        function speakWelcome(institutionName) {
-            if (isAudioMuted || !('speechSynthesis' in window)) return;
-            try {
-                window.speechSynthesis.cancel();
-                const text = `Selamat datang kepada perwakilan ${institutionName} di Digital Work AI Exhibition Menembus Batas Digital, Waroeng Latte Madiun.`;
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'id-ID';
-                utterance.rate = 0.95;
-                utterance.pitch = 1.05;
-                window.speechSynthesis.speak(utterance);
-            } catch (e) {}
-        }
-
         function toggleAudio() {
             isAudioMuted = !isAudioMuted;
             const icon = document.getElementById('audioIcon');
@@ -352,11 +344,11 @@
                 icon.className = 'fa-solid fa-volume-xmark text-[9px]';
                 text.innerText = 'AUDIO HENING';
                 pill.className = 'px-2 py-0.5 rounded text-[9.5px] font-tech font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1 cursor-pointer';
+                if (window.Robot3D) window.Robot3D.stopActiveSpeech();
             } else {
                 icon.className = 'fa-solid fa-volume-high text-[9px]';
                 text.innerText = 'AI AUDIO ONLINE';
                 pill.className = 'px-2 py-0.5 rounded text-[9.5px] font-tech font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 cursor-pointer';
-                playSciFiChime();
             }
         }
 
@@ -366,12 +358,19 @@
             }
         });
 
+        // Initialize 3D Robot
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.Robot3D) {
+                window.Robot3D.init('robotCanvas');
+            }
+        });
+
         // Data & Carousel Management
         let arrivedList = [];
         let carouselInterval = null;
         let carouselIndex = 0;
         let isSpotlightLocked = false;
-        let lockTimer = null;
+        let miniPopupTimer = null;
 
         async function loadStats() {
             try {
@@ -395,21 +394,22 @@
             // Update smooth marquee ticker
             renderMarquee(arrivedList);
 
-            // Start idle carousel if not locked
+            // Start idle carousel if not locked by new arrival popup
             if (!isSpotlightLocked) {
                 if (arrivedList.length > 0) {
                     displayCard(arrivedList[0], false);
                     startCarousel();
                 } else {
                     clearInterval(carouselInterval);
-                    document.getElementById('spotInstitution').innerText = 'Selamat Datang di Waroeng Latte';
-                    document.getElementById('spotCategory').innerText = 'MITRA RESMI KOTA MADIUN';
+                    document.getElementById('spotName').innerText = 'Selamat Datang di Waroeng Latte';
+                    document.getElementById('spotInstitution').innerText = 'Digital Work AI Exhibition : Menembus Batas Digital';
+                    document.getElementById('spotCategory').innerText = 'TAMU KEHORMATAN';
                     document.getElementById('spotAvatar').innerText = 'AI';
                     document.getElementById('spotMessage').innerText = '"Menghubungkan masa depan UMKM, teknologi, dan kecerdasan artifisial di Kota Pendekar Madiun."';
                     document.getElementById('spotEmotion').innerHTML = '<i class="fa-solid fa-sparkles text-neonCyan"></i> Menunggu Kehadiran';
-                    document.getElementById('spotKeywords').innerHTML = '<span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/30">#AI</span><span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-neonPurple/10 text-neonPurple border border-neonPurple/30">#MADIUN</span><span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-emerald-400/10 text-emerald-300 border border-emerald-400/30">#EXHIBITION</span>';
+                    document.getElementById('spotKeywords').innerHTML = '<span class="px-2 py-0.5 rounded text-[9.5px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/30">#AI</span><span class="px-2 py-0.5 rounded text-[9.5px] font-monoTech font-bold bg-neonPurple/10 text-neonPurple border border-neonPurple/30">#MADIUN</span><span class="px-2 py-0.5 rounded text-[9.5px] font-monoTech font-bold bg-emerald-400/10 text-emerald-300 border border-emerald-400/30">#EXHIBITION</span>';
                     document.getElementById('spotlightTimestamp').innerText = '[STANDBY TELEMETRY]';
-                    document.getElementById('displayModeTitle').innerText = 'AI RECEPTION DESK • WAROENG LATTE';
+                    document.getElementById('displayModeTitle').innerText = 'HOLOGRAPHIC RECEPTION // AI HOST ACTIVE';
                 }
             }
         }
@@ -418,20 +418,21 @@
             const track = document.getElementById('marqueeTrack');
             if (!list || list.length === 0) {
                 track.className = 'marquee-inner';
-                track.innerHTML = `<span class="text-chromeSilver/60 font-tech text-xs italic py-0.5">Menunggu sinyal kehadiran mitra pertama di Waroeng Latte Madiun...</span>`;
+                track.innerHTML = `<span class="text-chromeSilver/60 font-tech text-xs italic py-0.5">Menunggu sinyal kehadiran tamu pertama di Waroeng Latte Madiun...</span>`;
                 return;
             }
 
-            // Create pill markup with cyber styling
-            const makePills = () => list.map(g => `
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-cyberDark/90 border border-neonCyan/40 shadow-sm shrink-0">
-                    <span class="w-1.5 h-1.5 rounded-full bg-neonCyan shadow-[0_0_6px_#00F0FF] animate-pulse"></span>
-                    <span class="font-cyber font-bold text-neonCyan text-xs">${g.institution}</span>
-                    <span class="text-chromeSilver/70 text-[10px] font-tech font-medium border-l border-neonCyan/25 pl-1.5">${g.category || 'Mitra'}</span>
-                </div>
-            `).join('');
+            const makePills = () => list.map(g => {
+                const title = g.name ? `${g.name} (${g.institution})` : g.institution;
+                return `
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-cyberDark/90 border border-neonCyan/40 shadow-sm shrink-0">
+                        <span class="w-1.5 h-1.5 rounded-full bg-neonCyan shadow-[0_0_6px_#00F0FF] animate-pulse"></span>
+                        <span class="font-cyber font-bold text-neonCyan text-xs">${title}</span>
+                        <span class="text-chromeSilver/70 text-[10px] font-tech font-medium border-l border-neonCyan/25 pl-1.5">${g.category || 'Mitra'}</span>
+                    </div>
+                `;
+            }).join('');
 
-            // If there are items, animate smooth infinite loop
             if (list.length >= 2) {
                 track.className = 'marquee-inner marquee-scroll';
                 track.innerHTML = makePills() + makePills() + makePills();
@@ -445,16 +446,19 @@
             const g = item.guest || item;
             const m = item.message ? (typeof item.message === 'string' ? { text: item.message, emotion: item.emotion, keywords: item.keywords } : item.message) : { text: item.message || 'Selamat atas terselenggaranya pameran!', emotion: item.emotion || 'Inspiratif', keywords: item.keywords };
 
-            document.getElementById('spotInstitution').innerText = g.institution;
-            document.getElementById('spotCategory').innerText = (g.category || 'MITRA MADIUN').toUpperCase();
+            const mainName = g.name || g.institution;
+            const subTitle = g.name ? g.institution : (g.category || 'Mitra Resmi Kota Madiun');
 
-            const initials = g.institution.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+            document.getElementById('spotName').innerText = mainName;
+            document.getElementById('spotInstitution').innerText = subTitle;
+            document.getElementById('spotCategory').innerText = (g.category || 'TAMU KEHORMATAN').toUpperCase();
+
+            const initials = (g.name || g.institution).split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
             document.getElementById('spotAvatar').innerText = initials || 'AI';
 
             document.getElementById('spotMessage').innerText = `"${m.text || 'Selamat & Sukses untuk Digital Work AI Exhibition di Waroeng Latte!'}"`;
             document.getElementById('spotEmotion').innerHTML = `<i class="fa-solid fa-bolt-lightning text-neonCyan"></i> ${m.emotion || 'Inspiratif'}`;
 
-            // Keywords
             const kwContainer = document.getElementById('spotKeywords');
             let kwList = [];
             try {
@@ -463,7 +467,7 @@
             if (kwList.length === 0) kwList = ['MADIUN', 'INOVASI', 'AI'];
 
             kwContainer.innerHTML = kwList.map(kw => `
-                <span class="px-2.5 py-0.5 rounded text-[10px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/30">
+                <span class="px-2 py-0.5 rounded text-[9.5px] font-monoTech font-bold bg-neonCyan/10 text-neonCyan border border-neonCyan/30">
                     #${String(kw).toUpperCase()}
                 </span>
             `).join('');
@@ -472,15 +476,62 @@
             document.getElementById('spotlightTimestamp').innerText = `[TERVERIFIKASI: ${time}]`;
 
             const badgeTitle = document.getElementById('displayModeTitle');
-            const card = document.getElementById('spotlightCard');
-
             if (isNewArrival) {
                 badgeTitle.innerText = `✨ BARU SAJA HADIR DI MEJA DEPAN`;
-                card.classList.add('spotlight-active');
             } else {
-                badgeTitle.innerText = `HALL OF PARTNERS • MITRA TERVERIFIKASI`;
-                card.classList.remove('spotlight-active');
+                badgeTitle.innerText = `HALL OF GUESTS // TERVERIFIKASI HADIR`;
             }
+        }
+
+        // Compact Mini Pop-Up for 6 seconds on arrival
+        function showMiniPopup(data) {
+            const g = data.guest;
+            const m = data.message || {};
+
+            const popup = document.getElementById('miniPopup');
+            document.getElementById('popName').innerText = g.name || g.institution;
+            document.getElementById('popInst').innerText = g.institution;
+            document.getElementById('popMsg').innerText = `"${m.text || 'Selamat atas pameran AI Menembus Batas Digital!'}"`;
+
+            popup.classList.remove('hidden');
+            setTimeout(() => {
+                popup.classList.remove('translate-y-6', 'opacity-0');
+                popup.classList.add('translate-y-0', 'opacity-100');
+            }, 20);
+
+            // Confetti explosion
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 100,
+                    spread: 80,
+                    origin: { y: 0.6 },
+                    colors: ['#00F0FF', '#BD00FF', '#0077FE', '#FFFFFF']
+                });
+            }
+
+            // Robot Voice Greeting via Dual-Engine TTS
+            if (!isAudioMuted && window.Robot3D) {
+                const speechText = `Selamat datang kepada ${g.name ? g.name + ' dari ' : ''}${g.institution} di pameran kecerdasan artifisial, menembus batas digital!`;
+                window.Robot3D.speakText(speechText);
+            }
+
+            // Auto-dismiss after 6.2 seconds
+            clearTimeout(miniPopupTimer);
+            miniPopupTimer = setTimeout(() => {
+                dismissMiniPopup();
+            }, 6200);
+        }
+
+        function dismissMiniPopup() {
+            clearTimeout(miniPopupTimer);
+            const popup = document.getElementById('miniPopup');
+            popup.classList.remove('translate-y-0', 'opacity-100');
+            popup.classList.add('translate-y-6', 'opacity-0');
+            setTimeout(() => {
+                popup.classList.add('hidden');
+                isSpotlightLocked = false;
+                startCarousel();
+            }, 450);
         }
 
         function startCarousel() {
@@ -505,34 +556,19 @@
                         const checkinData = parsed.data;
 
                         isSpotlightLocked = true;
-                        clearTimeout(lockTimer);
                         clearInterval(carouselInterval);
 
+                        // 1. Show compact mini popup for 6s
+                        showMiniPopup(checkinData);
+
+                        // 2. Also update featured hero card
                         displayCard(checkinData, true);
 
-                        playSciFiChime();
-                        setTimeout(() => {
-                            speakWelcome(checkinData.guest.institution);
-                        }, 500);
-
-                        if (typeof confetti === 'function') {
-                            confetti({
-                                particleCount: 110,
-                                spread: 90,
-                                origin: { y: 0.6 },
-                                colors: ['#00F0FF', '#BD00FF', '#0077FE', '#FFFFFF']
-                            });
-                        }
-
+                        // 3. Refresh telemetry
                         loadStats();
-
-                        lockTimer = setTimeout(() => {
-                            isSpotlightLocked = false;
-                            startCarousel();
-                        }, 10000);
                     } else if (parsed.type === 'database_reset') {
                         isSpotlightLocked = false;
-                        clearTimeout(lockTimer);
+                        dismissMiniPopup();
                         loadStats();
                     }
                 } catch (err) {
@@ -546,10 +582,10 @@
             };
         }
 
-        window.addEventListener('load', () => {
-            loadStats();
-            initSSE();
-        });
+        // Initial setup
+        loadStats();
+        initSSE();
+        setInterval(loadStats, 3000);
     </script>
 </body>
 </html>
