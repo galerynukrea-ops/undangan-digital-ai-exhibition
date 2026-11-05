@@ -134,6 +134,61 @@ app.get('/api/guests', (req, res) => {
     }
 });
 
+// 1b. Self-Healing Sync: Restore known guests if container was newly spawned
+app.post('/api/guests/sync', (req, res) => {
+    try {
+        const { guests } = req.body;
+        if (!Array.isArray(guests) || guests.length === 0) {
+            return res.json({ success: true, message: 'No guests to sync' });
+        }
+
+        const insertGuest = db.prepare(`
+            INSERT OR REPLACE INTO guests (id, name, institution, category, qr_token, status, checked_in_at, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        const insertMsg = db.prepare(`
+            INSERT OR REPLACE INTO guest_messages (id, guest_id, message, sentiment, score, emotion, keywords, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        for (const g of guests) {
+            if (!g.id || !g.institution) continue;
+            try {
+                insertGuest.run(
+                    g.id,
+                    g.name || '',
+                    g.institution,
+                    g.category || 'Mitra Tambahan',
+                    g.qr_token || generateToken(),
+                    g.status || 'checked_in',
+                    g.checked_in_at || new Date().toISOString(),
+                    g.created_at || new Date().toISOString()
+                );
+
+                if (g.message) {
+                    insertMsg.run(
+                        uuidv4(),
+                        g.id,
+                        g.message,
+                        g.sentiment || 'positive',
+                        g.score !== undefined ? g.score : 0.8,
+                        g.emotion || 'Optimis',
+                        g.keywords || '[]',
+                        g.checked_in_at || new Date().toISOString()
+                    );
+                }
+            } catch (err) {}
+        }
+
+        const all = db.prepare('SELECT * FROM guests').all();
+        res.json({ success: true, count: all.length });
+    } catch (err) {
+        console.error('[API] Sync error:', err.message);
+        res.status(500).json({ success: false, error: 'Gagal sinkronisasi data tamu' });
+    }
+});
+
 // 2. Add single institution / guest
 app.post('/api/guests', (req, res) => {
     try {

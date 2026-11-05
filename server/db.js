@@ -130,24 +130,32 @@ try {
                         saveStore();
                         return { changes: store.guests.length };
                     }
-                    if (s.startsWith('INSERT INTO GUESTS')) {
-                        let id, name, institution, category, qr_token;
-                        if (params.length === 5) {
+                    if (s.includes('INTO GUESTS')) {
+                        let id, name, institution, category, qr_token, status, checked_in_at, created_at;
+                        if (params.length >= 8) {
+                            [id, name, institution, category, qr_token, status, checked_in_at, created_at] = params;
+                        } else if (params.length === 5) {
                             [id, name, institution, category, qr_token] = params;
                         } else {
                             [id, institution, category, qr_token] = params;
                             name = '';
                         }
-                        store.guests.push({
+                        const existingIdx = store.guests.findIndex(g => g.id === id);
+                        const guestObj = {
                             id,
                             name: name || '',
                             institution,
-                            category,
-                            qr_token,
-                            status: 'pending',
-                            checked_in_at: null,
-                            created_at: new Date().toISOString()
-                        });
+                            category: category || 'Mitra Tambahan',
+                            qr_token: qr_token || generateToken(),
+                            status: status || 'pending',
+                            checked_in_at: checked_in_at || null,
+                            created_at: created_at || new Date().toISOString()
+                        };
+                        if (existingIdx >= 0) {
+                            store.guests[existingIdx] = { ...store.guests[existingIdx], ...guestObj };
+                        } else {
+                            store.guests.push(guestObj);
+                        }
                         saveStore();
                         return { changes: 1 };
                     }
@@ -172,18 +180,24 @@ try {
                         }
                         return { changes: 1 };
                     }
-                    if (s.startsWith('INSERT INTO GUEST_MESSAGES')) {
-                        const [id, guest_id, message, sentiment, score, emotion, keywords] = params;
-                        store.messages.push({
-                            id,
+                    if (s.includes('INTO GUEST_MESSAGES')) {
+                        const [id, guest_id, message, sentiment, score, emotion, keywords, created_at] = params;
+                        const existingIdx = store.messages.findIndex(m => m.id === id || m.guest_id === guest_id);
+                        const msgObj = {
+                            id: id || uuidv4(),
                             guest_id,
                             message,
-                            sentiment,
-                            score,
-                            emotion,
-                            keywords,
-                            created_at: new Date().toISOString()
-                        });
+                            sentiment: sentiment || 'neutral',
+                            score: score !== undefined ? score : 0.5,
+                            emotion: emotion || 'Optimis',
+                            keywords: keywords || '[]',
+                            created_at: created_at || new Date().toISOString()
+                        };
+                        if (existingIdx >= 0) {
+                            store.messages[existingIdx] = msgObj;
+                        } else {
+                            store.messages.push(msgObj);
+                        }
                         saveStore();
                         return { changes: 1 };
                     }

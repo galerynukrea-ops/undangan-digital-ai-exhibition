@@ -311,6 +311,7 @@
 
     <!-- Scripts -->
     <script>
+        const CACHE_KEY = 'mbd_guests_cache_v2';
         let searchTimeout;
         let previousGuestCount = -1;
         let isFirstLoad = true;
@@ -320,20 +321,31 @@
             searchTimeout = setTimeout(() => fetchGuests(false), 250);
         }
 
-        async function fetchStats() {
+        function getCachedGuests() {
             try {
-                const res = await fetch('/api/stats');
-                const json = await res.json();
-                if (json.success) {
-                    const d = json.data;
-                    document.getElementById('statTotal').innerText = d.totalGuests;
-                    document.getElementById('statCheckedIn').innerText = d.checkedInCount;
-                    document.getElementById('statPending').innerText = d.pendingCount;
-                    document.getElementById('statRate').innerHTML = `<i class="fa-solid fa-chart-pie"></i> ${d.attendanceRate}% Kehadiran`;
+                const raw = localStorage.getItem(CACHE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) return parsed;
                 }
-            } catch (e) {
-                console.error('Error stats:', e);
-            }
+            } catch (e) {}
+            return [];
+        }
+
+        function setCachedGuests(list) {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify(list));
+            } catch (e) {}
+        }
+
+        async function syncGuestsToServer(guests) {
+            try {
+                await fetch('/api/guests/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ guests })
+                });
+            } catch (e) {}
         }
 
         async function fetchGuests(isSilent = false) {
@@ -347,18 +359,30 @@
             try {
                 const res = await fetch(url);
                 const json = await res.json();
-                const guests = json.data || [];
+                let serverGuests = json.data || [];
+                const localGuests = getCachedGuests();
+
+                // Self-Healing Anti-Flicker: Jika serverless container baru bangun dan mengembalikan 0,
+                // pertahankan data tamu yang sudah sah di browser & kirim sync ke server.
+                if (serverGuests.length === 0 && localGuests.length > 0 && !search && status === 'all') {
+                    serverGuests = localGuests;
+                    syncGuestsToServer(localGuests);
+                } else if (serverGuests.length > 0 && !search && status === 'all') {
+                    setCachedGuests(serverGuests);
+                }
 
                 // Cek jika ada tamu baru yang baru saja masuk
-                if (!isFirstLoad && guests.length > previousGuestCount && previousGuestCount >= 0) {
+                if (!isFirstLoad && serverGuests.length > previousGuestCount && previousGuestCount >= 0) {
                     highlightLiveArrival();
                 }
-                previousGuestCount = guests.length;
+                previousGuestCount = serverGuests.length;
                 isFirstLoad = false;
 
-                renderTable(guests);
+                renderTable(serverGuests);
             } catch (err) {
                 console.error('Error fetching guests:', err);
+                const fallback = getCachedGuests();
+                if (fallback.length > 0) renderTable(fallback);
             }
         }
 
@@ -481,10 +505,12 @@
                 });
                 const json = await res.json();
                 if (json.success) {
+                    localStorage.removeItem(CACHE_KEY);
+                    previousGuestCount = 0;
                     closeResetModal();
                     alert(json.message || 'Reset berhasil.');
-                    fetchGuests();
-                    fetchStats();
+                    renderTable([]);
+                    fetchGuests(false);
                 } else {
                     alert(json.error || 'Gagal melakukan reset.');
                 }
@@ -548,9 +574,13 @@
                 sse.onmessage = (event) => {
                     try {
                         const parsed = JSON.parse(event.data);
-                        if (parsed.type === 'guest_checked_in' || parsed.type === 'robot_greet' || parsed.type === 'database_reset') {
+                        if (parsed.type === 'guest_checked_in' || parsed.type === 'robot_greet') {
                             fetchGuests(false);
-                            fetchStats();
+                        } else if (parsed.type === 'database_reset') {
+                            localStorage.removeItem(CACHE_KEY);
+                            previousGuestCount = 0;
+                            renderTable([]);
+                            fetchGuests(false);
                         }
                     } catch (e) {}
                 };
@@ -574,7 +604,6 @@
                     return;
                 }
                 fetchGuests(true);
-                fetchStats();
             }, 2500);
         }
 
@@ -582,17 +611,18 @@
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
                 fetchGuests(false);
-                fetchStats();
             }
         });
         window.addEventListener('focus', () => {
             fetchGuests(false);
-            fetchStats();
         });
 
-        // Bootstrap on Load
-        fetchGuests();
-        fetchStats();
+        // Bootstrap on Load: Render cache seketika agar tidak pernah kedip 0
+        const initialCached = getCachedGuests();
+        if (initialCached.length > 0) {
+            renderTable(initialCached);
+        }
+        fetchGuests(false);
         initDashboardSSE();
         startAutoPolling();
     </script>
