@@ -30,6 +30,23 @@
             }
         }
     </script>
+    <style>
+        /* Cyber Scrollbar for Custom Dropdown */
+        .cyber-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .cyber-scrollbar::-webkit-scrollbar-track {
+            background: rgba(5, 8, 20, 0.95);
+            border-radius: 8px;
+        }
+        .cyber-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 240, 255, 0.5);
+            border-radius: 8px;
+        }
+        .cyber-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 240, 255, 0.85);
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-cyberBlack text-chromeWhite flex flex-col justify-between selection:bg-neonCyan selection:text-cyberBlack px-4 py-5 cyber-grid-bg">
 
@@ -76,11 +93,28 @@
                     </button>
                 </div>
 
-                <!-- 1. Dropdown Selection for Pre-registered Institutions -->
-                <div id="dropdownContainer">
-                    <select id="selectInstitution" onchange="handleSelectChange()" class="w-full px-3.5 py-3 bg-cyberDark border border-neonCyan/40 rounded-xl text-chromeWhite font-tech font-semibold text-xs focus:outline-none focus:border-neonCyan focus:ring-1 focus:ring-neonCyan">
+                <!-- 1. Custom Sci-Fi Cyber Dropdown Selection (Identik 100% di PC & HP) -->
+                <div id="dropdownContainer" class="relative">
+                    <button type="button" 
+                            id="customSelectTrigger" 
+                            onclick="toggleDropdown()" 
+                            class="w-full px-3.5 py-3 bg-cyberDark border border-neonCyan/40 rounded-xl text-chromeWhite font-tech font-semibold text-xs focus:outline-none focus:border-neonCyan focus:ring-1 focus:ring-neonCyan flex items-center justify-between transition shadow-[0_0_15px_rgba(0,240,255,0.08)] text-left">
+                        <span id="customSelectLabel" class="truncate text-chromeSilver">-- Pilih Instansi / Perusahaan --</span>
+                        <i id="customSelectChevron" class="fa-solid fa-chevron-down text-neonCyan text-[11px] transition-transform duration-200 ml-2 shrink-0"></i>
+                    </button>
+
+                    <!-- Hidden native select for form data & fallback compatibility -->
+                    <select id="selectInstitution" class="hidden">
                         <option value="">-- Pilih Instansi / Perusahaan --</option>
                     </select>
+
+                    <!-- Custom Dropdown Panel (Sama persis di PC & Layar HP) -->
+                    <div id="customDropdownPanel" 
+                         class="hidden absolute left-0 right-0 top-full mt-1.5 z-50 bg-[#070F22] border-2 border-neonCyan/70 rounded-xl shadow-[0_12px_45px_rgba(0,0,0,0.95),0_0_25px_rgba(0,240,255,0.35)] max-h-64 overflow-y-auto cyber-scrollbar transition-all">
+                        <div id="customDropdownItems" class="p-1.5 space-y-1">
+                            <!-- Items populated dynamically by JS -->
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 2. Manual Input for Additional / Unlisted Institutions -->
@@ -162,6 +196,7 @@
 
     <script>
         let guestList = [];
+        let institutionsData = [];
         let isCustomMode = false;
 
         async function loadInstitutions() {
@@ -169,25 +204,108 @@
                 const res = await fetch('/api/institutions');
                 const json = await res.json();
                 if (json.success) {
-                    const instList = json.data;
-                    const select = document.getElementById('selectInstitution');
-                    select.innerHTML = '<option value="">-- Pilih Instansi / Perusahaan --</option>' +
-                        '<option value="__NEW__" class="text-neonCyan font-bold">➕ Instansi Lainnya (Undangan Tambahan / Ketik Baru)</option>' +
-                        instList.map(item => {
-                            return `<option value="${item.institution}">${item.institution} • (${item.category})</option>`;
-                        }).join('');
+                    institutionsData = json.data || [];
+                    renderCustomDropdown();
                 }
             } catch (err) {
-                console.error(err);
+                console.error('Error loading institutions:', err);
             }
         }
 
-        function handleSelectChange() {
-            const val = document.getElementById('selectInstitution').value;
+        function renderCustomDropdown() {
+            const panel = document.getElementById('customDropdownItems');
+            const nativeSelect = document.getElementById('selectInstitution');
+            if (!panel || !nativeSelect) return;
+
+            const currentVal = nativeSelect.value;
+
+            // 1. Reset / Placeholder Item
+            let html = `
+                <div onclick="selectInstitutionItem('', '-- Pilih Instansi / Perusahaan --')" 
+                     class="px-3 py-2 rounded-lg text-chromeSilver/70 hover:bg-neonCyan/15 hover:text-chromeWhite cursor-pointer transition text-xs font-semibold flex items-center justify-between">
+                    <span>-- Pilih Instansi / Perusahaan --</span>
+                </div>
+                <!-- 2. Tambah Instansi Baru Action -->
+                <div onclick="selectInstitutionItem('__NEW__', '➕ Instansi Lainnya (Undangan Tambahan / Ketik Baru)')" 
+                     class="px-3 py-2.5 rounded-lg bg-neonCyan/10 text-neonCyan hover:bg-neonCyan/25 cursor-pointer transition text-xs font-cyber font-bold flex items-center justify-between border border-neonCyan/40 my-1 shadow-[0_0_12px_rgba(0,240,255,0.15)]">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-plus-circle text-neonMagenta text-sm"></i> Instansi Lainnya (Ketik Baru)</span>
+                    <i class="fa-solid fa-pen text-[10px] text-neonCyan"></i>
+                </div>
+            `;
+
+            let nativeHtml = `
+                <option value="">-- Pilih Instansi / Perusahaan --</option>
+                <option value="__NEW__">➕ Instansi Lainnya (Undangan Tambahan / Ketik Baru)</option>
+            `;
+
+            institutionsData.forEach(item => {
+                const isSelected = currentVal === item.institution;
+                const activeStyle = isSelected 
+                    ? 'bg-neonCyan/20 text-neonCyan border border-neonCyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]' 
+                    : 'hover:bg-neonCyan/15 text-chromeWhite';
+
+                const safeInst = escapeQuotes(item.institution);
+                const safeCat = escapeQuotes(item.category);
+
+                html += `
+                    <div onclick="selectInstitutionItem('${safeInst}', '${safeInst} • (${safeCat})')" 
+                         class="px-3 py-2.5 rounded-lg cursor-pointer transition text-xs flex items-center justify-between group ${activeStyle}">
+                        <div class="truncate pr-2">
+                            <span class="font-bold block text-chromeWhite group-hover:text-neonCyan transition">${escapeHtml(item.institution)}</span>
+                            <span class="text-[10px] text-chromeSilver/70 font-monoTech block mt-0.5">${escapeHtml(item.category)}</span>
+                        </div>
+                        ${isSelected ? '<i class="fa-solid fa-circle-check text-neonCyan text-xs shrink-0 drop-shadow-[0_0_5px_#00F0FF]"></i>' : ''}
+                    </div>
+                `;
+
+                nativeHtml += `<option value="${escapeHtml(item.institution)}">${escapeHtml(item.institution)} • (${escapeHtml(item.category)})</option>`;
+            });
+
+            panel.innerHTML = html;
+            nativeSelect.innerHTML = nativeHtml;
+        }
+
+        function toggleDropdown(force) {
+            const panel = document.getElementById('customDropdownPanel');
+            const chevron = document.getElementById('customSelectChevron');
+            if (!panel || !chevron) return;
+
+            const shouldOpen = typeof force === 'boolean' ? force : panel.classList.contains('hidden');
+
+            if (shouldOpen) {
+                panel.classList.remove('hidden');
+                chevron.classList.add('rotate-180');
+            } else {
+                panel.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            }
+        }
+
+        function selectInstitutionItem(val, label) {
+            const nativeSelect = document.getElementById('selectInstitution');
+            const labelEl = document.getElementById('customSelectLabel');
+
+            if (nativeSelect) nativeSelect.value = val;
+            if (labelEl) {
+                labelEl.innerText = val ? label : '-- Pilih Instansi / Perusahaan --';
+                labelEl.className = val ? 'truncate text-chromeWhite font-bold text-xs' : 'truncate text-chromeSilver text-xs';
+            }
+
+            toggleDropdown(false);
+            renderCustomDropdown(); // Perbarui tanda centang
+
             if (val === '__NEW__') {
                 toggleCustomMode(true);
             }
         }
+
+        // Tutup dropdown saat pengguna klik atau sentuh di luar dropdown
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('dropdownContainer');
+            if (container && !container.contains(e.target)) {
+                toggleDropdown(false);
+            }
+        });
 
         function toggleCustomMode(force) {
             isCustomMode = typeof force === 'boolean' ? force : !isCustomMode;
@@ -203,9 +321,22 @@
             } else {
                 dropdown.classList.remove('hidden');
                 customBox.classList.add('hidden');
-                toggleBtn.innerHTML = `<i class="fa-solid fa-plus-circle"></i> Undangan Tambahan?`;
-                document.getElementById('selectInstitution').value = '';
+                toggleBtn.innerHTML = `<i class="fa-solid fa-plus-circle text-neonPurple"></i> Undangan Tambahan?`;
+                selectInstitutionItem('', '-- Pilih Instansi / Perusahaan --');
             }
+        }
+
+        function escapeQuotes(str) {
+            return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
         function setMsg(text) {
@@ -223,8 +354,18 @@
             if (isCustomMode) {
                 institutionName = document.getElementById('customInstitutionInput').value.trim();
                 customCategory = document.getElementById('customCategoryInput').value.trim();
+                if (!institutionName) {
+                    alert('Silakan ketikkan nama instansi Anda.');
+                    document.getElementById('customInstitutionInput').focus();
+                    return;
+                }
             } else {
                 institutionName = document.getElementById('selectInstitution').value;
+                if (!institutionName) {
+                    alert('Silakan pilih asal instansi Anda dari daftar atau pilih Tambah Instansi.');
+                    toggleDropdown(true);
+                    return;
+                }
                 if (institutionName === '__NEW__') {
                     toggleCustomMode(true);
                     return;
