@@ -137,7 +137,7 @@ async function syncLocalDbWithCloud() {
             }
         }
 
-        // If local DB has guests that Cloud Store doesn't have yet, push them to Cloud Store asynchronously
+        // If local DB has guests that Cloud Store doesn't have yet, push them to Cloud Store
         if (Array.isArray(cloudGuests)) {
             const cloudIds = new Set(cloudGuests.map(g => g.id));
             const localGuests = db.prepare(`
@@ -148,7 +148,7 @@ async function syncLocalDbWithCloud() {
 
             for (const lg of localGuests) {
                 if (lg.id && lg.name && !cloudIds.has(lg.id)) {
-                    saveGuestToCloud(lg).catch(() => {});
+                    await saveGuestToCloud(lg);
                 }
             }
         }
@@ -664,11 +664,10 @@ app.get('/api/stats', async (req, res) => {
             .sort((a, b) => b.count - a.count)
             .slice(0, 12);
 
-        // Recent checked-in institutions
-        const recentCheckins = allGuests
+        // All and Recent checked-in institutions
+        const allCheckins = allGuests
             .filter(g => g.status === 'checked_in')
             .sort((a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0))
-            .slice(0, 10)
             .map(g => {
                 const m = allMessages.find(x => x.guest_id === g.id) || {};
                 return {
@@ -685,17 +684,20 @@ app.get('/api/stats', async (req, res) => {
                 };
             });
 
+        const recentCheckins = allCheckins.slice(0, 15);
+
         res.json({
             success: true,
             data: {
                 totalGuests,
-                checkedInCount,
+                checkedInCount: allCheckins.length,
                 pendingCount,
                 attendanceRate,
                 categories,
                 emotions,
                 keywords: sortedKeywords,
-                recentCheckins
+                recentCheckins,
+                allCheckins
             }
         });
     } catch (err) {

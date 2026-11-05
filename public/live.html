@@ -411,6 +411,28 @@
         let totalCount = 0;
         let popupDismissTimer = null;
 
+        function mergeGuestList(current, incoming) {
+            const map = new Map();
+            (current || []).forEach(g => { if (g && g.id) map.set(g.id, g); });
+            (incoming || []).forEach(g => {
+                if (g && g.id) {
+                    const existing = map.get(g.id) || {};
+                    map.set(g.id, { ...existing, ...g });
+                }
+            });
+            return Array.from(map.values()).sort(
+                (a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0)
+            );
+        }
+
+        // Restore instant cache
+        try {
+            const cached = JSON.parse(localStorage.getItem('mbd_live_guests') || '[]');
+            if (Array.isArray(cached) && cached.length > 0) {
+                checkedInGuests = cached;
+            }
+        } catch (e) {}
+
         // Fetch Stats & Checked In Guests
         async function loadStats() {
             try {
@@ -418,16 +440,29 @@
                 const json = await res.json();
                 if (json.success) {
                     const stats = json.data;
-                    totalCount = stats.totalGuests || 0;
-                    const checkedIn = stats.checkedInCount || 0;
-                    const counterEl = document.getElementById('counterText');
-                    counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedIn}</span> TAMU HADIR`;
+                    const incomingList = stats.allCheckins || stats.recentCheckins || [];
+                    checkedInGuests = mergeGuestList(checkedInGuests, incomingList);
+                    try {
+                        localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests));
+                    } catch (e) {}
 
-                    if (stats.recentCheckins && stats.recentCheckins.length > 0) {
-                        checkedInGuests = stats.recentCheckins;
+                    const checkedCount = Math.max(stats.checkedInCount || 0, checkedInGuests.length);
+                    const counterEl = document.getElementById('counterText');
+                    counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedCount}</span> TAMU HADIR`;
+
+                    if (checkedInGuests.length > 0) {
                         updateBottomMarquee(checkedInGuests);
                     } else {
                         renderEmptyMarquee();
+                    }
+
+                    // Self-healing: if client has guests unknown to server, heal the server
+                    if (checkedInGuests.length > (stats.checkedInCount || 0)) {
+                        fetch('/api/guests/sync', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ guests: checkedInGuests })
+                        }).catch(() => {});
                     }
                 }
             } catch (err) {
@@ -447,26 +482,37 @@
         }
 
         function updateBottomMarquee(guestList) {
+            const track = document.getElementById('bottomMarqueeTrack');
             if (!guestList || guestList.length === 0) {
                 renderEmptyMarquee();
                 return;
             }
 
-            // Create marquee items repeated for seamless infinite scroll
+            // Create beautiful cyber neon chips for each guest
             const itemsHtml = guestList.map((g) => {
-                const nameStr = g.name || g.institution;
-                const instStr = g.name ? ` (${g.institution})` : '';
-                return `<span class="inline-flex items-center gap-2"><span class="text-neonCyan font-bold">${nameStr}</span><span class="text-chromeSilver/80">${instStr}</span><i class="fa-solid fa-circle-check text-emerald-400 text-[10px] ml-1"></i></span>`;
-            }).join(' <span class="text-neonPurple mx-3">•</span> ');
+                const name = (g.name || '').trim();
+                const inst = (g.institution || '').trim();
+                const displayName = name || inst || 'Tamu Undangan';
+                const instBadge = (name && inst) ? `<span class="text-chromeSilver/90 text-xs font-normal">(${inst})</span>` : '';
+                return `
+                    <span class="inline-flex items-center gap-2 px-3.5 py-1 bg-cyberDark/90 border border-neonCyan/40 rounded-xl shadow-[0_0_10px_rgba(0,240,255,0.2)]">
+                        <span class="text-neonCyan font-cyber font-bold text-xs sm:text-sm tracking-wide">${displayName}</span>
+                        ${instBadge}
+                        <i class="fa-solid fa-circle-check text-emerald-400 text-xs ml-0.5"></i>
+                    </span>
+                `;
+            }).join(' <span class="text-neonPurple/80 mx-2 text-base font-bold">•</span> ');
 
-            // Duplicate 3 times so the loop never breaks
+            // Duplicate twice for seamless mathematical 50% infinite marquee loop
             const fullTrackHtml = `
                 <span class="text-xs sm:text-sm font-tech font-semibold tracking-wider text-chromeWhite flex items-center gap-4 py-0.5">
-                    ${itemsHtml} <span class="text-neonPurple mx-3">•</span> ${itemsHtml} <span class="text-neonPurple mx-3">•</span> ${itemsHtml}
+                    ${itemsHtml} <span class="text-neonPurple/80 mx-2 text-base font-bold">•</span> ${itemsHtml}
                 </span>
             `;
 
-            document.getElementById('bottomMarqueeTrack').innerHTML = fullTrackHtml;
+            track.innerHTML = fullTrackHtml;
+            const duration = Math.max(25, guestList.length * 8);
+            track.style.animationDuration = duration + 's';
         }
 
         // FIFO QUEUE SYSTEM FOR WELCOME POPUP (Urut, Tidak Menumpuk, 10 Detik per Tamu)
@@ -610,11 +656,41 @@
                 client.on('connect', () => {
                     console.log('[MQTT] Live Wall connected to real-time broker!');
                     client.subscribe('mbd_ai_exhibition_madiun_2026/events');
+                    client.subscribe('mbd_ai_exhibition_madiun_2026/state');
                 });
                 client.on('message', (topic, msg) => {
                     try {
+                        if (topic === 'mbd_ai_exhibition_madiun_2026/state') {
+                            const stateObj = JSON.parse(msg.toString());
+                            if (Array.isArray(stateObj.guests) && stateObj.guests.length > 0) {
+                                checkedInGuests = mergeGuestList(checkedInGuests, stateObj.guests);
+                                try {
+                                    localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests));
+                                } catch (e) {}
+                                updateBottomMarquee(checkedInGuests);
+                                const counterEl = document.getElementById('counterText');
+                                if (counterEl) {
+                                    counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedInGuests.length}</span> TAMU HADIR`;
+                                }
+                            }
+                            return;
+                        }
+
                         const parsed = JSON.parse(msg.toString());
                         if (parsed.type === 'guest_checked_in' || parsed.type === 'robot_greet') {
+                            const guestObj = parsed.data?.guest || parsed.data;
+                            if (guestObj && guestObj.id) {
+                                checkedInGuests = mergeGuestList(checkedInGuests, [guestObj]);
+                                try {
+                                    localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests));
+                                } catch (e) {}
+                                updateBottomMarquee(checkedInGuests);
+                                const counterEl = document.getElementById('counterText');
+                                if (counterEl) {
+                                    counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedInGuests.length}</span> TAMU HADIR`;
+                                }
+                            }
+
                             const gId = parsed.data?.guest?.id || parsed.data?.id;
                             if (gId) {
                                 if (greetedGuestIds.has(gId)) return; // Already greeted
@@ -626,6 +702,8 @@
                             arrivalQueue.length = 0;
                             isProcessingArrival = false;
                             greetedGuestIds.clear();
+                            checkedInGuests = [];
+                            try { localStorage.removeItem('mbd_live_guests'); } catch (e) {}
                             if (popupDismissTimer) clearTimeout(popupDismissTimer);
                             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                             const popup = document.getElementById('welcomePopup');

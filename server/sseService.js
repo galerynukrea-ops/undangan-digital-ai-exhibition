@@ -4,18 +4,16 @@ let clients = [];
 let mqttClient = null;
 
 try {
-    mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
-        reconnectPeriod: 2500,
+    mqttClient = mqtt.connect('mqtt://broker.hivemq.com:1883', {
+        reconnectPeriod: 3000,
         connectTimeout: 5000
     });
     mqttClient.on('connect', () => {
         console.log('[MQTT] Server connected to global real-time broker.');
     });
-    mqttClient.on('error', (err) => {
-        console.warn('[MQTT] Broker connection notice:', err.message);
-    });
+    mqttClient.on('error', () => {});
 } catch (e) {
-    console.warn('[MQTT] Could not initialize server MQTT client:', e.message);
+    console.warn('[MQTT] Notice:', e.message);
 }
 
 function addClient(req, res) {

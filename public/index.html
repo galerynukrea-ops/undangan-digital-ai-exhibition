@@ -352,18 +352,40 @@
                 const json = await res.json();
                 const serverGuests = json.data || [];
 
+                const current = getCachedGuests();
+                const map = new Map();
+                current.forEach(g => { if (g.id) map.set(g.id, g); });
+                serverGuests.forEach(g => {
+                    if (g.id) {
+                        const ex = map.get(g.id) || {};
+                        map.set(g.id, { ...ex, ...g });
+                    }
+                });
+                const mergedGuests = Array.from(map.values()).sort(
+                    (a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0)
+                );
+
                 if (!search && status === 'all') {
-                    setCachedGuests(serverGuests);
+                    setCachedGuests(mergedGuests);
+                }
+
+                // If client has more guests than server returned, heal server
+                if (mergedGuests.length > serverGuests.length) {
+                    fetch('/api/guests/sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ guests: mergedGuests })
+                    }).catch(() => {});
                 }
 
                 // Cek jika ada tamu baru yang baru saja masuk
-                if (!isFirstLoad && serverGuests.length > previousGuestCount && previousGuestCount >= 0) {
+                if (!isFirstLoad && mergedGuests.length > previousGuestCount && previousGuestCount >= 0) {
                     highlightLiveArrival();
                 }
-                previousGuestCount = serverGuests.length;
+                previousGuestCount = mergedGuests.length;
                 isFirstLoad = false;
 
-                renderTable(serverGuests);
+                renderTable(mergedGuests);
             } catch (err) {
                 console.error('Error fetching guests:', err);
                 const fallback = getCachedGuests();
@@ -563,9 +585,31 @@
                 client.on('connect', () => {
                     console.log('[MQTT] Dashboard connected to real-time broker!');
                     client.subscribe('mbd_ai_exhibition_madiun_2026/events');
+                    client.subscribe('mbd_ai_exhibition_madiun_2026/state');
                 });
                 client.on('message', (topic, msg) => {
                     try {
+                        if (topic === 'mbd_ai_exhibition_madiun_2026/state') {
+                            const stateObj = JSON.parse(msg.toString());
+                            if (Array.isArray(stateObj.guests) && stateObj.guests.length > 0) {
+                                const current = getCachedGuests();
+                                const map = new Map();
+                                current.forEach(g => { if (g.id) map.set(g.id, g); });
+                                stateObj.guests.forEach(g => {
+                                    if (g.id) {
+                                        const ex = map.get(g.id) || {};
+                                        map.set(g.id, { ...ex, ...g });
+                                    }
+                                });
+                                const merged = Array.from(map.values()).sort(
+                                    (a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0)
+                                );
+                                setCachedGuests(merged);
+                                renderTable(merged);
+                            }
+                            return;
+                        }
+
                         const parsed = JSON.parse(msg.toString());
                         if (parsed.type === 'guest_checked_in') {
                             const newGuest = parsed.data.guest;
