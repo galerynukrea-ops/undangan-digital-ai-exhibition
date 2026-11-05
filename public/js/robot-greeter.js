@@ -18,13 +18,24 @@
     let animFrameId = null;
     let containerElement = null;
 
-    // Temporary math helpers
-    const _dummyMatrix = new THREE.Matrix4();
-    const _dummyPos = new THREE.Vector3();
-    const _dummyQuat = new THREE.Quaternion();
-    const _dummyScale = new THREE.Vector3();
-    const _dummyColor = new THREE.Color();
-    const _upAxis = new THREE.Vector3(0, 1, 0);
+    // Temporary math helpers (Lazily initialized once Three.js is ready)
+    let _dummyMatrix = null;
+    let _dummyPos = null;
+    let _dummyQuat = null;
+    let _dummyScale = null;
+    let _dummyColor = null;
+    let _upAxis = null;
+
+    function initThreeHelpers() {
+        if (!_dummyMatrix && typeof THREE !== 'undefined') {
+            _dummyMatrix = new THREE.Matrix4();
+            _dummyPos = new THREE.Vector3();
+            _dummyQuat = new THREE.Quaternion();
+            _dummyScale = new THREE.Vector3();
+            _dummyColor = new THREE.Color();
+            _upAxis = new THREE.Vector3(0, 1, 0);
+        }
+    }
 
     // Audio State
     let audioCtx = null;
@@ -75,11 +86,17 @@
 
     function getAudioContext() {
         if (!audioCtx) {
-            const AudioClass = window.AudioContext || window.webkitAudioContext;
-            if (AudioClass) audioCtx = new AudioClass();
+            try {
+                const AudioClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioClass) audioCtx = new AudioClass();
+            } catch (e) {
+                console.warn('[AudioContext] Could not create AudioContext:', e.message);
+            }
         }
         if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume().catch(() => {});
+            try {
+                audioCtx.resume().catch(() => {});
+            } catch (e) {}
         }
         return audioCtx;
     }
@@ -279,6 +296,12 @@
     }
 
     function init(containerId) {
+        if (typeof THREE === 'undefined') {
+            console.warn('[Robot3D] THREE is still loading, retrying in 200ms...');
+            setTimeout(() => init(containerId), 200);
+            return;
+        }
+        initThreeHelpers();
         containerElement = document.getElementById(containerId);
         if (!containerElement) return;
 
@@ -680,6 +703,7 @@
         rightEar.finGroup.rotation.z = -0.24 - Math.sin(elapsed * 3.2) * 0.06;
 
         // Particle Orbits
+        if (!_dummyMatrix) initThreeHelpers();
         for (let i = 0; i < nodeOrbits.length; i++) {
             const orb = nodeOrbits[i];
             const a = orb.angle + elapsed * orb.speed;
