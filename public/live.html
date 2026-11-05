@@ -108,14 +108,14 @@
                 inset 0 0 30px rgba(189, 0, 255, 0.2);
         }
 
-        /* 15s Countdown Progress Bar */
+        /* 10s Countdown Progress Bar */
         @keyframes countdownProgress {
             0% { width: 100%; }
             100% { width: 0%; }
         }
 
         .animate-progress {
-            animation: countdownProgress 15s linear forwards;
+            animation: countdownProgress 10s linear forwards;
         }
 
         /* 3D Floating Event Emblem */
@@ -264,7 +264,7 @@
 
             <div class="flex items-center justify-between mt-2 text-[10px] text-chromeSilver/60 font-monoTech">
                 <span>WAROENG LATTE MADIUN</span>
-                <span>TAMPIL 15 DETIK</span>
+                <span id="popQueueIndicator">TAMPIL 10 DETIK</span>
             </div>
 
         </div>
@@ -431,8 +431,60 @@
             document.getElementById('bottomMarqueeTrack').innerHTML = fullTrackHtml;
         }
 
-        // TRIGGER CHECK-IN WELCOME SEQUENCE (Robot Terbang ke Kanan, Muncul Pop-up di Kiri Selama 15 Detik)
+        // FIFO QUEUE SYSTEM FOR WELCOME POPUP (Urut, Tidak Menumpuk, 10 Detik per Tamu)
+        const arrivalQueue = [];
+        let isProcessingArrival = false;
+        let popupDismissTimer = null;
+
+        function updateQueueBadge() {
+            const queueEl = document.getElementById('popQueueIndicator');
+            if (!queueEl) return;
+            if (arrivalQueue.length > 0) {
+                queueEl.innerHTML = `<span class="text-neonCyan font-bold">TAMPIL 10 DETIK</span> • <span class="text-amber-400 font-bold animate-pulse"><i class="fa-solid fa-users mr-1"></i>ANTREAN: +${arrivalQueue.length} TAMU</span>`;
+            } else {
+                queueEl.innerText = 'TAMPIL 10 DETIK';
+            }
+        }
+
+        // Trigger / Masukkan tamu ke antrean kedatangan
         function triggerGuestArrivalSequence(guestData) {
+            if (!guestData) return;
+            arrivalQueue.push(guestData);
+            updateQueueBadge();
+
+            // Update statistik angka & marquee bawah secara langsung
+            loadStats();
+
+            // Jika sedang tidak ada pop-up aktif, segera proses tamu pertama
+            if (!isProcessingArrival) {
+                processNextArrival();
+            }
+        }
+
+        function processNextArrival() {
+            // Jika antrean sudah habis: sembunyikan pop-up & kembalikan robot ke tengah
+            if (arrivalQueue.length === 0) {
+                isProcessingArrival = false;
+                updateQueueBadge();
+
+                const popup = document.getElementById('welcomePopup');
+                popup.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
+                popup.classList.add('-translate-x-[150%]', 'opacity-0', 'pointer-events-none');
+
+                if (window.Robot3D) {
+                    window.Robot3D.flyToCenter();
+                }
+                return;
+            }
+
+            // Ambil tamu berikutnya dari antrean (FIFO)
+            isProcessingArrival = true;
+            const currentGuestData = arrivalQueue.shift();
+            updateQueueBadge();
+            renderGuestArrival(currentGuestData);
+        }
+
+        function renderGuestArrival(guestData) {
             const guest = guestData.guest || guestData;
             const guestName = guest.name || guest.institution || 'Tamu Kehormatan';
             const guestInst = guest.institution || 'Mitra Kehormatan';
@@ -458,55 +510,56 @@
                 window.Robot3D.flyToRight(1.35);
             }
 
-            // 2. Tampilkan Pop-Up di Sebelah Kiri
+            // 2. Isi konten Pop-Up
             const popup = document.getElementById('welcomePopup');
             document.getElementById('popName').innerText = guestName;
             document.getElementById('popInst').innerHTML = `<i class="fa-solid fa-building-columns text-neonPurple"></i><span>${guestInst}</span>`;
             document.getElementById('popMsg').innerText = guestMsg;
 
-            // Reset and start 15s progress bar
+            // 3. Reset dan mulai animasi bilah mundur 10 detik
             const bar = document.getElementById('popProgressBar');
             bar.className = 'h-full bg-gradient-to-r from-neonCyan via-neonBlue to-neonPurple shadow-[0_0_10px_#00F0FF]';
-            // Trigger reflow
+            // Force DOM reflow
             void bar.offsetWidth;
             bar.className = 'h-full bg-gradient-to-r from-neonCyan via-neonBlue to-neonPurple shadow-[0_0_10px_#00F0FF] animate-progress';
 
-            // Animate popup in
+            // 4. Munculkan pop-up
             popup.classList.remove('-translate-x-[150%]', 'opacity-0', 'pointer-events-none');
             popup.classList.add('translate-x-0', 'opacity-100', 'pointer-events-auto');
 
-            // 3. Suara sapaan alami perempuan
-            const speechText = `Selamat datang ${guestName} dari ${guestInst}! Terima kasih atas kehadirannya di acara Menembus Batas Digital.`;
-            
+            // 5. Suara sapaan alami (batalkan suara sebelumnya agar tidak bertumpuk)
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            const speechText = `Selamat datang ${guestName} dari ${guestInst}! Terima kasih atas kehadirannya di Digital AI Work Exhibition.`;
             if (!isAudioMuted && window.Robot3D) {
                 window.Robot3D.speakText(speechText);
             }
 
-            // 4. Meletupkan konfeti
+            // 6. Letupan konfeti perayaan kedatangan
             if (typeof confetti === 'function') {
                 confetti({
-                    particleCount: 120,
-                    spread: 100,
+                    particleCount: 110,
+                    spread: 90,
                     origin: { y: 0.6, x: 0.35 },
                     colors: ['#00F0FF', '#BD00FF', '#0077FE', '#FFFFFF']
                 });
             }
 
-            // 5. Update data list hadir & marquee bawah
-            loadStats();
-
-            // 6. TEPAT SETELAH 15 DETIK: Sembunyikan Pop-Up, Robot Kembali ke Tengah
+            // 7. TIMER TEPAT 10 DETIK: Selesaikan sambutan ini, lalu lanjutkan ke antrean berikutnya
             if (popupDismissTimer) clearTimeout(popupDismissTimer);
             popupDismissTimer = setTimeout(() => {
-                // Sembunyikan Pop-up
-                popup.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
-                popup.classList.add('-translate-x-[150%]', 'opacity-0', 'pointer-events-none');
-
-                // Robot terbang kembali ke tengah (Smooth Flight back to Center)
-                if (window.Robot3D) {
-                    window.Robot3D.flyToCenter();
+                if (arrivalQueue.length > 0) {
+                    // Transisi visual halus sebelum berganti ke tamu berikutnya
+                    popup.classList.add('opacity-40');
+                    setTimeout(() => {
+                        popup.classList.remove('opacity-40');
+                        processNextArrival();
+                    }, 300);
+                } else {
+                    processNextArrival();
                 }
-            }, 15000);
+            }, 10000);
         }
 
         // SSE Real-time Listener
@@ -521,8 +574,16 @@
                     } else if (parsed.type === 'robot_greet') {
                         triggerGuestArrivalSequence(parsed.data);
                     } else if (parsed.type === 'database_reset') {
-                        loadStats();
+                        // Bersihkan antrean jika ada reset
+                        arrivalQueue.length = 0;
+                        isProcessingArrival = false;
+                        if (popupDismissTimer) clearTimeout(popupDismissTimer);
+                        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                        const popup = document.getElementById('welcomePopup');
+                        popup.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
+                        popup.classList.add('-translate-x-[150%]', 'opacity-0', 'pointer-events-none');
                         if (window.Robot3D) window.Robot3D.flyToCenter();
+                        loadStats();
                     }
                 } catch (err) {
                     console.error('SSE Error:', err);
