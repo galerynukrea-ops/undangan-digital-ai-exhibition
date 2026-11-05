@@ -433,7 +433,13 @@ app.get('/api/institutions', (req, res) => {
 
 app.post('/api/checkin/submit', async (req, res) => {
     try {
-        const { token, name, institution, newInstitution, category, message } = req.body || {};
+        const body = req.body || {};
+        const token = body.token;
+        const name = body.name || body.guest_name;
+        const institution = body.institution;
+        const newInstitution = body.newInstitution;
+        const category = body.category;
+        const message = body.message || body.guest_message;
 
         let targetInst = (newInstitution || institution || '').trim();
         if (targetInst === '__NEW__') targetInst = '';
@@ -574,8 +580,34 @@ app.get('/api/checkin/lookup/:token', (req, res) => {
 // REST API: Live Wall & Exhibition Analytics
 // -------------------------------------------------------------
 
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', async (req, res) => {
     try {
+        // Synchronize with persistent global cloud store so all Vercel instances have unified stats
+        try {
+            const cloudGuests = await getCloudGuests();
+            if (Array.isArray(cloudGuests) && cloudGuests.length > 0) {
+                const insertGuest = db.prepare(`
+                    INSERT OR REPLACE INTO guests (id, name, institution, category, qr_token, status, checked_in_at, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                `);
+                for (const g of cloudGuests) {
+                    if (!g.id || !g.name) continue;
+                    try {
+                        insertGuest.run(
+                            g.id,
+                            g.name || '',
+                            g.institution || 'Tamu Undangan',
+                            g.category || 'Mitra / Tamu',
+                            g.qr_token || generateToken(),
+                            g.status || 'checked_in',
+                            g.checked_in_at || g.created_at || new Date().toISOString(),
+                            g.created_at || new Date().toISOString()
+                        );
+                    } catch (e) {}
+                }
+            }
+        } catch (e) {}
+
         const allGuests = db.prepare('SELECT * FROM guests').all() || [];
         const totalGuests = allGuests.length;
         const checkedInCount = allGuests.filter(g => g.status === 'checked_in').length;

@@ -184,7 +184,7 @@
     </div>
 
     <footer class="text-center text-[10px] font-tech text-chromeSilver/60 py-4 tracking-wider">
-        Digital Work AI Exhibition : Menembus Batas Digital • Waroeng Latte, Kota Madiun
+        Pelatihan Berbasis Kompetensi • Digital AI Work Exhibition • Waroeng Latte, Kota Madiun
     </footer>
 
     <script>
@@ -260,20 +260,17 @@
                 institutionName = document.getElementById('customInstitutionInput').value.trim();
                 customCategory = document.getElementById('customCategoryInput').value.trim();
                 if (!institutionName) {
-                    alert('Silakan ketikkan nama instansi Anda.');
-                    document.getElementById('customInstitutionInput').focus();
-                    return;
+                    institutionName = 'Tamu Undangan';
                 }
             } else {
                 institutionName = document.getElementById('selectInstitution').value;
-                if (!institutionName || institutionName === '') {
-                    alert('Silakan pilih asal instansi Anda dari daftar atau pilih Undangan Tambahan.');
-                    document.getElementById('selectInstitution').focus();
-                    return;
-                }
                 if (institutionName === '__NEW__') {
                     toggleCustomMode(true);
                     return;
+                }
+                if (!institutionName || institutionName === '') {
+                    // Fallback otomatis agar tamu tidak terblokir saat konfirmasi
+                    institutionName = 'Tamu Undangan';
                 }
             }
 

@@ -19,7 +19,7 @@ async function getCloudGuests() {
 
     try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 3000);
+        const timeout = setTimeout(() => controller.abort(), 6000);
 
         const res = await fetch(CLOUD_URL, {
             signal: controller.signal,
@@ -54,7 +54,7 @@ async function saveGuestToCloud(guestRecord) {
             }
 
             const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 3500);
+            const timeout = setTimeout(() => controller.abort(), 6000);
 
             const res = await fetch(CLOUD_URL, {
                 signal: controller.signal,
@@ -78,7 +78,7 @@ async function saveGuestToCloud(guestRecord) {
             }
 
             const putController = new AbortController();
-            const putTimeout = setTimeout(() => putController.abort(), 4000);
+            const putTimeout = setTimeout(() => putController.abort(), 7000);
 
             const putRes = await fetch(CLOUD_URL, {
                 method: 'PUT',
