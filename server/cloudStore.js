@@ -42,8 +42,13 @@ async function getCloudGuests() {
     return memoryCache;
 }
 
+let lastCloudError = null;
+
 async function saveGuestToCloud(guestRecord) {
-    if (!guestRecord || !guestRecord.name) return false;
+    if (!guestRecord || !guestRecord.name) {
+        lastCloudError = 'Missing guestRecord or name';
+        return false;
+    }
 
     // Retry loop with exponential backoff and jitter to survive simultaneous phone submissions
     for (let attempt = 1; attempt <= 5; attempt++) {
@@ -62,7 +67,10 @@ async function saveGuestToCloud(guestRecord) {
             });
             clearTimeout(timeout);
 
-            if (!res.ok) continue;
+            if (!res.ok) {
+                lastCloudError = `Fetch failed with status ${res.status}`;
+                continue;
+            }
 
             const json = await res.json();
             const currentList = Array.isArray(json.data?.guests) ? json.data.guests : [];
@@ -97,9 +105,13 @@ async function saveGuestToCloud(guestRecord) {
             if (putRes.ok) {
                 memoryCache = updatedList;
                 lastFetchTime = Date.now();
+                lastCloudError = null;
                 return true;
+            } else {
+                lastCloudError = `PUT failed with status ${putRes.status}`;
             }
         } catch (err) {
+            lastCloudError = `Attempt ${attempt}: ${err.message}`;
             console.warn(`[CloudStore] Save attempt ${attempt} error:`, err.message);
         }
     }
@@ -170,5 +182,6 @@ module.exports = {
     getCloudGuests,
     saveGuestToCloud,
     deleteGuestFromCloud,
-    resetCloudGuests
+    resetCloudGuests,
+    getLastCloudError: () => lastCloudError
 };

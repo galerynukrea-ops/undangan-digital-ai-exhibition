@@ -11,7 +11,7 @@ const crypto = require('node:crypto');
 const uuidv4 = () => crypto.randomUUID();
 
 const { db, generateToken, resetAttendanceOnly, seedDatabase, sampleInstitutions } = require('./db');
-const { getCloudGuests, saveGuestToCloud, deleteGuestFromCloud, resetCloudGuests } = require('./cloudStore');
+const { getCloudGuests, saveGuestToCloud, deleteGuestFromCloud, resetCloudGuests, getLastCloudError } = require('./cloudStore');
 const { analyzeSentiment } = require('./aiService');
 const { generateVenueStandeePdf, PALETTE, EVENT_DETAILS } = require('./pdfService');
 const { addClient, broadcastEvent } = require('./sseService');
@@ -549,8 +549,10 @@ app.post('/api/checkin/submit', async (req, res) => {
         broadcastEvent('guest_checked_in', payload);
 
         // Save to Global Cloud Store so all Vercel containers stay 100% in sync
+        let cloudSaved = false;
+        let cloudError = null;
         try {
-            await saveGuestToCloud({
+            cloudSaved = await saveGuestToCloud({
                 id: guest.id,
                 name: targetName,
                 institution: targetInst,
@@ -565,12 +567,15 @@ app.post('/api/checkin/submit', async (req, res) => {
                 emotion: aiResult.emotion
             });
         } catch (e) {
+            cloudError = e.message;
             console.warn('[Checkin] Cloud save warning:', e.message);
         }
 
         res.json({
             success: true,
             message: `Verifikasi kedatangan berhasil untuk ${targetName}`,
+            cloudSaved,
+            cloudError: cloudError || getLastCloudError(),
             data: payload
         });
     } catch (err) {
