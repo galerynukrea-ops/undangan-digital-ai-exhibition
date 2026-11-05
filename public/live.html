@@ -475,7 +475,6 @@
         // FIFO QUEUE SYSTEM FOR WELCOME POPUP (Urut, Tidak Menumpuk, 10 Detik per Tamu)
         const arrivalQueue = [];
         let isProcessingArrival = false;
-        let popupDismissTimer = null;
 
         function updateQueueBadge() {
             const queueEl = document.getElementById('popQueueIndicator');
