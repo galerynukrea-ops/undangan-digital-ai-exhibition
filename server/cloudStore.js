@@ -114,6 +114,46 @@ async function saveGuestToCloud(guestRecord) {
     return false;
 }
 
+async function deleteGuestFromCloud(guestId) {
+    if (!guestId) return false;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 6000);
+            const res = await fetch(CLOUD_URL, {
+                signal: controller.signal,
+                headers: { 'Accept': 'application/json' }
+            });
+            clearTimeout(timeout);
+            if (!res.ok) continue;
+
+            const json = await res.json();
+            const currentList = Array.isArray(json.data?.guests) ? json.data.guests : [];
+            const updatedList = currentList.filter(g => g.id !== guestId);
+
+            const putRes = await fetch(CLOUD_URL, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: 'digital_work_ai_exhibition_madiun_2026',
+                    data: {
+                        guests: updatedList,
+                        lastUpdated: new Date().toISOString()
+                    }
+                })
+            });
+            if (putRes.ok) {
+                memoryCache = updatedList;
+                lastFetchTime = Date.now();
+                return true;
+            }
+        } catch (e) {
+            console.warn(`[CloudStore] Delete attempt ${attempt} error:`, e.message);
+        }
+    }
+    return false;
+}
+
 async function resetCloudGuests() {
     memoryCache = [];
     lastFetchTime = Date.now();
@@ -137,5 +177,6 @@ async function resetCloudGuests() {
 module.exports = {
     getCloudGuests,
     saveGuestToCloud,
+    deleteGuestFromCloud,
     resetCloudGuests
 };

@@ -11,7 +11,7 @@ const crypto = require('node:crypto');
 const uuidv4 = () => crypto.randomUUID();
 
 const { db, generateToken, resetAttendanceOnly, seedDatabase, sampleInstitutions } = require('./db');
-const { getCloudGuests, saveGuestToCloud, resetCloudGuests } = require('./cloudStore');
+const { getCloudGuests, saveGuestToCloud, deleteGuestFromCloud, resetCloudGuests } = require('./cloudStore');
 const { analyzeSentiment } = require('./aiService');
 const { generateVenueStandeePdf, PALETTE, EVENT_DETAILS } = require('./pdfService');
 const { addClient, broadcastEvent } = require('./sseService');
@@ -93,6 +93,66 @@ app.get('/api/network-info', (req, res) => {
     });
 });
 
+// Authoritative Multi-Container Synchronizer (Prevents Divergent Count Glitches)
+async function syncLocalDbWithCloud() {
+    try {
+        const cloudGuests = await getCloudGuests();
+        if (Array.isArray(cloudGuests)) {
+            // Delete local records that no longer exist in Cloud Store (eliminates container divergence)
+            const cloudIds = new Set(cloudGuests.map(g => g.id));
+            const localGuests = db.prepare('SELECT id FROM guests').all() || [];
+            for (const lg of localGuests) {
+                if (!cloudIds.has(lg.id)) {
+                    db.prepare('DELETE FROM guests WHERE id = ?').run(lg.id);
+                    db.prepare('DELETE FROM guest_messages WHERE guest_id = ?').run(lg.id);
+                }
+            }
+
+            // Insert or update records from Cloud Store
+            const insertGuest = db.prepare(`
+                INSERT OR REPLACE INTO guests (id, name, institution, category, qr_token, status, checked_in_at, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `);
+            const insertMsg = db.prepare(`
+                INSERT OR REPLACE INTO guest_messages (id, guest_id, message, sentiment, score, emotion, keywords, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `);
+
+            for (const g of cloudGuests) {
+                if (!g.id || !g.name) continue;
+                try {
+                    insertGuest.run(
+                        g.id,
+                        g.name || '',
+                        g.institution || 'Tamu Undangan',
+                        g.category || 'Mitra / Tamu',
+                        g.qr_token || generateToken(),
+                        g.status || 'checked_in',
+                        g.checked_in_at || g.created_at || new Date().toISOString(),
+                        g.created_at || new Date().toISOString()
+                    );
+                    if (g.message) {
+                        insertMsg.run(
+                            uuidv4(),
+                            g.id,
+                            g.message,
+                            g.sentiment || 'positive',
+                            g.score !== undefined ? g.score : 0.8,
+                            g.emotion || 'Optimis',
+                            '[]',
+                            g.checked_in_at || new Date().toISOString()
+                        );
+                    }
+                } catch (e) {}
+            }
+            return cloudGuests;
+        }
+    } catch (err) {
+        console.warn('[Sync] Cloud sync notice:', err.message);
+    }
+    return null;
+}
+
 // -------------------------------------------------------------
 // REST API: Guests (Institutions) Management
 // -------------------------------------------------------------
@@ -102,47 +162,8 @@ app.get('/api/guests', async (req, res) => {
     try {
         const { search, category, status } = req.query;
 
-        // Auto-hydrate from Cloud Store if available
-        try {
-            const cloudGuests = await getCloudGuests();
-            if (Array.isArray(cloudGuests) && cloudGuests.length > 0) {
-                const insertGuest = db.prepare(`
-                    INSERT OR REPLACE INTO guests (id, name, institution, category, qr_token, status, checked_in_at, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                `);
-                const insertMsg = db.prepare(`
-                    INSERT OR REPLACE INTO guest_messages (id, guest_id, message, sentiment, score, emotion, keywords, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                `);
-                for (const g of cloudGuests) {
-                    if (!g.id || !g.name) continue;
-                    try {
-                        insertGuest.run(
-                            g.id,
-                            g.name || '',
-                            g.institution || 'Tamu Undangan',
-                            g.category || 'Mitra / Tamu',
-                            g.qr_token || generateToken(),
-                            g.status || 'checked_in',
-                            g.checked_in_at || g.created_at || new Date().toISOString(),
-                            g.created_at || new Date().toISOString()
-                        );
-                        if (g.message) {
-                            insertMsg.run(
-                                uuidv4(),
-                                g.id,
-                                g.message,
-                                g.sentiment || 'positive',
-                                g.score !== undefined ? g.score : 0.8,
-                                g.emotion || 'Optimis',
-                                '[]',
-                                g.checked_in_at || new Date().toISOString()
-                            );
-                        }
-                    } catch (e) {}
-                }
-            }
-        } catch (e) {}
+        // Auto-hydrate from authoritative Cloud Store
+        await syncLocalDbWithCloud();
 
         let query = `
             SELECT g.*, m.message, m.sentiment, m.score, m.emotion, m.keywords
@@ -312,13 +333,13 @@ app.post('/api/guests/import', upload.single('file'), (req, res) => {
 });
 
 // 4. Delete institution
-app.delete('/api/guests/:id', (req, res) => {
+app.delete('/api/guests/:id', async (req, res) => {
     try {
         const { id } = req.params;
+        await deleteGuestFromCloud(id);
         const info = db.prepare('DELETE FROM guests WHERE id = ?').run(id);
-        if (info.changes === 0) {
-            return res.status(404).json({ success: false, error: 'Instansi tidak ditemukan' });
-        }
+        db.prepare('DELETE FROM guest_messages WHERE guest_id = ?').run(id);
+        broadcastEvent('guest_deleted', { id, timestamp: new Date().toISOString() });
         res.json({ success: true, message: 'Data instansi berhasil dihapus' });
     } catch (err) {
         console.error('[API] Error delete guest:', err.message);
@@ -583,30 +604,7 @@ app.get('/api/checkin/lookup/:token', (req, res) => {
 app.get('/api/stats', async (req, res) => {
     try {
         // Synchronize with persistent global cloud store so all Vercel instances have unified stats
-        try {
-            const cloudGuests = await getCloudGuests();
-            if (Array.isArray(cloudGuests) && cloudGuests.length > 0) {
-                const insertGuest = db.prepare(`
-                    INSERT OR REPLACE INTO guests (id, name, institution, category, qr_token, status, checked_in_at, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                `);
-                for (const g of cloudGuests) {
-                    if (!g.id || !g.name) continue;
-                    try {
-                        insertGuest.run(
-                            g.id,
-                            g.name || '',
-                            g.institution || 'Tamu Undangan',
-                            g.category || 'Mitra / Tamu',
-                            g.qr_token || generateToken(),
-                            g.status || 'checked_in',
-                            g.checked_in_at || g.created_at || new Date().toISOString(),
-                            g.created_at || new Date().toISOString()
-                        );
-                    } catch (e) {}
-                }
-            }
-        } catch (e) {}
+        await syncLocalDbWithCloud();
 
         const allGuests = db.prepare('SELECT * FROM guests').all() || [];
         const totalGuests = allGuests.length;
