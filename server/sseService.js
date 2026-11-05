@@ -1,5 +1,22 @@
-// Server-Sent Events (SSE) manager for live display
+// Server-Sent Events (SSE) & Global Real-time MQTT Manager for Live Display
+const mqtt = require('mqtt');
 let clients = [];
+let mqttClient = null;
+
+try {
+    mqttClient = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
+        reconnectPeriod: 2500,
+        connectTimeout: 5000
+    });
+    mqttClient.on('connect', () => {
+        console.log('[MQTT] Server connected to global real-time broker.');
+    });
+    mqttClient.on('error', (err) => {
+        console.warn('[MQTT] Broker connection notice:', err.message);
+    });
+} catch (e) {
+    console.warn('[MQTT] Could not initialize server MQTT client:', e.message);
+}
 
 function addClient(req, res) {
     res.setHeader('Content-Type', 'text/event-stream');
@@ -21,13 +38,20 @@ function addClient(req, res) {
 
 function broadcastEvent(eventType, payload) {
     const dataString = JSON.stringify({ type: eventType, data: payload, timestamp: new Date().toISOString() });
+
+    // 1. Local Server-Sent Events
     for (const client of clients) {
         try {
             client.res.write(`data: ${dataString}\n\n`);
-        } catch (err) {
-            console.error(`[SSE] Gagal kirim ke client ${client.id}:`, err.message);
-        }
+        } catch (err) {}
     }
+
+    // 2. Global Real-time MQTT Broadcast across all Vercel containers & devices
+    try {
+        if (mqttClient && mqttClient.connected) {
+            mqttClient.publish('mbd_ai_exhibition_madiun_2026/events', dataString);
+        }
+    } catch (e) {}
 }
 
 module.exports = {

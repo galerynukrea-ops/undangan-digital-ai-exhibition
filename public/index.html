@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -567,6 +568,51 @@
         // REAL-TIME AUTO-UPDATE ENGINE (SSE Push + 2.5s Polling + Window Focus)
         // -----------------------------------------------------------------
 
+        // 0. Global Real-time MQTT Broker Listener (<100ms Instant Table Injection)
+        function initDashboardMQTT() {
+            try {
+                if (typeof mqtt === 'undefined') return;
+                const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
+                    reconnectPeriod: 2500,
+                    connectTimeout: 5000
+                });
+                client.on('connect', () => {
+                    console.log('[MQTT] Dashboard connected to real-time broker!');
+                    client.subscribe('mbd_ai_exhibition_madiun_2026/events');
+                });
+                client.on('message', (topic, msg) => {
+                    try {
+                        const parsed = JSON.parse(msg.toString());
+                        if (parsed.type === 'guest_checked_in') {
+                            const newGuest = parsed.data.guest;
+                            const newMsg = parsed.data.message;
+                            if (newGuest) {
+                                newGuest.message = newMsg?.text || '';
+                                newGuest.emotion = newMsg?.emotion || '';
+                                newGuest.sentiment = newMsg?.sentiment || '';
+                                const current = getCachedGuests();
+                                const exists = current.some(g => g.id === newGuest.id);
+                                if (!exists) {
+                                    const updated = [newGuest, ...current];
+                                    setCachedGuests(updated);
+                                    renderTable(updated);
+                                    highlightLiveArrival();
+                                }
+                            }
+                            fetchGuests(true);
+                        } else if (parsed.type === 'database_reset') {
+                            localStorage.removeItem(CACHE_KEY);
+                            previousGuestCount = 0;
+                            renderTable([]);
+                            fetchGuests(false);
+                        }
+                    } catch (e) {}
+                });
+            } catch (e) {
+                console.warn('[MQTT] Dashboard fallback:', e);
+            }
+        }
+
         // 1. SSE Push Listener (Sub-second real-time reaction)
         function initDashboardSSE() {
             try {
@@ -623,6 +669,7 @@
             renderTable(initialCached);
         }
         fetchGuests(false);
+        initDashboardMQTT();
         initDashboardSSE();
         startAutoPolling();
     </script>

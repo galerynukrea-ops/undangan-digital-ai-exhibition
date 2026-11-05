@@ -8,6 +8,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+    <script>
+        // Init Mobile Real-time MQTT connection
+        let phoneMqtt = null;
+        try {
+            phoneMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { reconnectPeriod: 3000, connectTimeout: 5000 });
+            window.phoneMqtt = phoneMqtt;
+        } catch (e) {}
+    </script>
     <script>
         tailwind.config = {
             theme: {
@@ -287,6 +296,17 @@
                 });
                 const json = await res.json();
                 if (json.success) {
+                    // Siarkan langsung ke Live Wall & Dashboard via MQTT broker
+                    try {
+                        if (window.phoneMqtt && window.phoneMqtt.connected) {
+                            window.phoneMqtt.publish('mbd_ai_exhibition_madiun_2026/events', JSON.stringify({
+                                type: 'guest_checked_in',
+                                data: json.data,
+                                timestamp: new Date().toISOString()
+                            }));
+                        }
+                    } catch (e) {}
+
                     document.getElementById('selfCheckinForm').classList.add('hidden');
                     const succ = document.getElementById('selfSuccess');
                     succ.classList.remove('hidden');

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
     <!-- Three.js for 3D Procedural Robot -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="/js/robot-greeter.js"></script>
@@ -602,6 +603,48 @@
             }, 10000);
         }
 
+        // GLOBAL REAL-TIME MQTT BROKER LISTENER (Instant <100ms Delivery from Any Phone)
+        function initMQTT() {
+            try {
+                if (typeof mqtt === 'undefined') return;
+                const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
+                    reconnectPeriod: 2500,
+                    connectTimeout: 5000
+                });
+                client.on('connect', () => {
+                    console.log('[MQTT] Live Wall connected to real-time broker!');
+                    client.subscribe('mbd_ai_exhibition_madiun_2026/events');
+                });
+                client.on('message', (topic, msg) => {
+                    try {
+                        const parsed = JSON.parse(msg.toString());
+                        if (parsed.type === 'guest_checked_in' || parsed.type === 'robot_greet') {
+                            const gId = parsed.data?.guest?.id || parsed.data?.id;
+                            if (gId) {
+                                if (greetedGuestIds.has(gId)) return; // Already greeted
+                                greetedGuestIds.add(gId);
+                            }
+                            console.log('[MQTT] Real-time arrival received:', parsed.data);
+                            triggerGuestArrivalSequence(parsed.data);
+                        } else if (parsed.type === 'database_reset') {
+                            arrivalQueue.length = 0;
+                            isProcessingArrival = false;
+                            greetedGuestIds.clear();
+                            if (popupDismissTimer) clearTimeout(popupDismissTimer);
+                            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                            const popup = document.getElementById('welcomePopup');
+                            popup.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
+                            popup.classList.add('-translate-x-[150%]', 'opacity-0', 'pointer-events-none');
+                            if (window.Robot3D) window.Robot3D.flyToCenter();
+                            loadStats();
+                        }
+                    } catch (e) {}
+                });
+            } catch (e) {
+                console.warn('[MQTT] Fallback to Polling/SSE:', e);
+            }
+        }
+
         // SSE Real-time Listener
         function initSSE() {
             const eventSource = new EventSource('/api/live/stream');
@@ -675,6 +718,7 @@
         window.addEventListener('load', () => {
             init3DRobot();
             loadStats();
+            initMQTT();
             initSSE();
             pollArrivals();
             // Polling deteksi kehadiran tamu baru & pembaruan statistik setiap 1.5 detik
