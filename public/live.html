@@ -540,6 +540,8 @@
             init3DRobot();
             loadStats();
             initSSE();
+            // Fallback sync setiap 4s jika koneksi cloud SSE reset
+            setInterval(loadStats, 4000);
         });
     </script>
 </body>

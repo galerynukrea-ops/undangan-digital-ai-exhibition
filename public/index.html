@@ -37,6 +37,9 @@
                         <span class="text-[9px] font-monoTech font-semibold px-2 py-0.5 rounded bg-neonPurple/20 text-neonMagenta border border-neonPurple/40">
                             AI v2.0
                         </span>
+                        <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-tech font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> AUTO-SYNC AKTIF
+                        </span>
                     </h1>
                     <p class="text-[11px] font-tech text-chromeSilver/80">Digital Work AI Exhibition : Menembus Batas Digital • Waroeng Latte</p>
                 </div>
@@ -309,10 +312,12 @@
     <!-- Scripts -->
     <script>
         let searchTimeout;
+        let previousGuestCount = -1;
+        let isFirstLoad = true;
 
         function debounceFetch() {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(fetchGuests, 250);
+            searchTimeout = setTimeout(() => fetchGuests(false), 250);
         }
 
         async function fetchStats() {
@@ -331,7 +336,7 @@
             }
         }
 
-        async function fetchGuests() {
+        async function fetchGuests(isSilent = false) {
             const search = document.getElementById('searchInput').value;
             const status = document.getElementById('filterStatus').value;
 
@@ -342,9 +347,28 @@
             try {
                 const res = await fetch(url);
                 const json = await res.json();
-                renderTable(json.data || []);
+                const guests = json.data || [];
+
+                // Cek jika ada tamu baru yang baru saja masuk
+                if (!isFirstLoad && guests.length > previousGuestCount && previousGuestCount >= 0) {
+                    highlightLiveArrival();
+                }
+                previousGuestCount = guests.length;
+                isFirstLoad = false;
+
+                renderTable(guests);
             } catch (err) {
                 console.error('Error fetching guests:', err);
+            }
+        }
+
+        function highlightLiveArrival() {
+            const el = document.getElementById('statCheckedIn');
+            if (el) {
+                el.classList.add('text-emerald-400', 'scale-110');
+                setTimeout(() => {
+                    el.classList.remove('text-emerald-400', 'scale-110');
+                }, 1500);
             }
         }
 
@@ -513,9 +537,64 @@
             }
         }
 
-        // Initial Load
+        // -----------------------------------------------------------------
+        // REAL-TIME AUTO-UPDATE ENGINE (SSE Push + 2.5s Polling + Window Focus)
+        // -----------------------------------------------------------------
+
+        // 1. SSE Push Listener (Sub-second real-time reaction)
+        function initDashboardSSE() {
+            try {
+                const sse = new EventSource('/api/live/stream');
+                sse.onmessage = (event) => {
+                    try {
+                        const parsed = JSON.parse(event.data);
+                        if (parsed.type === 'guest_checked_in' || parsed.type === 'robot_greet' || parsed.type === 'database_reset') {
+                            fetchGuests(false);
+                            fetchStats();
+                        }
+                    } catch (e) {}
+                };
+                sse.onerror = () => {
+                    sse.close();
+                    setTimeout(initDashboardSSE, 4000);
+                };
+            } catch (e) {
+                console.warn('SSE not supported:', e);
+            }
+        }
+
+        // 2. Smart Auto-Polling (Interval 2.5s untuk Vercel Serverless & Offline Sync)
+        let pollingInterval = null;
+        function startAutoPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(() => {
+                // Hindari refresh jika admin sedang aktif mengetik di kolom pencarian
+                const searchEl = document.getElementById('searchInput');
+                if (searchEl && document.activeElement === searchEl && searchEl.value.trim() !== '') {
+                    return;
+                }
+                fetchGuests(true);
+                fetchStats();
+            }, 2500);
+        }
+
+        // 3. Trigger saat tab dibuka kembali / aktif
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                fetchGuests(false);
+                fetchStats();
+            }
+        });
+        window.addEventListener('focus', () => {
+            fetchGuests(false);
+            fetchStats();
+        });
+
+        // Bootstrap on Load
         fetchGuests();
         fetchStats();
+        initDashboardSSE();
+        startAutoPolling();
     </script>
 </body>
 </html>
