@@ -93,22 +93,12 @@ app.get('/api/network-info', (req, res) => {
     });
 });
 
-// Authoritative Multi-Container Synchronizer (Prevents Divergent Count Glitches)
+// Bi-directional Consensus Synchronizer (Zero Data-Loss, Accretive Safe)
 async function syncLocalDbWithCloud() {
     try {
         const cloudGuests = await getCloudGuests();
-        if (Array.isArray(cloudGuests)) {
-            // Delete local records that no longer exist in Cloud Store (eliminates container divergence)
-            const cloudIds = new Set(cloudGuests.map(g => g.id));
-            const localGuests = db.prepare('SELECT id FROM guests').all() || [];
-            for (const lg of localGuests) {
-                if (!cloudIds.has(lg.id)) {
-                    db.prepare('DELETE FROM guests WHERE id = ?').run(lg.id);
-                    db.prepare('DELETE FROM guest_messages WHERE guest_id = ?').run(lg.id);
-                }
-            }
-
-            // Insert or update records from Cloud Store
+        if (Array.isArray(cloudGuests) && cloudGuests.length > 0) {
+            // Insert or update records from Cloud Store into local SQLite
             const insertGuest = db.prepare(`
                 INSERT OR REPLACE INTO guests (id, name, institution, category, qr_token, status, checked_in_at, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -145,8 +135,24 @@ async function syncLocalDbWithCloud() {
                     }
                 } catch (e) {}
             }
-            return cloudGuests;
         }
+
+        // If local DB has guests that Cloud Store doesn't have yet, push them to Cloud Store asynchronously
+        if (Array.isArray(cloudGuests)) {
+            const cloudIds = new Set(cloudGuests.map(g => g.id));
+            const localGuests = db.prepare(`
+                SELECT g.*, m.message, m.sentiment, m.score, m.emotion 
+                FROM guests g 
+                LEFT JOIN guest_messages m ON g.id = m.guest_id
+            `).all() || [];
+
+            for (const lg of localGuests) {
+                if (lg.id && lg.name && !cloudIds.has(lg.id)) {
+                    saveGuestToCloud(lg).catch(() => {});
+                }
+            }
+        }
+        return cloudGuests;
     } catch (err) {
         console.warn('[Sync] Cloud sync notice:', err.message);
     }

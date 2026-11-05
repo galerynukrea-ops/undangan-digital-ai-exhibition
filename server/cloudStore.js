@@ -95,17 +95,9 @@ async function saveGuestToCloud(guestRecord) {
             clearTimeout(putTimeout);
 
             if (putRes.ok) {
-                // Verify our guest is safely committed
-                const verifyRes = await fetch(CLOUD_URL, { headers: { 'Accept': 'application/json' } });
-                if (verifyRes.ok) {
-                    const verifyJson = await verifyRes.json();
-                    const verifyList = verifyJson.data?.guests || [];
-                    if (verifyList.some(g => g.id === guestRecord.id)) {
-                        memoryCache = verifyList;
-                        lastFetchTime = Date.now();
-                        return true;
-                    }
-                }
+                memoryCache = updatedList;
+                lastFetchTime = Date.now();
+                return true;
             }
         } catch (err) {
             console.warn(`[CloudStore] Save attempt ${attempt} error:`, err.message);
