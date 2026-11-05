@@ -11,6 +11,7 @@ const crypto = require('node:crypto');
 const uuidv4 = () => crypto.randomUUID();
 
 const { db, generateToken, resetAttendanceOnly, seedDatabase, sampleInstitutions } = require('./db');
+const { getCloudGuests, saveGuestToCloud, resetCloudGuests } = require('./cloudStore');
 const { analyzeSentiment } = require('./aiService');
 const { generateVenueStandeePdf, PALETTE, EVENT_DETAILS } = require('./pdfService');
 const { addClient, broadcastEvent } = require('./sseService');
@@ -96,10 +97,53 @@ app.get('/api/network-info', (req, res) => {
 // REST API: Guests (Institutions) Management
 // -------------------------------------------------------------
 
-// 1. Get all institutions with query filters
-app.get('/api/guests', (req, res) => {
+// 1. Get all institutions with query filters (Synced with Cloud Store across all Vercel instances)
+app.get('/api/guests', async (req, res) => {
     try {
         const { search, category, status } = req.query;
+
+        // Auto-hydrate from Cloud Store if available
+        try {
+            const cloudGuests = await getCloudGuests();
+            if (Array.isArray(cloudGuests) && cloudGuests.length > 0) {
+                const insertGuest = db.prepare(`
+                    INSERT OR REPLACE INTO guests (id, name, institution, category, qr_token, status, checked_in_at, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                `);
+                const insertMsg = db.prepare(`
+                    INSERT OR REPLACE INTO guest_messages (id, guest_id, message, sentiment, score, emotion, keywords, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                `);
+                for (const g of cloudGuests) {
+                    if (!g.id || !g.name) continue;
+                    try {
+                        insertGuest.run(
+                            g.id,
+                            g.name || '',
+                            g.institution || 'Tamu Undangan',
+                            g.category || 'Mitra / Tamu',
+                            g.qr_token || generateToken(),
+                            g.status || 'checked_in',
+                            g.checked_in_at || g.created_at || new Date().toISOString(),
+                            g.created_at || new Date().toISOString()
+                        );
+                        if (g.message) {
+                            insertMsg.run(
+                                uuidv4(),
+                                g.id,
+                                g.message,
+                                g.sentiment || 'positive',
+                                g.score !== undefined ? g.score : 0.8,
+                                g.emotion || 'Optimis',
+                                '[]',
+                                g.checked_in_at || new Date().toISOString()
+                            );
+                        }
+                    } catch (e) {}
+                }
+            }
+        } catch (e) {}
+
         let query = `
             SELECT g.*, m.message, m.sentiment, m.score, m.emotion, m.keywords
             FROM guests g
@@ -109,9 +153,9 @@ app.get('/api/guests', (req, res) => {
         const params = [];
 
         if (search) {
-            query += ` AND (g.institution LIKE ? OR g.qr_token LIKE ? OR g.category LIKE ?)`;
+            query += ` AND (g.name LIKE ? OR g.institution LIKE ? OR g.qr_token LIKE ? OR g.category LIKE ?)`;
             const searchParam = `%${search.trim()}%`;
-            params.push(searchParam, searchParam, searchParam);
+            params.push(searchParam, searchParam, searchParam, searchParam);
         }
 
         if (category && category !== 'all') {
@@ -283,10 +327,13 @@ app.delete('/api/guests/:id', (req, res) => {
 });
 
 // 5. Reset Testing & Attendance Data (Supports mode: 'attendance' | 'factory')
-app.all(['/api/admin/reset', '/api/reset'], (req, res) => {
+app.all(['/api/admin/reset', '/api/reset'], async (req, res) => {
     try {
         const mode = (req.body?.mode || req.query?.mode || 'attendance').toLowerCase();
         
+        // Reset local DB & Global Cloud Store
+        await resetCloudGuests();
+
         if (mode === 'factory') {
             seedDatabase();
             broadcastEvent('database_reset', { mode: 'factory', timestamp: new Date().toISOString() });
@@ -405,14 +452,11 @@ app.post('/api/checkin/submit', async (req, res) => {
         if (token) {
             guest = db.prepare('SELECT * FROM guests WHERE qr_token = ?').get(token.trim().toUpperCase());
         }
-        if (!guest && targetInst !== 'Tamu Undangan') {
-            guest = db.prepare('SELECT * FROM guests WHERE institution = ?').get(targetInst);
-        }
 
         const now = new Date().toISOString();
 
         if (guest) {
-            // Update existing guest record
+            // Update existing pre-registered guest record with their personalized token
             try {
                 db.prepare(`
                     UPDATE guests 
@@ -422,7 +466,7 @@ app.post('/api/checkin/submit', async (req, res) => {
             } catch (e) {}
             guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(guest.id);
         } else {
-            // Always insert new record into database so it appears on dashboard!
+            // Standard Event Check-in: Always create a distinct individual guest entry
             const id = uuidv4();
             const newToken = generateToken();
             db.prepare(`
@@ -470,6 +514,22 @@ app.post('/api/checkin/submit', async (req, res) => {
 
         // Real-time broadcast to all connected Live Walls & Dashboard via SSE
         broadcastEvent('guest_checked_in', payload);
+
+        // Save to Global Cloud Store so all Vercel containers stay 100% in sync
+        saveGuestToCloud({
+            id: guest.id,
+            name: targetName,
+            institution: targetInst,
+            category: guest.category || finalCategory,
+            qr_token: guest.qr_token,
+            status: 'checked_in',
+            checked_in_at: now,
+            created_at: now,
+            message: guestMessage,
+            sentiment: aiResult.sentiment,
+            score: aiResult.score,
+            emotion: aiResult.emotion
+        });
 
         res.json({
             success: true,

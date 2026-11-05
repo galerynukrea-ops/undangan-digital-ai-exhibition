@@ -609,14 +609,15 @@
             eventSource.onmessage = (event) => {
                 try {
                     const parsed = JSON.parse(event.data);
-                    if (parsed.type === 'guest_checked_in') {
-                        triggerGuestArrivalSequence(parsed.data);
-                    } else if (parsed.type === 'robot_greet') {
+                    if (parsed.type === 'guest_checked_in' || parsed.type === 'robot_greet') {
+                        const gId = parsed.data?.guest?.id || parsed.data?.id;
+                        if (gId) greetedGuestIds.add(gId);
                         triggerGuestArrivalSequence(parsed.data);
                     } else if (parsed.type === 'database_reset') {
                         // Bersihkan antrean jika ada reset
                         arrivalQueue.length = 0;
                         isProcessingArrival = false;
+                        greetedGuestIds.clear();
                         if (popupDismissTimer) clearTimeout(popupDismissTimer);
                         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                         const popup = document.getElementById('welcomePopup');
@@ -632,8 +633,42 @@
 
             eventSource.onerror = () => {
                 eventSource.close();
-                setTimeout(initSSE, 4000);
+                setTimeout(initSSE, 3000);
             };
+        }
+
+        // ACTIVE ARRIVAL POLLING (100% Kebal terhadap batasan SSE serverless antar container)
+        const greetedGuestIds = new Set();
+        let isInitialArrivalScan = true;
+
+        async function pollArrivals() {
+            try {
+                const res = await fetch('/api/guests?status=checked_in');
+                const json = await res.json();
+                if (!json.success || !Array.isArray(json.data)) return;
+
+                const guests = json.data;
+
+                if (isInitialArrivalScan) {
+                    // Tandai seluruh tamu yang sudah hadir saat halaman dibuka
+                    guests.forEach(g => greetedGuestIds.add(g.id));
+                    isInitialArrivalScan = false;
+                    return;
+                }
+
+                // Cari tamu yang baru terdaftar dan belum disapa
+                const newArrivals = guests.filter(g => !greetedGuestIds.has(g.id));
+                newArrivals.sort((a, b) => new Date(a.checked_in_at || a.created_at) - new Date(b.checked_in_at || b.created_at));
+
+                for (const g of newArrivals) {
+                    greetedGuestIds.add(g.id);
+                    console.log('[Arrival Detector] Tamu baru terdeteksi:', g.name);
+                    triggerGuestArrivalSequence({
+                        guest: g,
+                        message: g.message ? { text: g.message } : null
+                    });
+                }
+            } catch (e) {}
         }
 
         // Bootstrap on Load
@@ -641,8 +676,12 @@
             init3DRobot();
             loadStats();
             initSSE();
-            // Fallback sync setiap 4s jika koneksi cloud SSE reset
-            setInterval(loadStats, 4000);
+            pollArrivals();
+            // Polling deteksi kehadiran tamu baru & pembaruan statistik setiap 1.5 detik
+            setInterval(() => {
+                loadStats();
+                pollArrivals();
+            }, 1500);
         });
     </script>
 </body>
