@@ -345,7 +345,7 @@
         <div class="shrink-0 flex items-center gap-2 bg-cyberDark/90 border border-neonCyan/40 px-3.5 py-1 rounded-xl shadow-[0_0_12px_rgba(0,240,255,0.2)]">
             <i class="fa-solid fa-users text-neonCyan text-xs"></i>
             <span id="counterText" class="font-cyber font-bold text-xs sm:text-sm text-chromeWhite">
-                <span id="counterChecked" class="text-neonCyan">0</span> / <span id="counterTotal">4</span> HADIR
+                <span id="counterChecked" class="text-neonCyan">--</span> TAMU HADIR
             </span>
         </div>
 
@@ -408,7 +408,7 @@
 
         // Data Store
         let checkedInGuests = [];
-        let totalCount = 4;
+        let totalCount = 0;
         let popupDismissTimer = null;
 
         // Fetch Stats & Checked In Guests
@@ -421,11 +421,7 @@
                     totalCount = stats.totalGuests || 0;
                     const checkedIn = stats.checkedInCount || 0;
                     const counterEl = document.getElementById('counterText');
-                    if (totalCount > 0) {
-                        counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedIn}</span> / <span id="counterTotal">${totalCount}</span> HADIR`;
-                    } else {
-                        counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedIn}</span> TAMU HADIR`;
-                    }
+                    counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedIn}</span> TAMU HADIR`;
 
                     if (stats.recentCheckins && stats.recentCheckins.length > 0) {
                         checkedInGuests = stats.recentCheckins;
