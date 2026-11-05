@@ -516,20 +516,24 @@ app.post('/api/checkin/submit', async (req, res) => {
         broadcastEvent('guest_checked_in', payload);
 
         // Save to Global Cloud Store so all Vercel containers stay 100% in sync
-        saveGuestToCloud({
-            id: guest.id,
-            name: targetName,
-            institution: targetInst,
-            category: guest.category || finalCategory,
-            qr_token: guest.qr_token,
-            status: 'checked_in',
-            checked_in_at: now,
-            created_at: now,
-            message: guestMessage,
-            sentiment: aiResult.sentiment,
-            score: aiResult.score,
-            emotion: aiResult.emotion
-        });
+        try {
+            await saveGuestToCloud({
+                id: guest.id,
+                name: targetName,
+                institution: targetInst,
+                category: guest.category || finalCategory,
+                qr_token: guest.qr_token,
+                status: 'checked_in',
+                checked_in_at: now,
+                created_at: now,
+                message: guestMessage,
+                sentiment: aiResult.sentiment,
+                score: aiResult.score,
+                emotion: aiResult.emotion
+            });
+        } catch (e) {
+            console.warn('[Checkin] Cloud save warning:', e.message);
+        }
 
         res.json({
             success: true,
