@@ -698,6 +698,20 @@
                             }
                             console.log('[MQTT] Real-time arrival received:', parsed.data);
                             triggerGuestArrivalSequence(parsed.data);
+                        } else if (parsed.type === 'guest_deleted') {
+                            const delId = parsed.data?.id;
+                            if (delId) {
+                                checkedInGuests = checkedInGuests.filter(g => g.id !== delId);
+                                try {
+                                    localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests));
+                                } catch (e) {}
+                                updateBottomMarquee(checkedInGuests);
+                                const counterEl = document.getElementById('counterText');
+                                if (counterEl) {
+                                    counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedInGuests.length}</span> TAMU HADIR`;
+                                }
+                            }
+                            loadStats();
                         } else if (parsed.type === 'database_reset') {
                             arrivalQueue.length = 0;
                             isProcessingArrival = false;
@@ -730,6 +744,18 @@
                         const gId = parsed.data?.guest?.id || parsed.data?.id;
                         if (gId) greetedGuestIds.add(gId);
                         triggerGuestArrivalSequence(parsed.data);
+                    } else if (parsed.type === 'guest_deleted') {
+                        const delId = parsed.data?.id;
+                        if (delId) {
+                            checkedInGuests = checkedInGuests.filter(g => g.id !== delId);
+                            try { localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests)); } catch (e) {}
+                            updateBottomMarquee(checkedInGuests);
+                            const counterEl = document.getElementById('counterText');
+                            if (counterEl) {
+                                counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedInGuests.length}</span> TAMU HADIR`;
+                            }
+                        }
+                        loadStats();
                     } else if (parsed.type === 'database_reset') {
                         // Bersihkan antrean jika ada reset
                         arrivalQueue.length = 0;

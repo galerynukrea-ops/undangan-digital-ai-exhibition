@@ -338,19 +338,34 @@ app.post('/api/guests/import', upload.single('file'), (req, res) => {
         });
 });
 
-// 4. Delete institution
-app.delete('/api/guests/:id', async (req, res) => {
+// 4. Delete institution (Supports DELETE, POST /:id/delete, and POST /delete for firewall resilience)
+async function handleDeleteGuest(id, res) {
+    if (!id) {
+        return res.status(400).json({ success: false, error: 'ID instansi diperlukan' });
+    }
     try {
-        const { id } = req.params;
         await deleteGuestFromCloud(id);
-        const info = db.prepare('DELETE FROM guests WHERE id = ?').run(id);
+        db.prepare('DELETE FROM guests WHERE id = ?').run(id);
         db.prepare('DELETE FROM guest_messages WHERE guest_id = ?').run(id);
         broadcastEvent('guest_deleted', { id, timestamp: new Date().toISOString() });
-        res.json({ success: true, message: 'Data instansi berhasil dihapus' });
+        res.json({ success: true, message: 'Data instansi berhasil dihapus', id });
     } catch (err) {
         console.error('[API] Error delete guest:', err.message);
         res.status(500).json({ success: false, error: 'Gagal menghapus data instansi' });
     }
+}
+
+app.delete('/api/guests/:id', async (req, res) => {
+    await handleDeleteGuest(req.params.id, res);
+});
+
+app.post('/api/guests/:id/delete', async (req, res) => {
+    await handleDeleteGuest(req.params.id, res);
+});
+
+app.post('/api/guests/delete', async (req, res) => {
+    const id = req.body?.id || req.query?.id;
+    await handleDeleteGuest(id, res);
 });
 
 // 5. Reset Testing & Attendance Data (Supports mode: 'attendance' | 'factory')

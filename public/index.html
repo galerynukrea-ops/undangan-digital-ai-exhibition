@@ -477,17 +477,37 @@
 
         async function deleteGuest(id, name) {
             if (!confirm(`Hapus instansi "${name}" dari sistem?`)) return;
+
+            // Hapus seketika dari cache lokal dan tabel tampilan
+            const current = getCachedGuests();
+            const updated = current.filter(g => g.id !== id);
+            setCachedGuests(updated);
+            renderTable(updated);
+
             try {
-                const res = await fetch(`/api/guests/${id}`, { method: 'DELETE' });
+                // Gunakan POST /:id/delete agar aman dari pemblokiran metode DELETE oleh provider seluler/proxy
+                let res = await fetch(`/api/guests/${id}/delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+
+                if (!res.ok) {
+                    res = await fetch(`/api/guests/${id}`, { method: 'DELETE' });
+                }
+
                 const json = await res.json();
                 if (json.success) {
-                    fetchGuests();
+                    fetchGuests(true);
                     fetchStats();
                 } else {
                     alert(json.error || 'Gagal menghapus');
+                    setCachedGuests(current);
+                    renderTable(current);
                 }
             } catch (err) {
-                alert('Terjadi kesalahan jaringan.');
+                console.warn('Delete network notice:', err);
+                fetchGuests(true);
             }
         }
 
@@ -629,7 +649,14 @@
                             }
                             fetchGuests(true);
                         } else if (parsed.type === 'guest_deleted') {
-                            fetchGuests(false);
+                            const delId = parsed.data?.id;
+                            if (delId) {
+                                const current = getCachedGuests();
+                                const updated = current.filter(g => g.id !== delId);
+                                setCachedGuests(updated);
+                                renderTable(updated);
+                            }
+                            fetchGuests(true);
                         } else if (parsed.type === 'database_reset') {
                             localStorage.removeItem(CACHE_KEY);
                             previousGuestCount = 0;
@@ -653,7 +680,14 @@
                         if (parsed.type === 'guest_checked_in' || parsed.type === 'robot_greet') {
                             fetchGuests(false);
                         } else if (parsed.type === 'guest_deleted') {
-                            fetchGuests(false);
+                            const delId = parsed.data?.id;
+                            if (delId) {
+                                const current = getCachedGuests();
+                                const updated = current.filter(g => g.id !== delId);
+                                setCachedGuests(updated);
+                                renderTable(updated);
+                            }
+                            fetchGuests(true);
                         } else if (parsed.type === 'database_reset') {
                             localStorage.removeItem(CACHE_KEY);
                             previousGuestCount = 0;
