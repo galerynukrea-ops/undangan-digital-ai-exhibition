@@ -193,7 +193,7 @@
 
         async function loadInstitutions() {
             try {
-                const res = await fetch('/api/institutions');
+                const res = await fetch('/api/institutions?t=' + Date.now());
                 const json = await res.json();
                 if (json.success) {
                     const instList = json.data || [];
@@ -291,6 +291,17 @@
                         message: message
                     })
                 });
+
+                if (!res.ok) {
+                    let errMsg = 'Gagal memverifikasi kehadiran.';
+                    try {
+                        const errJson = await res.json();
+                        if (errJson.error) errMsg = errJson.error;
+                    } catch (e) {}
+                    alert(errMsg);
+                    return;
+                }
+
                 const json = await res.json();
                 if (json.success) {
                     // Siarkan langsung ke Live Wall & Dashboard via MQTT broker
@@ -319,7 +330,8 @@
                     alert(json.error || 'Gagal memverifikasi');
                 }
             } catch (err) {
-                alert('Terjadi kesalahan jaringan.');
+                console.error('[Checkin Error]', err);
+                alert('Koneksi internet tidak stabil. Silakan periksa jaringan dan ketuk Konfirmasi sekali lagi.');
             } finally {
                 btn.innerHTML = `<i class="fa-solid fa-check-double"></i> Konfirmasi Kehadiran Saya`;
                 btn.disabled = false;

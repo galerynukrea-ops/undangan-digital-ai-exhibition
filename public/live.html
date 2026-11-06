@@ -450,7 +450,7 @@
         // Fetch Stats & Checked In Guests
         async function loadStats() {
             try {
-                const res = await fetch('/api/stats');
+                const res = await fetch('/api/stats?t=' + Date.now());
                 const json = await res.json();
                 if (json.success) {
                     const stats = json.data;
@@ -462,7 +462,9 @@
 
                     const checkedCount = checkedInGuests.length;
                     const counterEl = document.getElementById('counterText');
-                    counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedCount}</span> TAMU HADIR`;
+                    if (counterEl) {
+                        counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedCount}</span> TAMU HADIR`;
+                    }
 
                     if (checkedInGuests.length > 0) {
                         updateBottomMarquee(checkedInGuests);
@@ -673,16 +675,16 @@
                             if (Array.isArray(stateObj.deletedIds)) {
                                 stateObj.deletedIds.forEach(dId => markGuestDeleted(dId));
                             }
-                            if (Array.isArray(stateObj.guests)) {
-                                checkedInGuests = stateObj.guests.filter(g => g && g.id && !deletedGuestIds.has(g.id));
-                                try {
-                                    localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests));
-                                } catch (e) {}
-                                updateBottomMarquee(checkedInGuests);
+                            if (Array.isArray(stateObj.guests) && stateObj.guests.length === 0) {
+                                checkedInGuests = [];
+                                try { localStorage.removeItem('mbd_live_guests'); } catch (e) {}
+                                renderEmptyMarquee();
                                 const counterEl = document.getElementById('counterText');
                                 if (counterEl) {
-                                    counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedInGuests.length}</span> TAMU HADIR`;
+                                    counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">0</span> TAMU HADIR`;
                                 }
+                            } else {
+                                loadStats();
                             }
                             return;
                         }

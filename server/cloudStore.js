@@ -101,7 +101,7 @@ function broadcastState() {
                     deletedIds: Array.from(deletedGuestIds),
                     lastUpdated: new Date().toISOString()
                 }),
-                { retain: true, qos: 1 }
+                { retain: false, qos: 0 }
             );
         }
     } catch (e) {}
@@ -151,6 +151,12 @@ async function resetCloudGuests() {
     memoryGuests = [];
     deletedGuestIds.clear();
     persistLocalState();
+    try {
+        if (mqttClient && mqttClient.connected) {
+            // Actively wipe any retained message on the broker
+            mqttClient.publish(MQTT_TOPIC_STATE, Buffer.alloc(0), { retain: true, qos: 1 });
+        }
+    } catch (e) {}
     broadcastState();
 }
 

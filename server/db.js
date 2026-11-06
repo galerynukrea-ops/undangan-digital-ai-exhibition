@@ -8,18 +8,16 @@ function generateToken() {
     return `MBD-${randomHex.slice(0, 4)}-${randomHex.slice(4)}`;
 }
 
-// 10 Kumpulan Instansi Resmi Kota Madiun (Daftar Preset untuk Registrasi)
+// 8 Kumpulan Instansi / Perusahaan Resmi Kota Madiun (Daftar Preset untuk Registrasi)
 const sampleInstitutions = [
-    { institution: 'Dinas KUKM', category: 'Instansi Pemerintah (Pembina UMKM)' },
-    { institution: 'Votel Kartika', category: 'Hospitality & Hotel' },
-    { institution: 'Bluder Cokro', category: 'Industri Kuliner Khas Madiun' },
-    { institution: 'Jiwan Oli', category: 'Bengkel Otomotif & Perawatan Mobil' },
-    { institution: 'MPOINT', category: 'Bengkel & Servis Motor' },
-    { institution: 'Kelurahan Josenan', category: 'Pemerintahan Daerah (Kelurahan)' },
+    { institution: 'Kelurahan Winongo', category: 'Pemerintahan Daerah (Kelurahan)' },
+    { institution: 'Yessles', category: 'Lembaga Pendidikan & Kursus' },
+    { institution: 'MPoint', category: 'Bengkel & Servis Motor' },
     { institution: 'Maju Hardware', category: 'Pusat Retail Komputer & Gadget IT' },
+    { institution: 'Dinas Tenaga Kerja KUKM Kota Madiun', category: 'Instansi Pemerintah (Ketenagakerjaan & KUKM)' },
     { institution: 'Hotel Setia Budi', category: 'Hospitality & Hotel' },
-    { institution: 'Yessles (Yesless)', category: 'Lembaga Bimbingan Belajar & Les Privat' },
-    { institution: 'Neo Kramik', category: 'Pusat Grosir Granit Keramik & Bangunan' }
+    { institution: 'Rumah Sakit Santa Clara', category: 'Layanan Kesehatan & Rumah Sakit' },
+    { institution: 'LPKS Pola Sukses Akademi', category: 'Lembaga Pelatihan Kerja Swasta (LPKS)' }
 ];
 
 let dbInstance = null;

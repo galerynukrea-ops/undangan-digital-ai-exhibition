@@ -12,7 +12,7 @@ const uuidv4 = () => crypto.randomUUID();
 
 const { db, generateToken, resetAttendanceOnly, seedDatabase, sampleInstitutions } = require('./db');
 const { getCloudGuests, saveGuestToCloud, deleteGuestFromCloud, resetCloudGuests, getLastCloudError, isGuestDeleted, getDeletedGuestIds } = require('./cloudStore');
-const { analyzeSentiment } = require('./aiService');
+const { analyzeSentiment, localAnalyzeSentiment } = require('./aiService');
 const { generateVenueStandeePdf, PALETTE, EVENT_DETAILS } = require('./pdfService');
 const { addClient, broadcastEvent } = require('./sseService');
 
@@ -34,6 +34,15 @@ function getLocalIpAddress() {
 
 // Middleware
 app.use(cors());
+
+// Strict No-Cache headers for all API routes to prevent Vercel CDN & browser edge caching glitches
+app.use('/api', (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    next();
+});
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
@@ -523,9 +532,9 @@ app.post('/api/checkin/submit', async (req, res) => {
             guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(id);
         }
 
-        // Analyze sentiment (fast fail-safe)
+        // Fast instant sentiment analysis via local Indonesian lexicon (<1ms, zero network latency, zero timeout risk)
         const guestMessage = (message && message.trim()) || 'Sukses selalu untuk seluruh talenta muda & kemajuan kecerdasan artifisial di Kota Madiun!';
-        const aiResult = await analyzeSentiment(guestMessage);
+        const aiResult = localAnalyzeSentiment(guestMessage);
 
         const msgId = uuidv4();
         db.prepare(`
@@ -540,6 +549,21 @@ app.post('/api/checkin/submit', async (req, res) => {
             aiResult.emotion,
             JSON.stringify(aiResult.keywords)
         );
+
+        // Optional background Gemini refinement (fire-and-forget, non-blocking)
+        if (process.env.GEMINI_API_KEY) {
+            analyzeSentiment(guestMessage).then(refined => {
+                if (refined && refined.provider === 'gemini') {
+                    try {
+                        db.prepare(`
+                            UPDATE guest_messages 
+                            SET sentiment = ?, score = ?, emotion = ?, keywords = ?
+                            WHERE id = ?
+                        `).run(refined.sentiment, refined.score, refined.emotion, JSON.stringify(refined.keywords), msgId);
+                    } catch (e) {}
+                }
+            }).catch(() => {});
+        }
 
         const payload = {
             guest: {
