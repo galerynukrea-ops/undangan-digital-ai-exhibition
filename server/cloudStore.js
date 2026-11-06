@@ -1,7 +1,7 @@
 /**
- * CLOUD STORE & REAL-TIME STATE SYNCHRONIZER
+ * CLOUD STORE & REAL-TIME STATE SYNCHRONIZER (With Distributed Tombstones)
  * Multi-layer persistence: In-Memory + Local JSON + MQTT Retained State.
- * Completely immune to third-party rate limits (50 req/day limits eliminated).
+ * Prevents zombie guest resurrection across serverless containers and browser caches.
  * Digital Work AI Exhibition • Waroeng Latte Madiun
  */
 
@@ -56,19 +56,23 @@ const INITIAL_VIP_GUESTS = [
 ];
 
 let memoryGuests = [];
+let deletedGuestIds = new Set();
 
 function loadLocalState() {
     try {
         if (fs.existsSync(STATE_FILE)) {
             const raw = fs.readFileSync(STATE_FILE, 'utf-8');
             const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed.deletedIds)) {
+                deletedGuestIds = new Set(parsed.deletedIds);
+            }
             if (Array.isArray(parsed.guests) && parsed.guests.length > 0) {
-                memoryGuests = parsed.guests;
+                memoryGuests = parsed.guests.filter(g => !deletedGuestIds.has(g.id));
                 return;
             }
         }
     } catch (e) {}
-    memoryGuests = [...INITIAL_VIP_GUESTS];
+    memoryGuests = INITIAL_VIP_GUESTS.filter(g => !deletedGuestIds.has(g.id));
 }
 loadLocalState();
 
@@ -78,6 +82,7 @@ function persistLocalState() {
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(STATE_FILE, JSON.stringify({
             guests: memoryGuests,
+            deletedIds: Array.from(deletedGuestIds),
             lastUpdated: new Date().toISOString()
         }, null, 2), 'utf-8');
     } catch (e) {}
@@ -102,11 +107,14 @@ try {
         if (topic === MQTT_TOPIC_STATE) {
             try {
                 const parsed = JSON.parse(msg.toString());
-                if (Array.isArray(parsed.guests) && parsed.guests.length > 0) {
+                if (Array.isArray(parsed.deletedIds)) {
+                    parsed.deletedIds.forEach(id => deletedGuestIds.add(id));
+                }
+                if (Array.isArray(parsed.guests)) {
                     const map = new Map();
-                    memoryGuests.forEach(g => { if (g.id) map.set(g.id, g); });
+                    memoryGuests.forEach(g => { if (g.id && !deletedGuestIds.has(g.id)) map.set(g.id, g); });
                     parsed.guests.forEach(g => {
-                        if (g.id) {
+                        if (g.id && !deletedGuestIds.has(g.id)) {
                             const existing = map.get(g.id) || {};
                             map.set(g.id, { ...existing, ...g });
                         }
@@ -128,7 +136,11 @@ function broadcastState() {
         if (mqttClient && mqttClient.connected) {
             mqttClient.publish(
                 MQTT_TOPIC_STATE,
-                JSON.stringify({ guests: memoryGuests, lastUpdated: new Date().toISOString() }),
+                JSON.stringify({
+                    guests: memoryGuests,
+                    deletedIds: Array.from(deletedGuestIds),
+                    lastUpdated: new Date().toISOString()
+                }),
                 { retain: true, qos: 1 }
             );
         }
@@ -136,11 +148,23 @@ function broadcastState() {
 }
 
 async function getCloudGuests() {
-    return memoryGuests;
+    return memoryGuests.filter(g => !deletedGuestIds.has(g.id));
+}
+
+function isGuestDeleted(guestId) {
+    return deletedGuestIds.has(guestId);
+}
+
+function getDeletedGuestIds() {
+    return deletedGuestIds;
 }
 
 async function saveGuestToCloud(guestRecord) {
     if (!guestRecord || !guestRecord.name) return false;
+    if (deletedGuestIds.has(guestRecord.id)) {
+        // Tombstone active: never resurrect a deleted guest
+        return false;
+    }
 
     const existingIdx = memoryGuests.findIndex(g => g.id === guestRecord.id);
     if (existingIdx >= 0) {
@@ -156,6 +180,7 @@ async function saveGuestToCloud(guestRecord) {
 
 async function deleteGuestFromCloud(guestId) {
     if (!guestId) return false;
+    deletedGuestIds.add(guestId);
     memoryGuests = memoryGuests.filter(g => g.id !== guestId);
     persistLocalState();
     broadcastState();
@@ -164,6 +189,7 @@ async function deleteGuestFromCloud(guestId) {
 
 async function resetCloudGuests() {
     memoryGuests = [];
+    deletedGuestIds.clear();
     persistLocalState();
     broadcastState();
 }
@@ -173,5 +199,7 @@ module.exports = {
     saveGuestToCloud,
     deleteGuestFromCloud,
     resetCloudGuests,
+    isGuestDeleted,
+    getDeletedGuestIds,
     getLastCloudError: () => null
 };

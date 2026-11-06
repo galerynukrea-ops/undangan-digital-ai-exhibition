@@ -411,11 +411,25 @@
         let totalCount = 0;
         let popupDismissTimer = null;
 
+        let deletedGuestIds = new Set();
+        try {
+            const rawDel = JSON.parse(localStorage.getItem('mbd_deleted_ids') || '[]');
+            if (Array.isArray(rawDel)) rawDel.forEach(id => deletedGuestIds.add(id));
+        } catch (e) {}
+
+        function markGuestDeleted(id) {
+            if (!id) return;
+            deletedGuestIds.add(id);
+            try {
+                localStorage.setItem('mbd_deleted_ids', JSON.stringify(Array.from(deletedGuestIds)));
+            } catch (e) {}
+        }
+
         function mergeGuestList(current, incoming) {
             const map = new Map();
-            (current || []).forEach(g => { if (g && g.id) map.set(g.id, g); });
+            (current || []).forEach(g => { if (g && g.id && !deletedGuestIds.has(g.id)) map.set(g.id, g); });
             (incoming || []).forEach(g => {
-                if (g && g.id) {
+                if (g && g.id && !deletedGuestIds.has(g.id)) {
                     const existing = map.get(g.id) || {};
                     map.set(g.id, { ...existing, ...g });
                 }
@@ -429,7 +443,7 @@
         try {
             const cached = JSON.parse(localStorage.getItem('mbd_live_guests') || '[]');
             if (Array.isArray(cached) && cached.length > 0) {
-                checkedInGuests = cached;
+                checkedInGuests = cached.filter(g => g && g.id && !deletedGuestIds.has(g.id));
             }
         } catch (e) {}
 
@@ -440,13 +454,13 @@
                 const json = await res.json();
                 if (json.success) {
                     const stats = json.data;
-                    const incomingList = stats.allCheckins || stats.recentCheckins || [];
-                    checkedInGuests = mergeGuestList(checkedInGuests, incomingList);
+                    const incomingList = (stats.allCheckins || stats.recentCheckins || []).filter(g => g && g.id && !deletedGuestIds.has(g.id));
+                    checkedInGuests = incomingList;
                     try {
                         localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests));
                     } catch (e) {}
 
-                    const checkedCount = Math.max(stats.checkedInCount || 0, checkedInGuests.length);
+                    const checkedCount = checkedInGuests.length;
                     const counterEl = document.getElementById('counterText');
                     counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedCount}</span> TAMU HADIR`;
 
@@ -454,15 +468,6 @@
                         updateBottomMarquee(checkedInGuests);
                     } else {
                         renderEmptyMarquee();
-                    }
-
-                    // Self-healing: if client has guests unknown to server, heal the server
-                    if (checkedInGuests.length > (stats.checkedInCount || 0)) {
-                        fetch('/api/guests/sync', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ guests: checkedInGuests })
-                        }).catch(() => {});
                     }
                 }
             } catch (err) {
@@ -662,8 +667,11 @@
                     try {
                         if (topic === 'mbd_ai_exhibition_madiun_2026/state') {
                             const stateObj = JSON.parse(msg.toString());
-                            if (Array.isArray(stateObj.guests) && stateObj.guests.length > 0) {
-                                checkedInGuests = mergeGuestList(checkedInGuests, stateObj.guests);
+                            if (Array.isArray(stateObj.deletedIds)) {
+                                stateObj.deletedIds.forEach(dId => markGuestDeleted(dId));
+                            }
+                            if (Array.isArray(stateObj.guests)) {
+                                checkedInGuests = stateObj.guests.filter(g => g && g.id && !deletedGuestIds.has(g.id));
                                 try {
                                     localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests));
                                 } catch (e) {}
@@ -701,6 +709,7 @@
                         } else if (parsed.type === 'guest_deleted') {
                             const delId = parsed.data?.id;
                             if (delId) {
+                                markGuestDeleted(delId);
                                 checkedInGuests = checkedInGuests.filter(g => g.id !== delId);
                                 try {
                                     localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests));

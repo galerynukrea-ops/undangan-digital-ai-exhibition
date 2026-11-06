@@ -322,12 +322,28 @@
             searchTimeout = setTimeout(() => fetchGuests(false), 250);
         }
 
+        let deletedGuestIds = new Set();
+        try {
+            const rawDel = JSON.parse(localStorage.getItem('mbd_deleted_ids') || '[]');
+            if (Array.isArray(rawDel)) rawDel.forEach(id => deletedGuestIds.add(id));
+        } catch (e) {}
+
+        function markGuestDeleted(id) {
+            if (!id) return;
+            deletedGuestIds.add(id);
+            try {
+                localStorage.setItem('mbd_deleted_ids', JSON.stringify(Array.from(deletedGuestIds)));
+            } catch (e) {}
+        }
+
         function getCachedGuests() {
             try {
                 const raw = localStorage.getItem(CACHE_KEY);
                 if (raw) {
                     const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) return parsed;
+                    if (Array.isArray(parsed)) {
+                        return parsed.filter(g => g && g.id && !deletedGuestIds.has(g.id));
+                    }
                 }
             } catch (e) {}
             return [];
@@ -335,7 +351,8 @@
 
         function setCachedGuests(list) {
             try {
-                localStorage.setItem(CACHE_KEY, JSON.stringify(list));
+                const clean = Array.isArray(list) ? list.filter(g => g && g.id && !deletedGuestIds.has(g.id)) : [];
+                localStorage.setItem(CACHE_KEY, JSON.stringify(clean));
             } catch (e) {}
         }
 
@@ -350,42 +367,21 @@
             try {
                 const res = await fetch(url);
                 const json = await res.json();
-                const serverGuests = json.data || [];
-
-                const current = getCachedGuests();
-                const map = new Map();
-                current.forEach(g => { if (g.id) map.set(g.id, g); });
-                serverGuests.forEach(g => {
-                    if (g.id) {
-                        const ex = map.get(g.id) || {};
-                        map.set(g.id, { ...ex, ...g });
-                    }
-                });
-                const mergedGuests = Array.from(map.values()).sort(
-                    (a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0)
-                );
+                const rawServerGuests = json.data || [];
+                const serverGuests = rawServerGuests.filter(g => g && g.id && !deletedGuestIds.has(g.id));
 
                 if (!search && status === 'all') {
-                    setCachedGuests(mergedGuests);
-                }
-
-                // If client has more guests than server returned, heal server
-                if (mergedGuests.length > serverGuests.length) {
-                    fetch('/api/guests/sync', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ guests: mergedGuests })
-                    }).catch(() => {});
+                    setCachedGuests(serverGuests);
                 }
 
                 // Cek jika ada tamu baru yang baru saja masuk
-                if (!isFirstLoad && mergedGuests.length > previousGuestCount && previousGuestCount >= 0) {
+                if (!isFirstLoad && serverGuests.length > previousGuestCount && previousGuestCount >= 0) {
                     highlightLiveArrival();
                 }
-                previousGuestCount = mergedGuests.length;
+                previousGuestCount = serverGuests.length;
                 isFirstLoad = false;
 
-                renderTable(mergedGuests);
+                renderTable(serverGuests);
             } catch (err) {
                 console.error('Error fetching guests:', err);
                 const fallback = getCachedGuests();
@@ -477,6 +473,8 @@
 
         async function deleteGuest(id, name) {
             if (!confirm(`Hapus instansi "${name}" dari sistem?`)) return;
+
+            markGuestDeleted(id);
 
             // Hapus seketika dari cache lokal dan tabel tampilan
             const current = getCachedGuests();
@@ -611,21 +609,13 @@
                     try {
                         if (topic === 'mbd_ai_exhibition_madiun_2026/state') {
                             const stateObj = JSON.parse(msg.toString());
-                            if (Array.isArray(stateObj.guests) && stateObj.guests.length > 0) {
-                                const current = getCachedGuests();
-                                const map = new Map();
-                                current.forEach(g => { if (g.id) map.set(g.id, g); });
-                                stateObj.guests.forEach(g => {
-                                    if (g.id) {
-                                        const ex = map.get(g.id) || {};
-                                        map.set(g.id, { ...ex, ...g });
-                                    }
-                                });
-                                const merged = Array.from(map.values()).sort(
-                                    (a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0)
-                                );
-                                setCachedGuests(merged);
-                                renderTable(merged);
+                            if (Array.isArray(stateObj.deletedIds)) {
+                                stateObj.deletedIds.forEach(dId => markGuestDeleted(dId));
+                            }
+                            if (Array.isArray(stateObj.guests)) {
+                                const active = stateObj.guests.filter(g => g && g.id && !deletedGuestIds.has(g.id));
+                                setCachedGuests(active);
+                                renderTable(active);
                             }
                             return;
                         }
@@ -634,7 +624,7 @@
                         if (parsed.type === 'guest_checked_in') {
                             const newGuest = parsed.data.guest;
                             const newMsg = parsed.data.message;
-                            if (newGuest) {
+                            if (newGuest && !deletedGuestIds.has(newGuest.id)) {
                                 newGuest.message = newMsg?.text || '';
                                 newGuest.emotion = newMsg?.emotion || '';
                                 newGuest.sentiment = newMsg?.sentiment || '';
@@ -651,6 +641,7 @@
                         } else if (parsed.type === 'guest_deleted') {
                             const delId = parsed.data?.id;
                             if (delId) {
+                                markGuestDeleted(delId);
                                 const current = getCachedGuests();
                                 const updated = current.filter(g => g.id !== delId);
                                 setCachedGuests(updated);
@@ -658,6 +649,8 @@
                             }
                             fetchGuests(true);
                         } else if (parsed.type === 'database_reset') {
+                            deletedGuestIds.clear();
+                            try { localStorage.removeItem('mbd_deleted_ids'); } catch (e) {}
                             localStorage.removeItem(CACHE_KEY);
                             previousGuestCount = 0;
                             renderTable([]);

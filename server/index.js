@@ -11,7 +11,7 @@ const crypto = require('node:crypto');
 const uuidv4 = () => crypto.randomUUID();
 
 const { db, generateToken, resetAttendanceOnly, seedDatabase, sampleInstitutions } = require('./db');
-const { getCloudGuests, saveGuestToCloud, deleteGuestFromCloud, resetCloudGuests, getLastCloudError } = require('./cloudStore');
+const { getCloudGuests, saveGuestToCloud, deleteGuestFromCloud, resetCloudGuests, getLastCloudError, isGuestDeleted, getDeletedGuestIds } = require('./cloudStore');
 const { analyzeSentiment } = require('./aiService');
 const { generateVenueStandeePdf, PALETTE, EVENT_DETAILS } = require('./pdfService');
 const { addClient, broadcastEvent } = require('./sseService');
@@ -93,9 +93,19 @@ app.get('/api/network-info', (req, res) => {
     });
 });
 
-// Bi-directional Consensus Synchronizer (Zero Data-Loss, Accretive Safe)
+// Bi-directional Consensus Synchronizer (Zero Data-Loss, Accretive Safe with Tombstones)
 async function syncLocalDbWithCloud() {
     try {
+        const deletedIds = getDeletedGuestIds();
+        if (deletedIds && deletedIds.size > 0) {
+            for (const dId of deletedIds) {
+                try {
+                    db.prepare('DELETE FROM guests WHERE id = ?').run(dId);
+                    db.prepare('DELETE FROM guest_messages WHERE guest_id = ?').run(dId);
+                } catch (e) {}
+            }
+        }
+
         const cloudGuests = await getCloudGuests();
         if (Array.isArray(cloudGuests) && cloudGuests.length > 0) {
             // Insert or update records from Cloud Store into local SQLite
@@ -109,7 +119,7 @@ async function syncLocalDbWithCloud() {
             `);
 
             for (const g of cloudGuests) {
-                if (!g.id || !g.name) continue;
+                if (!g.id || !g.name || isGuestDeleted(g.id)) continue;
                 try {
                     insertGuest.run(
                         g.id,
@@ -147,7 +157,7 @@ async function syncLocalDbWithCloud() {
             `).all() || [];
 
             for (const lg of localGuests) {
-                if (lg.id && lg.name && !cloudIds.has(lg.id)) {
+                if (lg.id && lg.name && !cloudIds.has(lg.id) && !isGuestDeleted(lg.id)) {
                     await saveGuestToCloud(lg);
                 }
             }
@@ -224,7 +234,7 @@ app.post('/api/guests/sync', (req, res) => {
         `);
 
         for (const g of guests) {
-            if (!g.id || !g.institution) continue;
+            if (!g.id || !g.institution || isGuestDeleted(g.id)) continue;
             try {
                 insertGuest.run(
                     g.id,
