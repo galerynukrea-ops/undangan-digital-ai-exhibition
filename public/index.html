@@ -67,29 +67,26 @@
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
 
-        <!-- Standee Highlight Banner -->
-        <div class="cyber-panel p-5 rounded-2xl border border-neonCyan/50 bg-gradient-to-r from-cyberDark via-cyberBlack to-cyberDark flex flex-wrap items-center justify-between gap-4 cyber-clip">
+        <!-- Data Export & Rekap Banner -->
+        <div class="cyber-panel p-5 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-cyberDark via-cyberBlack to-cyberDark flex flex-wrap items-center justify-between gap-4 cyber-clip">
             <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 rounded-xl bg-neonCyan/15 border border-neonCyan/50 flex items-center justify-center text-neonCyan text-2xl shrink-0 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
-                    <i class="fa-solid fa-qrcode"></i>
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-2xl shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                    <i class="fa-solid fa-file-csv"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm sm:text-base font-bold text-neonCyan font-cyber">
-                        1 Master Barcode Kedatangan di Depan Venue
+                    <h3 class="text-sm sm:text-base font-bold text-emerald-400 font-cyber">
+                        Rekap & Ekspor Data Kehadiran Tamu
                     </h3>
                     <p class="text-xs font-tech text-chromeSilver/80">
-                        Undangan fisik dicetak bersih tanpa barcode. Tamu memindai 1 barcode yang dipasang di standing tablet / meja depan Waroeng Latte Madiun.
+                        Unduh laporan lengkap data instansi, tamu hadir, waktu check-in, dan analisis pesan AI ke dalam format CSV / Excel.
                     </p>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-2 font-cyber text-xs">
-                <a href="/standee" target="_blank" class="px-4 py-2 rounded-xl font-extrabold bg-gradient-to-r from-neonCyan to-neonPurple hover:opacity-95 text-cyberBlack flex items-center gap-2 shadow-[0_0_20px_rgba(0,240,255,0.4)] transition">
-                    <i class="fa-solid fa-print"></i> Buka Standee Barcode
+                <a href="/api/guests/export/csv" class="px-4 py-2.5 rounded-xl font-extrabold bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-95 text-cyberBlack flex items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.4)] transition">
+                    <i class="fa-solid fa-file-arrow-down text-sm"></i> Download File CSV Data Tamu
                 </a>
-                <a href="/api/venue/standee/pdf" class="px-3.5 py-2 rounded-xl font-bold bg-cyberDark hover:bg-neonCyan/20 text-neonCyan border border-neonCyan/40 flex items-center gap-1.5 transition">
-                    <i class="fa-solid fa-download"></i> PDF Standee A4
-                </a>
-                <button onclick="openResetModal()" class="px-3.5 py-2 rounded-xl font-bold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/40 flex items-center gap-1.5 transition" title="Bersihkan data uji coba">
+                <button onclick="openResetModal()" class="px-3.5 py-2.5 rounded-xl font-bold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/40 flex items-center gap-1.5 transition" title="Bersihkan data uji coba">
                     <i class="fa-solid fa-rotate-left text-rose-400"></i> Reset Uji Coba
                 </button>
             </div>

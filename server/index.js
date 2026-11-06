@@ -357,6 +357,85 @@ app.post('/api/guests/import', upload.single('file'), (req, res) => {
         });
 });
 
+// 3b. Export guest data to CSV file (RFC 4180 with UTF-8 BOM for Excel compatibility)
+app.get(['/api/guests/export/csv', '/api/guests/export'], async (req, res) => {
+    try {
+        await syncLocalDbWithCloud();
+
+        const guests = db.prepare('SELECT * FROM guests ORDER BY checked_in_at DESC, created_at DESC').all() || [];
+        const messages = db.prepare('SELECT * FROM guest_messages').all() || [];
+
+        const formatField = (val) => {
+            if (val === null || val === undefined) return '""';
+            const str = String(val).replace(/"/g, '""');
+            return `"${str}"`;
+        };
+
+        const headers = [
+            'No',
+            'Nama Tamu',
+            'Instansi / Perusahaan',
+            'Kategori',
+            'Status Kehadiran',
+            'Waktu Kehadiran (WIB)',
+            'Pesan / Ucapan',
+            'Sentimen Pesan',
+            'Emosi Terdeteksi',
+            'Kode Token QR'
+        ];
+
+        const rows = guests.map((g, idx) => {
+            const m = messages.find(x => x.guest_id === g.id) || {};
+
+            let timeStr = '-';
+            if (g.checked_in_at) {
+                try {
+                    const d = new Date(g.checked_in_at);
+                    timeStr = d.toLocaleString('id-ID', {
+                        timeZone: 'Asia/Jakarta',
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    }) + ' WIB';
+                } catch (e) {
+                    timeStr = g.checked_in_at;
+                }
+            }
+
+            const statusStr = g.status === 'checked_in' ? 'Hadir (Terverifikasi)' : 'Belum Hadir';
+
+            return [
+                idx + 1,
+                g.name || '-',
+                g.institution || '-',
+                g.category || 'Mitra / Tamu',
+                statusStr,
+                timeStr,
+                m.message || '-',
+                m.sentiment ? m.sentiment.toUpperCase() : '-',
+                m.emotion || '-',
+                g.qr_token || '-'
+            ].map(formatField).join(',');
+        });
+
+        const csvContent = '\uFEFF' + [headers.map(formatField).join(','), ...rows].join('\r\n');
+
+        const nowTag = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const filename = `Data_Tamu_Exhibition_Madiun_${nowTag}.csv`;
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+        res.send(csvContent);
+    } catch (err) {
+        console.error('[API] Error exporting CSV:', err.message);
+        res.status(500).send('Gagal mengekspor data tamu ke file CSV');
+    }
+});
+
 // 4. Delete institution (Supports DELETE, POST /:id/delete, and POST /delete for firewall resilience)
 async function handleDeleteGuest(id, res) {
     if (!id) {
