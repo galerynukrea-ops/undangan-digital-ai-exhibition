@@ -731,6 +731,68 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
+// Dual-Engine TTS Phonetic Expander (Converts abbreviations: bpk -> Bapak, dr -> Dokter, etc.)
+function expandSpeechText(text) {
+    if (!text) return '';
+    let t = text;
+
+    const replaceWord = (pattern, replacement) => {
+        const re = new RegExp('(^|[\\s(])' + pattern + '(\\.|(?=[\\s,)]|$))', 'gi');
+        t = t.replace(re, (match, prefix) => prefix + replacement);
+    };
+
+    replaceWord('bpk', 'Bapak');
+    replaceWord('bu', 'Ibu');
+    replaceWord('sdr', 'Saudara');
+    replaceWord('sdri', 'Saudari');
+    replaceWord('k\\.?h', 'Kiai Haji');
+    replaceWord('kh', 'Kiai Haji');
+    replaceWord('prof', 'Profesor');
+    replaceWord('ir', 'Insinyur');
+    replaceWord('drg', 'Dokter Gigi');
+    replaceWord('dr', 'Dokter');
+    replaceWord('drs', 'Doktorandus');
+    replaceWord('dra', 'Doktoranda');
+    replaceWord('ust', 'Ustadz');
+    replaceWord('h', 'Haji');
+    replaceWord('hj', 'Hajjah');
+
+    replaceWord('s\\.?h', 'Sarjana Hukum');
+    replaceWord('sh', 'Sarjana Hukum');
+    replaceWord('s\\.?kom', 'Sarjana Komputer');
+    replaceWord('skom', 'Sarjana Komputer');
+    replaceWord('s\\.?e', 'Sarjana Ekonomi');
+    replaceWord('se', 'Sarjana Ekonomi');
+    replaceWord('s\\.?pd', 'Sarjana Pendidikan');
+    replaceWord('spd', 'Sarjana Pendidikan');
+    replaceWord('s\\.?t', 'Sarjana Teknik');
+    replaceWord('st', 'Sarjana Teknik');
+    replaceWord('s\\.?sos', 'Sarjana Sosial');
+    replaceWord('ssos', 'Sarjana Sosial');
+    replaceWord('s\\.?si', 'Sarjana Sains');
+    replaceWord('ssi', 'Sarjana Sains');
+    replaceWord('m\\.?m', 'Magister Manajemen');
+    replaceWord('mm', 'Magister Manajemen');
+    replaceWord('m\\.?pd', 'Magister Pendidikan');
+    replaceWord('mpd', 'Magister Pendidikan');
+    replaceWord('m\\.?kom', 'Magister Komputer');
+    replaceWord('mkom', 'Magister Komputer');
+    replaceWord('m\\.?t', 'Magister Teknik');
+    replaceWord('mt', 'Magister Teknik');
+    replaceWord('m\\.?si', 'Magister Sains');
+    replaceWord('msi', 'Magister Sains');
+    replaceWord('m\\.?h', 'Magister Hukum');
+    replaceWord('mh', 'Magister Hukum');
+
+    replaceWord('pt', 'P T');
+    replaceWord('cv', 'C V');
+    replaceWord('kab', 'Kabupaten');
+    replaceWord('kec', 'Kecamatan');
+    replaceWord('kel', 'Kelurahan');
+
+    return t.replace(/\s+/g, ' ').trim();
+}
+
 // Dual-Engine TTS: Gemini 3.8 Flash Lite TTS with fallback
 app.post('/api/tts', async (req, res) => {
     try {
@@ -738,6 +800,8 @@ app.post('/api/tts', async (req, res) => {
         if (!text || !text.trim()) {
             return res.status(400).json({ error: 'Teks suara wajib diisi' });
         }
+
+        const spokenText = expandSpeechText(text.trim());
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
@@ -754,7 +818,7 @@ app.post('/api/tts', async (req, res) => {
                 contents: [{
                     role: 'user',
                     parts: [{
-                        text: text.trim(),
+                        text: spokenText,
                         speechMetadata: {
                             style: 'Warm, articulate Indonesian exhibition host'
                         }

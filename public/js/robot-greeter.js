@@ -139,9 +139,78 @@
         setSpeaking(false);
     }
 
-    async function speakText(text, onComplete) {
+    function expandSpeechText(text) {
+        if (!text) return '';
+        let t = text;
+
+        const replaceWord = (pattern, replacement) => {
+            const re = new RegExp('(^|[\\s(])' + pattern + '(\\.|(?=[\\s,)]|$))', 'gi');
+            t = t.replace(re, (match, prefix) => prefix + replacement);
+        };
+
+        // Social honorifics (Sapaan kehormatan)
+        replaceWord('bpk', 'Bapak');
+        replaceWord('bu', 'Ibu');
+        replaceWord('sdr', 'Saudara');
+        replaceWord('sdri', 'Saudari');
+
+        // Religious & Academic titles (Gelar Keagamaan & Keilmuan)
+        replaceWord('k\\.?h', 'Kiai Haji');
+        replaceWord('kh', 'Kiai Haji');
+        replaceWord('prof', 'Profesor');
+        replaceWord('ir', 'Insinyur');
+        replaceWord('drg', 'Dokter Gigi');
+        replaceWord('dr', 'Dokter');
+        replaceWord('drs', 'Doktorandus');
+        replaceWord('dra', 'Doktoranda');
+        replaceWord('ust', 'Ustadz');
+        replaceWord('h', 'Haji');
+        replaceWord('hj', 'Hajjah');
+
+        // Academic degrees (Gelar Pendidikan / Kesarjanaan)
+        replaceWord('s\\.?h', 'Sarjana Hukum');
+        replaceWord('sh', 'Sarjana Hukum');
+        replaceWord('s\\.?kom', 'Sarjana Komputer');
+        replaceWord('skom', 'Sarjana Komputer');
+        replaceWord('s\\.?e', 'Sarjana Ekonomi');
+        replaceWord('se', 'Sarjana Ekonomi');
+        replaceWord('s\\.?pd', 'Sarjana Pendidikan');
+        replaceWord('spd', 'Sarjana Pendidikan');
+        replaceWord('s\\.?t', 'Sarjana Teknik');
+        replaceWord('st', 'Sarjana Teknik');
+        replaceWord('s\\.?sos', 'Sarjana Sosial');
+        replaceWord('ssos', 'Sarjana Sosial');
+        replaceWord('s\\.?si', 'Sarjana Sains');
+        replaceWord('ssi', 'Sarjana Sains');
+        replaceWord('m\\.?m', 'Magister Manajemen');
+        replaceWord('mm', 'Magister Manajemen');
+        replaceWord('m\\.?pd', 'Magister Pendidikan');
+        replaceWord('mpd', 'Magister Pendidikan');
+        replaceWord('m\\.?kom', 'Magister Komputer');
+        replaceWord('mkom', 'Magister Komputer');
+        replaceWord('m\\.?t', 'Magister Teknik');
+        replaceWord('mt', 'Magister Teknik');
+        replaceWord('m\\.?si', 'Magister Sains');
+        replaceWord('msi', 'Magister Sains');
+        replaceWord('m\\.?h', 'Magister Hukum');
+        replaceWord('mh', 'Magister Hukum');
+
+        // Institutional abbreviations
+        replaceWord('pt', 'P T');
+        replaceWord('cv', 'C V');
+        replaceWord('kab', 'Kabupaten');
+        replaceWord('kec', 'Kecamatan');
+        replaceWord('kel', 'Kelurahan');
+
+        return t.replace(/\s+/g, ' ').trim();
+    }
+
+    async function speakText(rawText, onComplete) {
         stopActiveSpeech();
-        if (!text || !text.trim()) return;
+        if (!rawText || !rawText.trim()) return;
+
+        // Phonetic expansion for abbreviations (bpk -> Bapak, dr -> Dokter, etc.)
+        const text = expandSpeechText(rawText);
 
         playWelcomeChime();
         setSpeaking(true);
@@ -724,6 +793,7 @@
         setAction,
         setSpeaking,
         speakText,
+        expandSpeechText,
         stopActiveSpeech,
         unlockAudio,
         isAudioUnlocked: () => audioUnlocked,

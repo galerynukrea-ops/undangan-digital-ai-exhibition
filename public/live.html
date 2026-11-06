@@ -619,7 +619,10 @@
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
             }
-            const speechText = `Selamat datang ${guestName} dari ${guestInst}! Terima kasih atas kehadirannya di Digital AI Work Exhibition.`;
+            const expander = (window.Robot3D && window.Robot3D.expandSpeechText) ? window.Robot3D.expandSpeechText : (s) => s;
+            const spokenName = expander(guestName);
+            const spokenInst = expander(guestInst);
+            const speechText = `Selamat datang ${spokenName} dari ${spokenInst}! Terima kasih atas kehadirannya di Digital AI Work Exhibition.`;
             if (!isAudioMuted && window.Robot3D) {
                 window.Robot3D.speakText(speechText);
             }
