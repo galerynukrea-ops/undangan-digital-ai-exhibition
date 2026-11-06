@@ -13,47 +13,7 @@ const STATE_FILE = process.env.VERCEL
     ? '/tmp/cloud_state.json'
     : path.join(__dirname, '..', 'data', 'cloud_state.json');
 
-const INITIAL_VIP_GUESTS = [
-    {
-        id: '2ab7ff07-827a-41f3-9f34-1f828b8c612d',
-        name: 'Dr. H. Maidi, S.H., M.M., M.Pd',
-        institution: 'Pemerintah Kota Madiun',
-        category: 'Instansi Pemerintah',
-        status: 'checked_in',
-        checked_in_at: '2026-11-05T17:54:54.881Z',
-        created_at: '2026-11-05T17:54:54.881Z',
-        message: 'Sukses selalu untuk seluruh talenta muda & kemajuan kecerdasan artifisial di Kota Madiun!',
-        sentiment: 'positive',
-        score: 0.95,
-        emotion: 'Optimis'
-    },
-    {
-        id: 'guest_pria_solo_1',
-        name: 'Pria Solo',
-        institution: 'Hotel Setia Budi',
-        category: 'Hospitality & Hotel',
-        status: 'checked_in',
-        checked_in_at: '2026-11-05T18:00:00.000Z',
-        created_at: '2026-11-05T18:00:00.000Z',
-        message: 'Selamat dan sukses Digital AI Work Exhibition di Waroeng Latte Madiun!',
-        sentiment: 'positive',
-        score: 0.9,
-        emotion: 'Inspiratif'
-    },
-    {
-        id: 'guest_gangsar_1',
-        name: 'Gangsar',
-        institution: 'Bluder Cokro',
-        category: 'Industri Kuliner Khas Madiun',
-        status: 'checked_in',
-        checked_in_at: '2026-11-05T18:15:00.000Z',
-        created_at: '2026-11-05T18:15:00.000Z',
-        message: 'Keren sekali inovasi teknologi kecerdasan artifisial karya anak bangsa!',
-        sentiment: 'positive',
-        score: 0.92,
-        emotion: 'Bangga'
-    }
-];
+const INITIAL_VIP_GUESTS = [];
 
 let memoryGuests = [];
 let deletedGuestIds = new Set();

@@ -378,31 +378,20 @@ app.post('/api/guests/delete', async (req, res) => {
     await handleDeleteGuest(id, res);
 });
 
-// 5. Reset Testing & Attendance Data (Supports mode: 'attendance' | 'factory')
+// 5. Reset Testing & Attendance Data (Wipes all sample guests to 0 for simulation)
 app.all(['/api/admin/reset', '/api/reset'], async (req, res) => {
     try {
-        const mode = (req.body?.mode || req.query?.mode || 'attendance').toLowerCase();
+        const mode = (req.body?.mode || req.query?.mode || 'factory').toLowerCase();
         
         // Reset local DB & Global Cloud Store
         await resetCloudGuests();
+        seedDatabase();
 
-        if (mode === 'factory') {
-            seedDatabase();
-            broadcastEvent('database_reset', { mode: 'factory', timestamp: new Date().toISOString() });
-            return res.json({
-                success: true,
-                mode: 'factory',
-                message: 'Database berhasil di-reset penuh ke 10 instansi awal (kondisi pabrik).'
-            });
-        }
-
-        // Default: attendance reset
-        resetAttendanceOnly();
-        broadcastEvent('database_reset', { mode: 'attendance', timestamp: new Date().toISOString() });
+        broadcastEvent('database_reset', { mode, timestamp: new Date().toISOString() });
         return res.json({
             success: true,
-            mode: 'attendance',
-            message: 'Status kehadiran berhasil dibersihkan (0 hadir). 10 mitra resmi siap digunakan kembali.'
+            mode,
+            message: 'Seluruh data contoh berhasil dibersihkan (0 tamu). Sistem siap untuk simulasi registrasi baru.'
         });
     } catch (err) {
         console.error('[API] Error reset database:', err.message);

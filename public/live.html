@@ -729,13 +729,22 @@
                             isProcessingArrival = false;
                             greetedGuestIds.clear();
                             checkedInGuests = [];
-                            try { localStorage.removeItem('mbd_live_guests'); } catch (e) {}
+                            deletedGuestIds.clear();
+                            try {
+                                localStorage.removeItem('mbd_live_guests');
+                                localStorage.removeItem('mbd_deleted_ids');
+                            } catch (e) {}
                             if (popupDismissTimer) clearTimeout(popupDismissTimer);
                             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                             const popup = document.getElementById('welcomePopup');
                             popup.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
                             popup.classList.add('-translate-x-[150%]', 'opacity-0', 'pointer-events-none');
                             if (window.Robot3D) window.Robot3D.flyToCenter();
+                            renderEmptyMarquee();
+                            const counterEl = document.getElementById('counterText');
+                            if (counterEl) {
+                                counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">0</span> TAMU HADIR`;
+                            }
                             loadStats();
                         }
                     } catch (e) {}
@@ -773,12 +782,23 @@
                         arrivalQueue.length = 0;
                         isProcessingArrival = false;
                         greetedGuestIds.clear();
+                        checkedInGuests = [];
+                        deletedGuestIds.clear();
+                        try {
+                            localStorage.removeItem('mbd_live_guests');
+                            localStorage.removeItem('mbd_deleted_ids');
+                        } catch (e) {}
                         if (popupDismissTimer) clearTimeout(popupDismissTimer);
                         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                         const popup = document.getElementById('welcomePopup');
                         popup.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
                         popup.classList.add('-translate-x-[150%]', 'opacity-0', 'pointer-events-none');
                         if (window.Robot3D) window.Robot3D.flyToCenter();
+                        renderEmptyMarquee();
+                        const counterEl = document.getElementById('counterText');
+                        if (counterEl) {
+                            counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">0</span> TAMU HADIR`;
+                        }
                         loadStats();
                     }
                 } catch (err) {

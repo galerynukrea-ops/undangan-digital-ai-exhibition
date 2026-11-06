@@ -682,10 +682,15 @@
                             }
                             fetchGuests(true);
                         } else if (parsed.type === 'database_reset') {
-                            localStorage.removeItem(CACHE_KEY);
+                            deletedGuestIds.clear();
+                            try {
+                                localStorage.removeItem('mbd_deleted_ids');
+                                localStorage.removeItem(CACHE_KEY);
+                            } catch (e) {}
                             previousGuestCount = 0;
                             renderTable([]);
                             fetchGuests(false);
+                            fetchStats();
                         }
                     } catch (e) {}
                 };
