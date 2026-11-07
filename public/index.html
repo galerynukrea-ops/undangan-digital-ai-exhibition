@@ -298,6 +298,9 @@
             } catch (e) {}
         }
 
+        let activeDisplayedGuests = [];
+        let isExplicitReset = false;
+
         // Fetch Guests from Server with Strict Cache-Busting
         async function fetchGuests(isSilent = false) {
             if (isFetching && isSilent) return;
@@ -317,6 +320,16 @@
                 const json = await res.json();
                 if (json.success) {
                     const guests = (json.data || []).filter(g => g && g.id && !deletedGuestIds.has(g.id));
+
+                    // ANTI-FLICKER GUARD:
+                    // If serverless container cold-started and briefly returned 0, but we already have guests displayed,
+                    // and no user reset was clicked, NEVER wipe the list!
+                    if (guests.length === 0 && activeDisplayedGuests.length > 0 && !isExplicitReset && !search && status === 'all') {
+                        return;
+                    }
+
+                    activeDisplayedGuests = guests;
+                    isExplicitReset = false;
                     renderTable(guests);
                 }
             } catch (err) {
@@ -520,6 +533,7 @@
 
         async function confirmReset(mode) {
             try {
+                isExplicitReset = true;
                 const res = await fetch('/api/admin/reset', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -530,14 +544,17 @@
                     closeResetModal();
                     deletedGuestIds.clear();
                     try { localStorage.removeItem('mbd_deleted_ids'); } catch (e) {}
+                    activeDisplayedGuests = [];
                     lastRenderedHash = '';
                     renderTable([]);
                     fetchGuests(false);
                     alert(json.message || 'Reset berhasil. Data tamu kembali ke 0.');
                 } else {
+                    isExplicitReset = false;
                     alert(json.error || 'Gagal melakukan reset.');
                 }
             } catch (err) {
+                isExplicitReset = false;
                 alert('Gagal menghubungi server.');
             }
         }
@@ -552,7 +569,9 @@
                         if (parsed.type === 'guest_checked_in' || parsed.type === 'guest_feedback' || parsed.type === 'guest_deleted') {
                             fetchGuests(true);
                         } else if (parsed.type === 'database_reset') {
+                            isExplicitReset = true;
                             deletedGuestIds.clear();
+                            activeDisplayedGuests = [];
                             lastRenderedHash = '';
                             renderTable([]);
                             fetchGuests(false);

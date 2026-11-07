@@ -410,6 +410,7 @@
         let checkedInGuests = [];
         let totalCount = 0;
         let popupDismissTimer = null;
+        let isLiveResetting = false;
 
         let deletedGuestIds = new Set();
         try {
@@ -455,7 +456,16 @@
                 if (json.success) {
                     const stats = json.data;
                     const incomingList = (stats.allCheckins || stats.recentCheckins || []).filter(g => g && g.id && !deletedGuestIds.has(g.id));
+                    
+                    // ANTI-FLICKER GUARD:
+                    // If cold-start lambda returns 0, but screen already has active checked-in guests,
+                    // do not wipe to 0 unless an explicit database reset occurred.
+                    if (incomingList.length === 0 && checkedInGuests.length > 0 && !isLiveResetting) {
+                        return;
+                    }
+
                     checkedInGuests = incomingList;
+                    isLiveResetting = false;
                     try {
                         localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests));
                     } catch (e) {}
@@ -783,6 +793,7 @@
                         loadStats();
                     } else if (parsed.type === 'database_reset') {
                         // Bersihkan antrean jika ada reset
+                        isLiveResetting = true;
                         arrivalQueue.length = 0;
                         isProcessingArrival = false;
                         greetedGuestIds.clear();

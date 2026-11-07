@@ -1,7 +1,7 @@
 /**
- * CLOUD STORE & REAL-TIME STATE SYNCHRONIZER (With Distributed Tombstones)
+ * CLOUD STORE & REAL-TIME STATE SYNCHRONIZER (With Distributed Consensus)
  * Multi-layer persistence: In-Memory + Local JSON + MQTT Retained State.
- * Prevents zombie guest resurrection across serverless containers and browser caches.
+ * Prevents split-brain and disappearing guests across Vercel serverless containers.
  * Digital Work AI Exhibition • Waroeng Latte Madiun
  */
 
@@ -17,6 +17,7 @@ const INITIAL_VIP_GUESTS = [];
 
 let memoryGuests = [];
 let deletedGuestIds = new Set();
+let hasLoadedRetained = false;
 
 function loadLocalState() {
     try {
@@ -52,62 +53,102 @@ function persistLocalState() {
 let mqttClient = null;
 const MQTT_TOPIC_STATE = 'mbd_ai_exhibition_madiun_2026/state';
 
-try {
-    mqttClient = mqtt.connect('mqtt://broker.hivemq.com:1883', {
-        reconnectPeriod: 3000,
-        connectTimeout: 5000,
-        keepalive: 60
-    });
-
-    mqttClient.on('connect', () => {
-        mqttClient.subscribe(MQTT_TOPIC_STATE, { qos: 1 });
-    });
-
-    mqttClient.on('message', (topic, msg) => {
-        if (topic === MQTT_TOPIC_STATE) {
-            try {
-                const parsed = JSON.parse(msg.toString());
-                if (Array.isArray(parsed.deletedIds)) {
-                    parsed.deletedIds.forEach(id => deletedGuestIds.add(id));
-                }
-                if (Array.isArray(parsed.guests)) {
-                    const map = new Map();
-                    memoryGuests.forEach(g => { if (g.id && !deletedGuestIds.has(g.id)) map.set(g.id, g); });
-                    parsed.guests.forEach(g => {
-                        if (g.id && !deletedGuestIds.has(g.id)) {
-                            const existing = map.get(g.id) || {};
-                            map.set(g.id, { ...existing, ...g });
-                        }
-                    });
-                    memoryGuests = Array.from(map.values()).sort(
-                        (a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0)
-                    );
-                    persistLocalState();
-                }
-            } catch (e) {}
-        }
-    });
-
-    mqttClient.on('error', () => {});
-} catch (e) {}
-
-function broadcastState() {
+function getOrInitMqtt() {
+    if (mqttClient) return mqttClient;
     try {
-        if (mqttClient && mqttClient.connected) {
-            mqttClient.publish(
-                MQTT_TOPIC_STATE,
-                JSON.stringify({
-                    guests: memoryGuests,
-                    deletedIds: Array.from(deletedGuestIds),
-                    lastUpdated: new Date().toISOString()
-                }),
-                { retain: false, qos: 0 }
-            );
+        mqttClient = mqtt.connect('mqtt://broker.hivemq.com:1883', {
+            reconnectPeriod: 2500,
+            connectTimeout: 4000,
+            keepalive: 60
+        });
+
+        mqttClient.on('connect', () => {
+            mqttClient.subscribe(MQTT_TOPIC_STATE, { qos: 1 });
+        });
+
+        mqttClient.on('message', (topic, msg) => {
+            if (topic === MQTT_TOPIC_STATE) {
+                try {
+                    hasLoadedRetained = true;
+                    if (!msg || msg.length === 0) return;
+                    const parsed = JSON.parse(msg.toString());
+                    if (Array.isArray(parsed.deletedIds)) {
+                        parsed.deletedIds.forEach(id => deletedGuestIds.add(id));
+                    }
+                    if (Array.isArray(parsed.guests)) {
+                        const map = new Map();
+                        memoryGuests.forEach(g => { if (g.id && !deletedGuestIds.has(g.id)) map.set(g.id, g); });
+                        parsed.guests.forEach(g => {
+                            if (g.id && !deletedGuestIds.has(g.id)) {
+                                const existing = map.get(g.id) || {};
+                                map.set(g.id, { ...existing, ...g });
+                            }
+                        });
+                        memoryGuests = Array.from(map.values()).sort(
+                            (a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0)
+                        );
+                        persistLocalState();
+                    }
+                } catch (e) {}
+            }
+        });
+
+        mqttClient.on('error', () => {});
+    } catch (e) {}
+    return mqttClient;
+}
+getOrInitMqtt();
+
+function ensureMqttConnected() {
+    return new Promise((resolve) => {
+        const client = getOrInitMqtt();
+        if (!client) return resolve(null);
+        if (client.connected) return resolve(client);
+        
+        let done = false;
+        const timer = setTimeout(() => {
+            if (!done) { done = true; resolve(client.connected ? client : null); }
+        }, 1500);
+
+        client.once('connect', () => {
+            if (!done) { done = true; clearTimeout(timer); resolve(client); }
+        });
+    });
+}
+
+async function broadcastState() {
+    try {
+        const client = await ensureMqttConnected();
+        if (client && client.connected) {
+            const payload = JSON.stringify({
+                guests: memoryGuests,
+                deletedIds: Array.from(deletedGuestIds),
+                lastUpdated: new Date().toISOString()
+            });
+            await new Promise((resolve) => {
+                client.publish(MQTT_TOPIC_STATE, payload, { retain: true, qos: 1 }, () => resolve());
+            });
         }
     } catch (e) {}
 }
 
 async function getCloudGuests() {
+    // If local memory is empty on cold container, give HiveMQ up to 700ms to deliver retained state
+    if (memoryGuests.length === 0 && !hasLoadedRetained) {
+        await new Promise((resolve) => {
+            ensureMqttConnected();
+            const timer = setTimeout(() => resolve(), 700);
+            if (mqttClient) {
+                mqttClient.once('message', (topic) => {
+                    if (topic === MQTT_TOPIC_STATE) {
+                        clearTimeout(timer);
+                        resolve();
+                    }
+                });
+            }
+        });
+        hasLoadedRetained = true;
+    }
     return memoryGuests.filter(g => !deletedGuestIds.has(g.id));
 }
 
@@ -122,7 +163,6 @@ function getDeletedGuestIds() {
 async function saveGuestToCloud(guestRecord) {
     if (!guestRecord || !guestRecord.name) return false;
     if (deletedGuestIds.has(guestRecord.id)) {
-        // Tombstone active: never resurrect a deleted guest
         return false;
     }
 
@@ -134,7 +174,7 @@ async function saveGuestToCloud(guestRecord) {
     }
 
     persistLocalState();
-    broadcastState();
+    await broadcastState();
     return true;
 }
 
@@ -143,7 +183,7 @@ async function deleteGuestFromCloud(guestId) {
     deletedGuestIds.add(guestId);
     memoryGuests = memoryGuests.filter(g => g.id !== guestId);
     persistLocalState();
-    broadcastState();
+    await broadcastState();
     return true;
 }
 
@@ -152,12 +192,18 @@ async function resetCloudGuests() {
     deletedGuestIds.clear();
     persistLocalState();
     try {
-        if (mqttClient && mqttClient.connected) {
-            // Actively wipe any retained message on the broker
-            mqttClient.publish(MQTT_TOPIC_STATE, Buffer.alloc(0), { retain: true, qos: 1 });
+        const client = await ensureMqttConnected();
+        if (client && client.connected) {
+            const emptyPayload = JSON.stringify({
+                guests: [],
+                deletedIds: [],
+                lastUpdated: new Date().toISOString()
+            });
+            await new Promise((resolve) => {
+                client.publish(MQTT_TOPIC_STATE, emptyPayload, { retain: true, qos: 1 }, () => resolve());
+            });
         }
     } catch (e) {}
-    broadcastState();
 }
 
 module.exports = {
