@@ -61,6 +61,12 @@ try {
     try {
         sqliteDb.exec("ALTER TABLE guests ADD COLUMN name TEXT DEFAULT ''");
     } catch (e) {}
+    try {
+        sqliteDb.exec("ALTER TABLE guest_messages ADD COLUMN impression TEXT DEFAULT ''");
+    } catch (e) {}
+    try {
+        sqliteDb.exec("ALTER TABLE guest_messages ADD COLUMN feedback TEXT DEFAULT ''");
+    } catch (e) {}
 
     dbInstance = sqliteDb;
     console.log('[DB] Using native node:sqlite DatabaseSync.');

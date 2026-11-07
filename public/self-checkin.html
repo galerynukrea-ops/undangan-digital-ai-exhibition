@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="dark">
-    <title>Buku Tamu Digital • Digital Work AI Exhibition: MENEMBUS BATAS DIGITAL</title>
+    <title>Buku Tamu Digital • Digital AI Work Exhibition Madiun</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -17,264 +17,258 @@
             window.phoneMqtt = phoneMqtt;
         } catch (e) {}
     </script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        cyberBlack: '#050814',
-                        cyberDark: '#080E21',
-                        neonCyan: '#00F0FF',
-                        neonBlue: '#0077FE',
-                        neonPurple: '#BD00FF',
-                        neonMagenta: '#E056FD',
-                        chromeWhite: '#FFFFFF',
-                        chromeSilver: '#CBD5E1'
-                    },
-                    fontFamily: {
-                        cyber: ['Orbitron', 'sans-serif'],
-                        tech: ['Rajdhani', 'sans-serif'],
-                        monoTech: ['Share Tech Mono', 'monospace']
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        :root {
-            color-scheme: dark;
-        }
-        select, option {
-            color-scheme: dark !important;
-            background-color: #080E21 !important;
-            color: #FFFFFF !important;
-        }
-        select option:checked {
-            background-color: #0077FE !important;
-            color: #FFFFFF !important;
-        }
-    </style>
 </head>
-<body class="min-h-screen bg-cyberBlack text-chromeWhite flex flex-col justify-between selection:bg-neonCyan selection:text-cyberBlack px-4 py-5 cyber-grid-bg">
+<body class="min-h-screen bg-[#070D1E] text-slate-100 flex flex-col justify-between px-3 sm:px-4 py-6 font-sans antialiased selection:bg-cyan-500 selection:text-black">
 
-    <!-- Card Container -->
-    <div class="max-w-md mx-auto w-full cyber-panel p-6 sm:p-7 rounded-2xl border border-neonCyan/50 space-y-5 shadow-[0_0_40px_rgba(0,240,255,0.25)] relative overflow-hidden cyber-clip">
-        
-        <div class="corner-reticle corner-tl"></div>
-        <div class="corner-reticle corner-tr"></div>
-        <div class="corner-reticle corner-bl"></div>
-        <div class="corner-reticle corner-br"></div>
+    <!-- Card Container (Optimal Width, High Contrast, Large Readable Elements) -->
+    <main class="max-w-lg mx-auto w-full bg-[#0D182E] border-2 border-cyan-400/50 rounded-2xl p-5 sm:p-7 shadow-[0_10px_40px_rgba(0,0,0,0.6)] space-y-6">
 
-        <!-- Header Banner with Official 3D Graphic Logo -->
-        <div class="text-center space-y-2 pb-3 border-b border-neonCyan/25">
-            <div class="relative group">
-                <img src="/images/logo-header.png?v=2" alt="Digital AI Work Exhibition" class="h-16 sm:h-20 w-auto mx-auto object-contain drop-shadow-[0_0_15px_rgba(0,240,255,0.45)] transition hover:scale-105 duration-300" />
+        <!-- Header: Official Logo & Event Details -->
+        <header class="text-center space-y-3 pb-4 border-b border-cyan-500/25">
+            <div class="flex justify-center">
+                <img src="/images/logo-header.png?v=2" alt="Digital AI Work Exhibition Logo" class="h-16 sm:h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(0,240,255,0.4)]" />
             </div>
 
-            <div class="text-[9px] font-cyber font-bold tracking-widest text-neonCyan uppercase mt-1">BUKU TAMU DIGITAL RESMI</div>
-            
-            <div class="p-2.5 rounded-xl bg-cyberDark/90 border border-neonCyan/30 text-[11px] font-tech text-chromeSilver space-y-0.5 mt-2">
-                <p class="font-bold text-neonCyan"><i class="fa-regular fa-calendar-check mr-1.5 text-neonPurple"></i>Rabu, 11 November 2026 • 10.00 WIB</p>
-                <p class="text-chromeWhite"><i class="fa-solid fa-location-dot mr-1.5 text-neonCyan"></i>Waroeng Latte, Jl. Cokroaminoto No.88, Madiun</p>
-            </div>
-        </div>
-
-        <!-- Form Verification -->
-        <form id="selfCheckinForm" onsubmit="submitSelfCheckin(event)" class="space-y-4 text-xs font-tech">
-            
-            <!-- Nama Lengkap / PIC -->
             <div>
-                <label class="block text-chromeWhite font-semibold mb-1 flex items-center justify-between">
-                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-user-astronaut text-neonCyan"></i> Nama Lengkap Anda / PIC *</span>
-                    <span class="text-[10px] text-neonCyan font-monoTech">Disapa Robot AI</span>
+                <span class="inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-bold uppercase tracking-widest bg-cyan-500/20 text-cyan-300 border border-cyan-400/40">
+                    Buku Tamu Digital Resmi
+                </span>
+                <h1 class="text-xl sm:text-2xl font-black text-white mt-1.5 tracking-tight leading-snug">
+                    Digital AI Work Exhibition
+                </h1>
+                <p class="text-sm sm:text-base text-cyan-200/90 font-medium">
+                    Kolaborasi Talenta Muda & Artificial Intelligence
+                </p>
+            </div>
+
+            <div class="p-3 rounded-xl bg-[#081020] border border-cyan-500/30 text-xs sm:text-sm text-slate-300 space-y-1 text-left sm:text-center">
+                <p class="font-bold text-cyan-300 flex items-center justify-start sm:justify-center gap-2">
+                    <i class="fa-regular fa-calendar-check text-purple-400 text-base"></i>
+                    Rabu, 11 November 2026 • 10.00 WIB s/d Selesai
+                </p>
+                <p class="text-slate-200 flex items-center justify-start sm:justify-center gap-2">
+                    <i class="fa-solid fa-location-dot text-rose-400 text-base"></i>
+                    Waroeng Latte, Jl. H.A. Salim / Cokroaminoto No.88, Kota Madiun
+                </p>
+            </div>
+        </header>
+
+        <!-- FORM REGISTRASI KEHADIRAN (Font Besar, Mudah Dibaca, 2 Input Saja) -->
+        <form id="selfCheckinForm" onsubmit="submitSelfCheckin(event)" class="space-y-5">
+
+            <!-- 1. Nama Lengkap Tamu -->
+            <div class="space-y-1.5">
+                <label for="selfName" class="block text-base sm:text-lg font-bold text-white flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-user-check text-cyan-400 text-lg"></i>
+                        Nama Lengkap Bapak / Ibu *
+                    </span>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
+                        Disapa Robot AI
+                    </span>
                 </label>
-                <input type="text" id="selfName" required placeholder="Contoh: Bpk. Bambang Sutrisno / Rina Wijaya" class="w-full px-3.5 py-3 bg-cyberDark border border-neonCyan/40 rounded-xl text-chromeWhite placeholder-chromeSilver/40 focus:outline-none focus:border-neonCyan focus:ring-1 focus:ring-neonCyan text-xs font-semibold">
+                <input 
+                    type="text" 
+                    id="selfName" 
+                    required 
+                    placeholder="Contoh: Bpk. Bambang Sutrisno" 
+                    class="w-full px-4 py-3.5 sm:py-4 bg-[#070D1E] border-2 border-cyan-400/50 rounded-xl text-white text-base sm:text-lg font-semibold placeholder-slate-400 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/40 transition shadow-inner"
+                >
             </div>
 
-            <!-- Mode Toggle Tabs (Daftar / Tambahan Baru) -->
-            <div class="space-y-2">
-                <div class="flex items-center justify-between text-chromeWhite font-semibold">
-                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-building text-neonCyan"></i> Asal Instansi / Perusahaan *</span>
-                    <button type="button" onclick="toggleCustomMode()" id="btnToggleMode" class="text-[10px] text-neonCyan hover:underline flex items-center gap-1 font-cyber">
-                        <i class="fa-solid fa-plus-circle text-neonPurple"></i> Undangan Tambahan?
-                    </button>
-                </div>
-
-                <!-- 1. Dropdown Selection for Pre-registered Institutions -->
-                <div id="dropdownContainer" class="relative">
-                    <select id="selectInstitution" onchange="handleSelectChange()" required class="w-full px-3.5 py-3 pr-10 bg-cyberDark border border-neonCyan/40 rounded-xl text-chromeWhite font-tech font-semibold text-xs focus:outline-none focus:border-neonCyan focus:ring-1 focus:ring-neonCyan appearance-none cursor-pointer">
-                        <option value="">-- Pilih Instansi / Perusahaan --</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-neonCyan">
-                        <i class="fa-solid fa-chevron-down text-xs"></i>
-                    </div>
-                </div>
-
-                <!-- 2. Manual Input for Additional / Unlisted Institutions -->
-                <div id="customInstitutionBox" class="hidden space-y-2.5 p-3.5 rounded-xl bg-cyberDark border border-neonPurple/50">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-cyber font-bold text-neonMagenta flex items-center gap-1.5">
-                            <i class="fa-solid fa-file-circle-plus"></i> Input Instansi Tambahan
-                        </span>
-                        <button type="button" onclick="toggleCustomMode(false)" class="text-[10px] text-chromeSilver/70 hover:text-chromeWhite">
-                            <i class="fa-solid fa-arrow-rotate-left mr-0.5"></i> Pilih dari daftar
-                        </button>
-                    </div>
-
-                    <div>
-                        <label class="block text-[11px] text-chromeWhite mb-1">Nama Instansi / Perusahaan *</label>
-                        <input type="text" id="customInstitutionInput" placeholder="Contoh: Radar Madiun / Diskominfo / PT XYZ" class="w-full px-3 py-2.5 bg-cyberBlack border border-neonPurple/40 rounded-xl text-chromeWhite placeholder-chromeSilver/40 focus:outline-none focus:border-neonMagenta text-xs font-semibold">
-                    </div>
-
-                    <div>
-                        <label class="block text-[11px] text-chromeWhite mb-1">Kategori / Sektor Usaha (Opsional)</label>
-                        <input type="text" id="customCategoryInput" placeholder="Contoh: Media / Pemerintahan / Swasta / Komunitas" class="w-full px-3 py-2 bg-cyberBlack border border-neonPurple/40 rounded-xl text-chromeWhite placeholder-chromeSilver/40 focus:outline-none focus:border-neonMagenta text-xs">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Message / Impression -->
-            <div>
-                <label class="block text-chromeWhite font-semibold mb-1.5 flex items-center justify-between">
-                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-pen-fancy text-neonCyan"></i> Ucapan / Harapan untuk Talenta AI</span>
-                    <span class="text-[10px] text-neonPurple font-monoTech">Dianalisis AI</span>
+            <!-- 2. Asal Instansi / Perusahaan (Tamu Mengisi Sendiri Secara Bebas) -->
+            <div class="space-y-1.5">
+                <label for="selfInstitution" class="block text-base sm:text-lg font-bold text-white flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-building text-cyan-400 text-lg"></i>
+                        Asal Instansi / Perusahaan / Lembaga *
+                    </span>
+                    <span class="text-xs font-semibold text-slate-300">
+                        Ketik Bebas
+                    </span>
                 </label>
-                <textarea id="selfMessage" rows="3" required placeholder="Tuliskan ucapan apresiasi dari instansi Anda untuk pameran ini..." class="w-full p-3 bg-cyberDark border border-neonCyan/40 rounded-xl text-chromeWhite placeholder-chromeSilver/40 focus:outline-none focus:border-neonCyan text-xs"></textarea>
+                <input 
+                    type="text" 
+                    id="selfInstitution" 
+                    required 
+                    placeholder="Contoh: Kelurahan Winongo / RS Santa Clara / Umum" 
+                    class="w-full px-4 py-3.5 sm:py-4 bg-[#070D1E] border-2 border-cyan-400/50 rounded-xl text-white text-base sm:text-lg font-semibold placeholder-slate-400 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/40 transition shadow-inner"
+                >
             </div>
 
-            <!-- Quick tag suggestions -->
-            <div class="space-y-1">
-                <p class="text-[10px] text-chromeSilver/70">Pilihan ucapan cepat:</p>
-                <div class="flex flex-wrap gap-1.5">
-                    <button type="button" onclick="setMsg('Selamat dan sukses atas pameran AI talenta muda di Waroeng Latte!')" class="px-2 py-1 rounded-lg bg-cyberDark hover:bg-neonCyan/20 text-neonCyan text-[10px] border border-neonCyan/30 transition">
-                        ✨ Selamat & Sukses
-                    </button>
-                    <button type="button" onclick="setMsg('Inovasi luar biasa untuk kemajuan ekosistem digital Madiun!')" class="px-2 py-1 rounded-lg bg-cyberDark hover:bg-neonPurple/20 text-neonMagenta text-[10px] border border-neonPurple/30 transition">
-                        🚀 Maju Madiun Digital
-                    </button>
-                    <button type="button" onclick="setMsg('Bangga bermitra dan melihat karya talenta AI muda Indonesia!')" class="px-2 py-1 rounded-lg bg-cyberDark hover:bg-neonCyan/20 text-chromeWhite text-[10px] border border-chromeSilver/30 transition">
-                        🔥 Bangga Talenta Muda
-                    </button>
-                </div>
-            </div>
-
-            <button type="submit" id="btnSubmitSelf" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-neonCyan via-neonBlue to-neonPurple hover:opacity-95 text-cyberBlack font-cyber font-extrabold text-xs shadow-[0_0_25px_rgba(0,240,255,0.4)] transition hover:scale-[1.01] flex items-center justify-center gap-2 mt-2 tracking-wider">
-                <i class="fa-solid fa-check-double text-sm"></i> Konfirmasi Kehadiran Saya
+            <!-- Tombol Konfirmasi Kehadiran -->
+            <button 
+                type="submit" 
+                id="btnSubmitSelf" 
+                class="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 hover:from-cyan-300 hover:to-indigo-400 text-slate-950 font-black text-base sm:text-lg tracking-wide shadow-[0_0_25px_rgba(0,240,255,0.4)] transition transform active:scale-95 flex items-center justify-center gap-2.5 cursor-pointer mt-3"
+            >
+                <i class="fa-solid fa-check-double text-xl"></i>
+                Konfirmasi Kehadiran Saya
             </button>
         </form>
 
-        <!-- Success Notice (Tanpa tombol kembali ke formulir) -->
-        <div id="selfSuccess" class="p-6 rounded-2xl bg-cyberDark/95 border-2 border-neonCyan/70 text-center space-y-3.5 hidden shadow-[0_0_40px_rgba(0,240,255,0.4)]">
-            <div class="w-14 h-14 rounded-full bg-neonCyan/20 text-neonCyan flex items-center justify-center mx-auto text-2xl shadow-[0_0_20px_rgba(0,240,255,0.6)] border border-neonCyan/50">
-                <i class="fa-solid fa-circle-check"></i>
+        <!-- LAYAR SETELAH SELESAI MENGISI (SUCCESS STATE) -->
+        <section id="selfSuccess" class="hidden space-y-6 text-center">
+            
+            <div class="p-6 rounded-2xl bg-[#081226] border-2 border-emerald-400/70 shadow-[0_0_35px_rgba(16,185,129,0.3)] space-y-3">
+                <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-3xl border-2 border-emerald-400/60 shadow-[0_0_20px_rgba(16,185,129,0.5)]">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h2 id="successGuestTitle" class="text-xl sm:text-2xl font-black text-white leading-tight">
+                    Selamat Datang!
+                </h2>
+                <p id="successGuestSub" class="text-sm sm:text-base text-cyan-200 font-semibold">
+                    Kehadiran Anda Telah Terverifikasi di Sistem.
+                </p>
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-xs sm:text-sm font-bold">
+                    <i class="fa-solid fa-robot text-cyan-400"></i>
+                    Nama Anda telah tampil & disapa di Layar Utama Proyektor
+                </div>
             </div>
-            <h3 id="successInstTitle" class="text-lg font-bold font-cyber text-neonCyan leading-snug">Terima Kasih!</h3>
-            <p class="text-xs font-tech text-chromeWhite/90 leading-relaxed">
-                Kedatangan Anda telah terverifikasi. Pesan ucapan dan sambutan Anda telah tampil di Layar Utama Waroeng Latte Madiun.
-            </p>
-            <div id="selfRecordedMsgBox" class="hidden p-3 rounded-xl bg-cyberBlack/80 border border-neonCyan/30 text-left">
-                <span class="text-[10px] font-cyber text-neonPurple font-bold block mb-1">PESAN & HARAPAN ANDA:</span>
-                <p id="selfRecordedMsg" class="text-xs text-chromeSilver italic leading-relaxed"></p>
-            </div>
-            <div class="text-[10.5px] font-cyber text-emerald-400 font-semibold tracking-wider pt-2 border-t border-neonCyan/20">
-                ✨ SELAMAT MENIKMATI ACARA ✨
-            </div>
-        </div>
 
-    </div>
+            <!-- Bagian Pesan & Kesan serta Kritik & Saran (Disarankan diisi setelah acara selesai) -->
+            <div class="p-5 sm:p-6 rounded-2xl bg-[#091326] border-2 border-amber-400/50 text-left space-y-4 shadow-lg">
+                <div class="p-3.5 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs sm:text-sm leading-relaxed space-y-1">
+                    <p class="font-bold text-amber-300 flex items-center gap-2 text-sm sm:text-base">
+                        <i class="fa-solid fa-circle-exclamation text-base"></i>
+                        Disarankan Mengisi Setelah Acara Selesai:
+                    </p>
+                    <p>
+                        Bapak/Ibu/Tamu Undangan disarankan untuk mengisi formulir <strong>Pesan & Kesan</strong> serta <strong>Kritik & Saran</strong> di bawah ini setelah seluruh rangkaian acara pameran selesai (atau sekarang bila berkenan).
+                    </p>
+                </div>
 
-    <footer class="text-center text-[10px] font-tech text-chromeSilver/60 py-4 tracking-wider">
-        Pelatihan Berbasis Kompetensi • Digital AI Work Exhibition • Waroeng Latte, Kota Madiun
+                <form id="feedbackForm" onsubmit="submitFeedback(event)" class="space-y-4">
+                    <!-- 1. Pesan dan Kesan -->
+                    <div class="space-y-1.5">
+                        <label for="feedbackImpression" class="block text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-heart text-rose-400"></i>
+                            Pesan dan Kesan Anda:
+                        </label>
+                        <textarea 
+                            id="feedbackImpression" 
+                            rows="3" 
+                            placeholder="Tuliskan kesan dan pesan Anda terhadap pameran dan karya talenta AI muda..." 
+                            class="w-full px-4 py-3 bg-[#070D1E] border border-cyan-400/40 rounded-xl text-white text-sm sm:text-base placeholder-slate-400 focus:outline-none focus:border-cyan-300 focus:ring-1 focus:ring-cyan-400"
+                        ></textarea>
+                    </div>
+
+                    <!-- 2. Kritik dan Saran -->
+                    <div class="space-y-1.5">
+                        <label for="feedbackCritique" class="block text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-comment-dots text-cyan-400"></i>
+                            Kritik dan Saran:
+                        </label>
+                        <textarea 
+                            id="feedbackCritique" 
+                            rows="3" 
+                            placeholder="Tuliskan kritik dan saran konstruktif untuk pengembangan kami ke depan..." 
+                            class="w-full px-4 py-3 bg-[#070D1E] border border-cyan-400/40 rounded-xl text-white text-sm sm:text-base placeholder-slate-400 focus:outline-none focus:border-cyan-300 focus:ring-1 focus:ring-cyan-400"
+                        ></textarea>
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        id="btnSubmitFeedback" 
+                        class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-sm sm:text-base shadow-[0_0_20px_rgba(16,185,129,0.35)] transition flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                        <i class="fa-solid fa-paper-plane"></i>
+                        Kirim Pesan, Kesan & Saran
+                    </button>
+                </form>
+
+                <!-- Feedback Success Notice -->
+                <div id="feedbackSuccessAlert" class="hidden p-4 rounded-xl bg-emerald-950/80 border border-emerald-400 text-emerald-200 text-sm font-semibold flex items-center gap-3">
+                    <i class="fa-solid fa-circle-check text-emerald-400 text-xl shrink-0"></i>
+                    <span>Terima kasih banyak! Pesan, kesan, kritik, dan saran Anda telah tersimpan dengan aman.</span>
+                </div>
+            </div>
+
+            <div class="text-xs sm:text-sm font-bold text-emerald-400 tracking-wider pt-2 border-t border-cyan-500/25">
+                ✨ SELAMAT MENIKMATI PAMERAN MENEMBUS BATAS DIGITAL ✨
+            </div>
+        </section>
+
+        <!-- CALL TO ACTION: FOLLOW INSTAGRAM RESMI (Besar, Jelas, & Nyaman Ditekan) -->
+        <section class="p-4 sm:p-5 rounded-2xl bg-[#081224] border-2 border-purple-500/40 space-y-3 shadow-lg">
+            <div class="text-center space-y-0.5">
+                <h3 class="text-sm sm:text-base font-bold text-white flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-instagram text-pink-400 text-lg"></i>
+                    Ikuti Update Resmi di Instagram:
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-300">
+                    Dapatkan info pelatihan kerja, dokumentasi acara, dan lowongan kerja terbaru.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                <!-- CTA 1: Infonaker Kota Madiun -->
+                <a 
+                    href="https://www.instagram.com/infonakermadiunkota" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    class="p-3 rounded-xl bg-gradient-to-r from-purple-900/60 to-pink-900/40 hover:from-purple-800/80 hover:to-pink-800/60 border border-pink-500/40 flex items-center gap-3 transition active:scale-95 group shadow-sm"
+                >
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white text-xl shrink-0 shadow">
+                        <i class="fa-brands fa-instagram"></i>
+                    </div>
+                    <div class="text-left overflow-hidden">
+                        <span class="block text-xs sm:text-sm font-black text-pink-200 group-hover:text-white truncate">
+                            @infonakermadiunkota
+                        </span>
+                        <span class="block text-[11px] text-slate-300 leading-tight truncate">
+                            Disnaker-KUKM Kota Madiun
+                        </span>
+                    </div>
+                </a>
+
+                <!-- CTA 2: Pola Sukses Akademi -->
+                <a 
+                    href="https://www.instagram.com/polasuksesakademi" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    class="p-3 rounded-xl bg-gradient-to-r from-purple-900/60 to-pink-900/40 hover:from-purple-800/80 hover:to-pink-800/60 border border-pink-500/40 flex items-center gap-3 transition active:scale-95 group shadow-sm"
+                >
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white text-xl shrink-0 shadow">
+                        <i class="fa-brands fa-instagram"></i>
+                    </div>
+                    <div class="text-left overflow-hidden">
+                        <span class="block text-xs sm:text-sm font-black text-pink-200 group-hover:text-white truncate">
+                            @polasuksesakademi
+                        </span>
+                        <span class="block text-[11px] text-slate-300 leading-tight truncate">
+                            LPKS Pola Sukses Akademi
+                        </span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-slate-400 py-4">
+        Pelatihan Berbasis Kompetensi • Digital AI Work Exhibition • Waroeng Latte Madiun
     </footer>
 
+    <!-- Script Logika Registrasi & Feedback -->
     <script>
-        let guestList = [];
-        let isCustomMode = false;
-
-        async function loadInstitutions() {
-            try {
-                const res = await fetch('/api/institutions?t=' + Date.now());
-                const json = await res.json();
-                if (json.success) {
-                    const instList = json.data || [];
-                    const select = document.getElementById('selectInstitution');
-                    select.innerHTML = '<option value="">-- Pilih Instansi / Perusahaan --</option>' +
-                        '<option value="__NEW__" class="text-neonCyan font-bold bg-[#0B1528]">➕ Instansi Lainnya (Undangan Tambahan / Ketik Baru)</option>' +
-                        instList.map(item => {
-                            return `<option value="${escapeHtml(item.institution)}" class="bg-[#0B1528] text-white">${escapeHtml(item.institution)} • (${escapeHtml(item.category)})</option>`;
-                        }).join('');
-                }
-            } catch (err) {
-                console.error('Error loading institutions:', err);
-            }
-        }
-
-        function handleSelectChange() {
-            const val = document.getElementById('selectInstitution').value;
-            if (val === '__NEW__') {
-                toggleCustomMode(true);
-            }
-        }
-
-        function toggleCustomMode(force) {
-            isCustomMode = typeof force === 'boolean' ? force : !isCustomMode;
-            const dropdown = document.getElementById('dropdownContainer');
-            const customBox = document.getElementById('customInstitutionBox');
-            const toggleBtn = document.getElementById('btnToggleMode');
-
-            if (isCustomMode) {
-                dropdown.classList.add('hidden');
-                customBox.classList.remove('hidden');
-                toggleBtn.innerHTML = `<i class="fa-solid fa-list"></i> Pilih dari daftar`;
-                document.getElementById('customInstitutionInput').focus();
-            } else {
-                dropdown.classList.remove('hidden');
-                customBox.classList.add('hidden');
-                toggleBtn.innerHTML = `<i class="fa-solid fa-plus-circle text-neonPurple"></i> Undangan Tambahan?`;
-                document.getElementById('selectInstitution').value = '';
-            }
-        }
-
-        function escapeHtml(str) {
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
-
-        function setMsg(text) {
-            document.getElementById('selfMessage').value = text;
-        }
+        let currentGuestId = null;
 
         async function submitSelfCheckin(e) {
             e.preventDefault();
             
             const guestName = document.getElementById('selfName').value.trim();
+            const institutionName = document.getElementById('selfInstitution').value.trim();
 
-            let institutionName = '';
-            let customCategory = '';
-
-            if (isCustomMode) {
-                institutionName = document.getElementById('customInstitutionInput').value.trim();
-                customCategory = document.getElementById('customCategoryInput').value.trim();
-                if (!institutionName) {
-                    institutionName = 'Tamu Undangan';
-                }
-            } else {
-                institutionName = document.getElementById('selectInstitution').value;
-                if (institutionName === '__NEW__') {
-                    toggleCustomMode(true);
-                    return;
-                }
-                if (!institutionName || institutionName === '') {
-                    // Fallback otomatis agar tamu tidak terblokir saat konfirmasi
-                    institutionName = 'Tamu Undangan';
-                }
+            if (!guestName) {
+                alert('Silakan masukkan nama lengkap Anda.');
+                return;
             }
-
-            const message = document.getElementById('selfMessage').value;
+            if (!institutionName) {
+                alert('Silakan masukkan asal instansi, lembaga, atau perusahaan Anda.');
+                return;
+            }
 
             const btn = document.getElementById('btnSubmitSelf');
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Memverifikasi Kehadiran...`;
@@ -287,8 +281,7 @@
                     body: JSON.stringify({
                         name: guestName,
                         institution: institutionName,
-                        category: customCategory || 'Mitra Tambahan',
-                        message: message
+                        category: 'Mitra Undangan'
                     })
                 });
 
@@ -304,6 +297,8 @@
 
                 const json = await res.json();
                 if (json.success) {
+                    currentGuestId = json.data?.guest?.id;
+
                     // Siarkan langsung ke Live Wall & Dashboard via MQTT broker
                     try {
                         if (window.phoneMqtt && window.phoneMqtt.connected) {
@@ -315,38 +310,77 @@
                         }
                     } catch (e) {}
 
+                    // Ganti tampilan ke Layar Selesai (Success Screen)
                     document.getElementById('selfCheckinForm').classList.add('hidden');
                     const succ = document.getElementById('selfSuccess');
                     succ.classList.remove('hidden');
-                    const display = json.data.guest.name ? `${json.data.guest.name} (${json.data.guest.institution})` : json.data.guest.institution;
-                    document.getElementById('successInstTitle').innerText = `Selamat Datang, ${display}!`;
 
-                    const recordedMsg = json.data.message?.text || json.data.message || message;
-                    if (recordedMsg && recordedMsg.trim()) {
-                        document.getElementById('selfRecordedMsg').innerText = `“${recordedMsg.trim()}”`;
-                        document.getElementById('selfRecordedMsgBox').classList.remove('hidden');
-                    }
+                    const display = json.data.guest.name 
+                        ? `${json.data.guest.name} (${json.data.guest.institution})` 
+                        : json.data.guest.institution;
+                    document.getElementById('successGuestTitle').innerText = `Selamat Datang, ${json.data.guest.name || 'Bapak/Ibu'}!`;
+                    document.getElementById('successGuestSub').innerText = `Asal: ${json.data.guest.institution} • Kehadiran Anda Telah Terverifikasi`;
+
+                    // Scroll halus ke bagian sukses
+                    succ.scrollIntoView({ behavior: 'smooth' });
                 } else {
-                    alert(json.error || 'Gagal memverifikasi');
+                    alert(json.error || 'Gagal memverifikasi kehadiran');
                 }
             } catch (err) {
                 console.error('[Checkin Error]', err);
                 alert('Koneksi internet tidak stabil. Silakan periksa jaringan dan ketuk Konfirmasi sekali lagi.');
             } finally {
-                btn.innerHTML = `<i class="fa-solid fa-check-double"></i> Konfirmasi Kehadiran Saya`;
+                btn.innerHTML = `<i class="fa-solid fa-check-double text-xl"></i> Konfirmasi Kehadiran Saya`;
                 btn.disabled = false;
             }
         }
 
-        function resetForm() {
-            document.getElementById('selfSuccess').classList.add('hidden');
-            document.getElementById('selfCheckinForm').classList.remove('hidden');
-            document.getElementById('selfCheckinForm').reset();
-            toggleCustomMode(false);
-            loadInstitutions();
-        }
+        async function submitFeedback(e) {
+            e.preventDefault();
 
-        window.addEventListener('load', loadInstitutions);
+            if (!currentGuestId) {
+                alert('Sesi registrasi tidak ditemukan. Silakan muat ulang halaman.');
+                return;
+            }
+
+            const impression = document.getElementById('feedbackImpression').value.trim();
+            const critique = document.getElementById('feedbackCritique').value.trim();
+
+            if (!impression && !critique) {
+                alert('Silakan isi kolom Pesan & Kesan atau Kritik & Saran terlebih dahulu.');
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitFeedback');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mengirimkan...`;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/checkin/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        guestId: currentGuestId,
+                        impression: impression,
+                        feedback: critique
+                    })
+                });
+
+                const json = await res.json();
+                if (json.success) {
+                    document.getElementById('feedbackForm').classList.add('hidden');
+                    document.getElementById('feedbackSuccessAlert').classList.remove('hidden');
+                } else {
+                    alert(json.error || 'Gagal mengirimkan pesan & saran.');
+                }
+            } catch (err) {
+                console.error('[Feedback error]', err);
+                alert('Gagal mengirimkan pesan. Silakan coba kembali.');
+            } finally {
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Kirim Pesan, Kesan & Saran`;
+                btn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>

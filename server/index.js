@@ -123,8 +123,8 @@ async function syncLocalDbWithCloud() {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `);
             const insertMsg = db.prepare(`
-                INSERT OR REPLACE INTO guest_messages (id, guest_id, message, sentiment, score, emotion, keywords, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT OR REPLACE INTO guest_messages (id, guest_id, message, impression, feedback, sentiment, score, emotion, keywords, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
             for (const g of cloudGuests) {
@@ -140,11 +140,13 @@ async function syncLocalDbWithCloud() {
                         g.checked_in_at || g.created_at || new Date().toISOString(),
                         g.created_at || new Date().toISOString()
                     );
-                    if (g.message) {
+                    if (g.message || g.impression || g.feedback) {
                         insertMsg.run(
                             uuidv4(),
                             g.id,
-                            g.message,
+                            g.message || '',
+                            g.impression || '',
+                            g.feedback || '',
                             g.sentiment || 'positive',
                             g.score !== undefined ? g.score : 0.8,
                             g.emotion || 'Optimis',
@@ -160,7 +162,7 @@ async function syncLocalDbWithCloud() {
         if (Array.isArray(cloudGuests)) {
             const cloudIds = new Set(cloudGuests.map(g => g.id));
             const localGuests = db.prepare(`
-                SELECT g.*, m.message, m.sentiment, m.score, m.emotion 
+                SELECT g.*, m.message, m.impression, m.feedback, m.sentiment, m.score, m.emotion 
                 FROM guests g 
                 LEFT JOIN guest_messages m ON g.id = m.guest_id
             `).all() || [];
@@ -191,7 +193,7 @@ app.get('/api/guests', async (req, res) => {
         await syncLocalDbWithCloud();
 
         let query = `
-            SELECT g.*, m.message, m.sentiment, m.score, m.emotion, m.keywords
+            SELECT g.*, m.message, m.sentiment, m.score, m.emotion, m.keywords, m.impression, m.feedback
             FROM guests g
             LEFT JOIN guest_messages m ON g.id = m.guest_id
             WHERE 1=1
@@ -214,7 +216,7 @@ app.get('/api/guests', async (req, res) => {
             params.push(status);
         }
 
-        query += ` ORDER BY g.created_at ASC`;
+        query += ` ORDER BY CASE WHEN g.status = 'checked_in' THEN 0 ELSE 1 END, g.checked_in_at DESC, g.created_at DESC`;
 
         const guests = db.prepare(query).all(...params);
         res.json({ success: true, count: guests.length, data: guests });
@@ -378,7 +380,8 @@ app.get(['/api/guests/export/csv', '/api/guests/export'], async (req, res) => {
             'Kategori',
             'Status Kehadiran',
             'Waktu Kehadiran (WIB)',
-            'Pesan / Ucapan',
+            'Pesan & Kesan',
+            'Kritik & Saran',
             'Sentimen Pesan',
             'Emosi Terdeteksi',
             'Kode Token QR'
@@ -414,7 +417,8 @@ app.get(['/api/guests/export/csv', '/api/guests/export'], async (req, res) => {
                 g.category || 'Mitra / Tamu',
                 statusStr,
                 timeStr,
-                m.message || '-',
+                m.impression || (m.message && m.message !== '-' ? m.message : '-'),
+                m.feedback || '-',
                 m.sentiment ? m.sentiment.toUpperCase() : '-',
                 m.emotion || '-',
                 g.qr_token || '-'
@@ -698,6 +702,97 @@ app.post('/api/checkin/submit', async (req, res) => {
     } catch (err) {
         console.error('[API] Check-in error:', err.message);
         res.status(500).json({ success: false, error: 'Gagal memproses verifikasi kedatangan' });
+    }
+});
+
+// Post-Event Feedback: Pesan & Kesan serta Kritik & Saran (Disarankan diisi setelah acara selesai)
+app.post('/api/checkin/feedback', async (req, res) => {
+    try {
+        const body = req.body || {};
+        const guestId = body.guestId || body.guest_id;
+        const impression = (body.impression || body.pesanKesan || '').trim();
+        const feedback = (body.feedback || body.kritikSaran || '').trim();
+
+        if (!guestId) {
+            return res.status(400).json({ success: false, error: 'ID Tamu diperlukan' });
+        }
+
+        const guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(guestId);
+        if (!guest) {
+            return res.status(404).json({ success: false, error: 'Data tamu tidak ditemukan' });
+        }
+
+        const combinedText = [impression, feedback].filter(Boolean).join(' | ') || 'Pesan dan saran terkirim';
+        const aiResult = localAnalyzeSentiment(combinedText);
+
+        const existingMsg = db.prepare('SELECT * FROM guest_messages WHERE guest_id = ?').get(guestId);
+        if (existingMsg) {
+            db.prepare(`
+                UPDATE guest_messages 
+                SET message = ?, impression = ?, feedback = ?, sentiment = ?, score = ?, emotion = ?, keywords = ?
+                WHERE id = ?
+            `).run(
+                combinedText,
+                impression,
+                feedback,
+                aiResult.sentiment,
+                aiResult.score,
+                aiResult.emotion,
+                JSON.stringify(aiResult.keywords),
+                existingMsg.id
+            );
+        } else {
+            const msgId = uuidv4();
+            db.prepare(`
+                INSERT INTO guest_messages (id, guest_id, message, impression, feedback, sentiment, score, emotion, keywords, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            `).run(
+                msgId,
+                guestId,
+                combinedText,
+                impression,
+                feedback,
+                aiResult.sentiment,
+                aiResult.score,
+                aiResult.emotion,
+                JSON.stringify(aiResult.keywords)
+            );
+        }
+
+        // Update in persistent Cloud Store
+        await saveGuestToCloud({
+            id: guest.id,
+            name: guest.name,
+            institution: guest.institution,
+            category: guest.category,
+            qr_token: guest.qr_token,
+            status: guest.status,
+            checked_in_at: guest.checked_in_at,
+            created_at: guest.created_at,
+            message: combinedText,
+            impression,
+            feedback,
+            sentiment: aiResult.sentiment,
+            score: aiResult.score,
+            emotion: aiResult.emotion
+        });
+
+        broadcastEvent('guest_feedback', {
+            guestId,
+            name: guest.name,
+            institution: guest.institution,
+            impression,
+            feedback,
+            timestamp: new Date().toISOString()
+        });
+
+        res.json({
+            success: true,
+            message: 'Terima kasih! Pesan, kesan, kritik, dan saran Anda berhasil disimpan.'
+        });
+    } catch (err) {
+        console.error('[API] Error submit feedback:', err.message);
+        res.status(500).json({ success: false, error: 'Gagal menyimpan pesan dan saran' });
     }
 });
 

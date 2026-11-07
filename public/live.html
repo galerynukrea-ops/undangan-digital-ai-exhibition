@@ -779,6 +779,8 @@
                             }
                         }
                         loadStats();
+                    } else if (parsed.type === 'guest_feedback') {
+                        loadStats();
                     } else if (parsed.type === 'database_reset') {
                         // Bersihkan antrean jika ada reset
                         arrivalQueue.length = 0;

@@ -3,320 +3,285 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard • Pelatihan Berbasis Kompetensi • Digital AI Work Exhibition</title>
+    <title>Dashboard Admin Buku Tamu • Digital AI Work Exhibition</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        navy: '#112250',
-                        sapphire: '#3B507D',
-                        warmTaupe: '#BEB7A7',
-                        champagne: '#E7E2CE',
-                        ivory: '#F5F4F0'
-                    }
-                }
-            }
-        }
-    </script>
+    <style>
+        /* Smooth, minimalist scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
 </head>
-<body class="min-h-screen bg-navy text-ivory flex flex-col selection:bg-champagne selection:text-navy">
+<body class="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased flex flex-col selection:bg-indigo-600 selection:text-white">
 
-    <!-- Futuristic Cyber Header Navbar -->
-    <header class="border-b border-neonCyan/25 bg-cyberDark/90 backdrop-blur sticky top-0 z-40 shadow-xl">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
+    <!-- Top Admin Navigation Bar -->
+    <header class="border-b border-slate-800 bg-slate-900/95 sticky top-0 z-40 shadow-sm backdrop-blur">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
+            
+            <!-- Left: Logo & Event Title -->
             <div class="flex items-center space-x-3.5">
-                <img src="/images/logo-header.png?v=2" alt="Digital AI Work Exhibition" class="h-10 sm:h-12 w-auto object-contain drop-shadow-[0_0_12px_rgba(0,240,255,0.4)]" />
+                <img src="/images/logo-header.png?v=2" alt="Logo" class="h-10 w-auto object-contain" />
                 <div>
-                    <h1 class="text-xs sm:text-sm font-bold tracking-wider text-neonCyan font-cyber flex items-center gap-2">
-                        PANEL ADMINISTRASI & KONTROL
-                        <span class="text-[9px] font-monoTech font-semibold px-2 py-0.5 rounded bg-neonPurple/20 text-neonMagenta border border-neonPurple/40">
-                            AI v2.0
+                    <div class="flex items-center gap-2.5">
+                        <h1 class="text-base sm:text-lg font-bold text-white tracking-tight">
+                            Dashboard Admin Buku Tamu
+                        </h1>
+                        <span id="connectionBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Terhubung
                         </span>
-                        <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-tech font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> AUTO-SYNC AKTIF
-                        </span>
-                    </h1>
-                    <p class="text-[11px] font-tech text-chromeSilver/80">Pelatihan Berbasis Kompetensi • Digital AI Work Exhibition • Waroeng Latte Madiun</p>
+                    </div>
+                    <p class="text-xs text-slate-400">
+                        Pelatihan Berbasis Kompetensi • Digital AI Work Exhibition • Waroeng Latte Madiun
+                    </p>
                 </div>
             </div>
 
-            <!-- Quick Navigation -->
-            <nav class="flex flex-wrap items-center gap-2 text-xs font-tech">
-                <a href="/" class="px-3 py-1.5 rounded-lg font-bold bg-gradient-to-r from-neonCyan to-neonPurple text-cyberBlack flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,240,255,0.3)]">
-                    <i class="fa-solid fa-gauge"></i> Dashboard
+            <!-- Right: Quick Navigation to Other Pages -->
+            <nav class="flex flex-wrap items-center gap-2">
+                <a href="/checkin" target="_blank" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-mobile-screen text-indigo-400"></i>
+                    Buku Tamu (HP)
                 </a>
-                <a href="/standee" target="_blank" class="px-3 py-1.5 rounded-lg font-bold bg-cyberDark text-neonCyan border border-neonCyan/40 flex items-center gap-1.5 transition hover:bg-neonCyan/20">
-                    <i class="fa-solid fa-qrcode text-neonCyan"></i> 1 Barcode Depan Venue
+                <a href="/live" target="_blank" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-display text-cyan-400"></i>
+                    Layar Live Proyektor
                 </a>
-                <a href="/checkin" target="_blank" class="px-3 py-1.5 rounded-lg font-medium bg-cyberDark hover:bg-neonPurple/20 text-chromeWhite border border-neonPurple/40 flex items-center gap-1.5 transition">
-                    <i class="fa-solid fa-mobile-screen text-neonPurple"></i> Buku Tamu Digital
-                </a>
-                <a href="/live" target="_blank" class="px-3 py-1.5 rounded-lg font-medium bg-cyberDark hover:bg-neonCyan/20 text-chromeWhite border border-neonCyan/40 flex items-center gap-1.5 transition">
-                    <i class="fa-solid fa-display text-neonCyan"></i> Live Wall Proyektor
+                <a href="/standee" target="_blank" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-qrcode text-amber-400"></i>
+                    Standee Barcode
                 </a>
             </nav>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
+    <!-- Main Admin Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
 
-        <!-- Data Export & Rekap Banner -->
-        <div class="cyber-panel p-5 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-cyberDark via-cyberBlack to-cyberDark flex flex-wrap items-center justify-between gap-4 cyber-clip">
-            <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/50 flex items-center justify-center text-emerald-400 text-2xl shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                    <i class="fa-solid fa-file-csv"></i>
-                </div>
-                <div>
-                    <h3 class="text-sm sm:text-base font-bold text-emerald-400 font-cyber">
-                        Rekap & Ekspor Data Kehadiran Tamu
-                    </h3>
-                    <p class="text-xs font-tech text-chromeSilver/80">
-                        Unduh laporan lengkap data instansi, tamu hadir, waktu check-in, dan analisis pesan AI ke dalam format CSV / Excel.
-                    </p>
-                </div>
-            </div>
-            <div class="flex flex-wrap items-center gap-2 font-cyber text-xs">
-                <a href="/api/guests/export/csv" class="px-4 py-2.5 rounded-xl font-extrabold bg-gradient-to-r from-emerald-500 to-teal-400 hover:opacity-95 text-cyberBlack flex items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.4)] transition">
-                    <i class="fa-solid fa-file-arrow-down text-sm"></i> Download File CSV Data Tamu
-                </a>
-                <button onclick="openResetModal()" class="px-3.5 py-2.5 rounded-xl font-bold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/40 flex items-center gap-1.5 transition" title="Bersihkan data uji coba">
-                    <i class="fa-solid fa-rotate-left text-rose-400"></i> Reset Uji Coba
-                </button>
-            </div>
-        </div>
-
-        <!-- Metrics Overview -->
+        <!-- 4 Metric Cards (Standard Admin Overview) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="luxury-panel p-5 rounded-2xl border border-warmTaupe/25 relative overflow-hidden">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-warmTaupe uppercase tracking-wider">Total Instansi</p>
-                        <h3 id="statTotal" class="text-3xl font-extrabold text-ivory mt-1 font-luxury">--</h3>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-sapphire/30 border border-warmTaupe/30 flex items-center justify-center text-champagne">
-                        <i class="fa-solid fa-building text-xl"></i>
-                    </div>
+            
+            <!-- Card 1: Total Tamu -->
+            <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Tamu Terdata</p>
+                    <h3 id="statTotal" class="text-3xl font-extrabold text-white mt-1">--</h3>
+                    <p class="text-xs text-slate-400 mt-1">Semua pendaftar</p>
                 </div>
-                <p class="text-xs text-warmTaupe/80 mt-3 flex items-center gap-1.5">
-                    <i class="fa-solid fa-circle-check text-champagne"></i> Buku Tamu Digital
-                </p>
+                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-users"></i>
+                </div>
             </div>
 
-            <div class="luxury-panel p-5 rounded-2xl border border-warmTaupe/25 relative overflow-hidden">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-warmTaupe uppercase tracking-wider">Hadir di Venue</p>
-                        <h3 id="statCheckedIn" class="text-3xl font-extrabold text-champagne mt-1 font-luxury">--</h3>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-champagne/15 border border-champagne/30 flex items-center justify-center text-champagne">
-                        <i class="fa-solid fa-check-double text-xl"></i>
-                    </div>
+            <!-- Card 2: Tamu Hadir -->
+            <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Hadir di Venue</p>
+                    <h3 id="statCheckedIn" class="text-3xl font-extrabold text-emerald-400 mt-1">--</h3>
+                    <p class="text-xs text-slate-400 mt-1">Telah verifikasi kedatangan</p>
                 </div>
-                <p id="statRate" class="text-xs text-champagne mt-3 flex items-center gap-1 font-semibold">
-                    <i class="fa-solid fa-chart-pie"></i> 0% Kehadiran
-                </p>
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
             </div>
 
-            <div class="luxury-panel p-5 rounded-2xl border border-warmTaupe/25 relative overflow-hidden">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-warmTaupe uppercase tracking-wider">Belum Terverifikasi</p>
-                        <h3 id="statPending" class="text-3xl font-extrabold text-warmTaupe mt-1 font-luxury">--</h3>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-sapphire/30 border border-warmTaupe/30 flex items-center justify-center text-warmTaupe">
-                        <i class="fa-solid fa-hourglass-half text-xl"></i>
-                    </div>
+            <!-- Card 3: Belum Hadir -->
+            <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Belum Hadir</p>
+                    <h3 id="statPending" class="text-3xl font-extrabold text-slate-300 mt-1">--</h3>
+                    <p class="text-xs text-slate-400 mt-1">Menunggu kedatangan</p>
                 </div>
-                <p class="text-xs text-warmTaupe/80 mt-3 flex items-center gap-1">
-                    <i class="fa-solid fa-clock"></i> Menunggu di meja depan
-                </p>
+                <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
             </div>
 
-            <div class="luxury-panel p-5 rounded-2xl border border-warmTaupe/25 relative overflow-hidden">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-warmTaupe uppercase tracking-wider">Sentimen Apresiasi AI</p>
-                        <h3 id="statSentiment" class="text-3xl font-extrabold text-ivory mt-1 font-luxury">100%</h3>
-                    </div>
-                    <div class="w-12 h-12 rounded-xl bg-sapphire/30 border border-warmTaupe/30 flex items-center justify-center text-champagne">
-                        <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
-                    </div>
+            <!-- Card 4: Persentase Kehadiran -->
+            <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Persentase Kehadiran</p>
+                    <h3 id="statRate" class="text-3xl font-extrabold text-cyan-400 mt-1">--%</h3>
+                    <p class="text-xs text-slate-400 mt-1">Rasio kehadiran tamu</p>
                 </div>
-                <p class="text-xs text-champagne mt-3 flex items-center gap-1 font-semibold">
-                    <i class="fa-solid fa-heart text-champagne"></i> Harapan untuk Talenta AI
-                </p>
+                <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
             </div>
         </div>
 
-        <!-- Action Bar & Controls -->
-        <div class="luxury-panel p-4 rounded-2xl border border-warmTaupe/25 flex flex-wrap items-center justify-between gap-4">
-            <!-- Left: Add Instansi -->
+        <!-- Toolbar: Search, Filter, Actions (Download CSV, Tambah, Reset) -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            
+            <!-- Left: Search & Filter -->
+            <div class="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        oninput="debounceFetch()" 
+                        placeholder="Cari nama tamu, instansi, atau token QR..." 
+                        class="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    >
+                </div>
+
+                <div class="w-full sm:w-44">
+                    <select 
+                        id="filterStatus" 
+                        onchange="fetchGuests(false)" 
+                        class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                    >
+                        <option value="all">Semua Status</option>
+                        <option value="checked_in">✓ Sudah Hadir</option>
+                        <option value="pending">⏳ Belum Hadir</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Right: Action Buttons -->
             <div class="flex flex-wrap items-center gap-2.5">
-                <button onclick="openAddModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-champagne hover:bg-champagne/90 text-navy flex items-center gap-2 shadow-md transition">
-                    <i class="fa-solid fa-plus"></i> Tambah Instansi
+                <!-- Download CSV Button -->
+                <a 
+                    href="/api/guests/export/csv" 
+                    class="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2 shadow-sm transition"
+                    title="Unduh seluruh data tamu dalam format CSV / Excel"
+                >
+                    <i class="fa-solid fa-file-csv text-sm"></i>
+                    Download File CSV Data Tamu
+                </a>
+
+                <!-- Tambah Tamu Manual -->
+                <button 
+                    onclick="openAddModal()" 
+                    class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5 transition"
+                >
+                    <i class="fa-solid fa-plus"></i>
+                    Tambah Tamu
+                </button>
+
+                <!-- Reset Data Uji Coba -->
+                <button 
+                    onclick="openResetModal()" 
+                    class="px-3 py-2 rounded-lg text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1.5 transition"
+                    title="Bersihkan data uji coba / simulasi"
+                >
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Reset Data
                 </button>
             </div>
-
-            <!-- Right: Search & Filters -->
-            <div class="flex flex-wrap items-center gap-2.5">
-                <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-warmTaupe text-xs"></i>
-                    <input id="searchInput" oninput="debounceFetch()" type="text" placeholder="Cari instansi..." class="pl-8 pr-3 py-1.5 bg-navy/80 border border-warmTaupe/30 rounded-xl text-xs text-ivory placeholder-warmTaupe/60 focus:outline-none focus:border-champagne w-56 sm:w-64">
-                </div>
-
-                <select id="filterStatus" onchange="fetchGuests()" class="px-2.5 py-1.5 bg-navy/80 border border-warmTaupe/30 rounded-xl text-xs text-ivory focus:outline-none focus:border-champagne">
-                    <option value="all">Semua Status</option>
-                    <option value="checked_in">Sudah Hadir</option>
-                    <option value="pending">Belum Hadir</option>
-                </select>
-            </div>
         </div>
 
-        <!-- Guest List Table -->
-        <div class="luxury-panel rounded-2xl border border-warmTaupe/25 overflow-hidden">
+        <!-- Table Container -->
+        <div class="rounded-xl bg-slate-900 border border-slate-800 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="border-b border-warmTaupe/20 bg-sapphire/30 text-champagne font-semibold uppercase tracking-wider">
-                            <th class="py-3.5 px-4 w-12 text-center">No</th>
-                            <th class="py-3.5 px-4">Nama Lengkap / PIC</th>
-                            <th class="py-3.5 px-4">Instansi / Perusahaan</th>
-                            <th class="py-3.5 px-4">Kategori / Sektor</th>
-                            <th class="py-3.5 px-4">Status Kedatangan</th>
-                            <th class="py-3.5 px-4">Waktu Verifikasi</th>
-                            <th class="py-3.5 px-4">Pesan & Analisis Sentimen AI</th>
-                            <th class="py-3.5 px-4 text-center w-28">Aksi</th>
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-950 text-slate-400 font-semibold uppercase tracking-wider border-b border-slate-800 text-[11px]">
+                        <tr>
+                            <th class="py-3 px-4 text-center w-12">No</th>
+                            <th class="py-3 px-4 min-w-[160px]">Nama Tamu</th>
+                            <th class="py-3 px-4 min-w-[160px]">Instansi / Lembaga</th>
+                            <th class="py-3 px-4 min-w-[100px]">Status</th>
+                            <th class="py-3 px-4 min-w-[110px]">Waktu Hadir</th>
+                            <th class="py-3 px-4 min-w-[200px]">Pesan & Kesan</th>
+                            <th class="py-3 px-4 min-w-[200px]">Kritik & Saran</th>
+                            <th class="py-3 px-4 text-center w-28">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody id="guestTableBody" class="divide-y divide-warmTaupe/15 text-ivory">
+                    <tbody id="guestTableBody" class="divide-y divide-slate-800/80">
                         <tr>
-                            <td colspan="8" class="text-center py-10 text-warmTaupe">
-                                <i class="fa-solid fa-spinner fa-spin text-champagne text-lg mb-2"></i>
-                                <p>Memuat daftar instansi...</p>
+                            <td colspan="8" class="text-center py-12 text-slate-400">
+                                <i class="fa-solid fa-spinner fa-spin text-xl mb-2 block text-indigo-400"></i>
+                                Memuat data tamu...
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
+
     </main>
 
-    <!-- Modal: Tambah Instansi -->
-    <div id="addModal" class="fixed inset-0 z-50 bg-navy/90 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="luxury-panel rounded-2xl border border-champagne/40 max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <div class="flex items-center justify-between pb-3 border-b border-warmTaupe/20">
-                <h3 class="text-sm font-bold text-champagne font-luxury flex items-center gap-2">
-                    <i class="fa-solid fa-building text-champagne"></i> Tambah Instansi / Perusahaan Tamu
+    <!-- Modal: Tambah Tamu Manual -->
+    <div id="addModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 rounded-xl border border-slate-700 max-w-md w-full p-5 space-y-4 shadow-xl">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus text-indigo-400"></i>
+                    Tambah Data Tamu Manual
                 </h3>
-                <button onclick="closeAddModal()" class="text-warmTaupe hover:text-ivory text-sm">
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-white text-base">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
             <form id="addGuestForm" onsubmit="submitAddGuest(event)" class="space-y-3.5 text-xs">
                 <div>
-                    <label class="block text-ivory font-medium mb-1">Nama Lengkap Tamu / PIC</label>
-                    <input type="text" id="addName" placeholder="Contoh: Bpk. Bambang Sutrisno / Ibu Rina Wijaya" class="w-full px-3 py-2 bg-navy border border-warmTaupe/30 rounded-xl text-ivory placeholder-warmTaupe/50 focus:outline-none focus:border-champagne">
+                    <label class="block text-slate-300 font-medium mb-1">Nama Lengkap Tamu *</label>
+                    <input type="text" id="addName" required placeholder="Contoh: Bpk. Bambang Sutrisno" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500">
                 </div>
 
                 <div>
-                    <label class="block text-ivory font-medium mb-1">Nama Instansi / Perusahaan *</label>
-                    <input type="text" id="addInstitution" required placeholder="Contoh: Maju Hardware / Dinas Tenaga Kerja KUKM Kota Madiun" class="w-full px-3 py-2 bg-navy border border-warmTaupe/30 rounded-xl text-ivory placeholder-warmTaupe/50 focus:outline-none focus:border-champagne">
+                    <label class="block text-slate-300 font-medium mb-1">Asal Instansi / Perusahaan *</label>
+                    <input type="text" id="addInstitution" required placeholder="Contoh: Kelurahan Winongo / RS Santa Clara / Umum" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500">
                 </div>
 
                 <div>
-                    <label class="block text-ivory font-medium mb-1">Kategori / Sektor Usaha</label>
-                    <input type="text" id="addCategory" placeholder="Contoh: Industri Kuliner / Pemerintahan / Hospitality" class="w-full px-3 py-2 bg-navy border border-warmTaupe/30 rounded-xl text-ivory placeholder-warmTaupe/50 focus:outline-none focus:border-champagne">
+                    <label class="block text-slate-300 font-medium mb-1">Kategori (Opsional)</label>
+                    <input type="text" id="addCategory" placeholder="Contoh: Mitra / Tamu Undangan" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500">
                 </div>
 
-                <div class="pt-3 flex items-center justify-end gap-2">
-                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 rounded-xl bg-sapphire/40 text-warmTaupe hover:bg-sapphire/60 transition">Batal</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-champagne text-navy font-bold hover:bg-champagne/90 transition shadow-md">Simpan Instansi</button>
+                <div class="pt-2 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeAddModal()" class="px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition">Batal</button>
+                    <button type="submit" class="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition">Simpan Tamu</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Modal: Reset Uji Coba -->
-    <div id="resetModal" class="fixed inset-0 z-50 bg-cyberBlack/90 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="cyber-panel rounded-2xl border border-rose-500/50 max-w-lg w-full p-6 space-y-4 shadow-[0_0_50px_rgba(244,63,94,0.3)] cyber-clip">
-            <div class="flex items-center justify-between pb-3 border-b border-rose-500/20">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </div>
-                    <h3 class="text-sm sm:text-base font-bold text-rose-300 font-cyber">
-                        Reset Data Uji Coba (Testing)
-                    </h3>
+    <div id="resetModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 rounded-xl border border-rose-500/40 max-w-md w-full p-5 space-y-4 shadow-xl">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2 text-rose-400">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                    <h3 class="text-sm font-bold text-rose-300">Konfirmasi Reset Data Simulasi</h3>
                 </div>
-                <button onclick="closeResetModal()" class="text-chromeSilver/60 hover:text-chromeWhite text-sm">
+                <button onclick="closeResetModal()" class="text-slate-400 hover:text-white text-base">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <p class="text-xs text-chromeSilver/80 font-tech leading-relaxed">
-                Pilih metode reset untuk membersihkan data percobaan sebelum hari pelaksanaan pameran di Waroeng Latte Madiun:
+            <p class="text-xs text-slate-300 leading-relaxed">
+                Tindakan ini akan mengosongkan seluruh data tamu dan pesan simulasi menjadi <strong>0 tamu</strong> agar sistem siap digunakan pada hari acara.
             </p>
 
-            <div class="space-y-3">
-                <!-- Opsi 1: Reset Kehadiran Saja -->
-                <div class="p-3.5 rounded-xl bg-cyberDark/90 border border-neonCyan/30 hover:border-neonCyan transition cursor-pointer flex items-start gap-3" onclick="confirmReset('attendance')">
-                    <div class="mt-0.5 w-6 h-6 rounded-md bg-neonCyan/20 text-neonCyan flex items-center justify-center text-xs shrink-0">
-                        <i class="fa-solid fa-user-clock"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex items-center justify-between">
-                            <span class="font-cyber font-bold text-xs text-neonCyan">1. Reset Status Kehadiran (0 Hadir)</span>
-                            <span class="text-[9px] font-monoTech text-neonEmerald bg-neonEmerald/10 border border-neonEmerald/30 px-2 py-0.5 rounded">DIREKOMENDASIKAN</span>
-                        </div>
-                        <p class="text-[11px] text-chromeSilver/70 mt-1">
-                            Kembalikan status 10 instansi resmi menjadi <strong>Belum Hadir</strong>, kosongkan testimoni & sentimen uji coba, serta hapus instansi percobaan tambahan. Token QR tetap sama.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Opsi 2: Reset Total / Factory Reset -->
-                <div class="p-3.5 rounded-xl bg-cyberDark/90 border border-rose-500/30 hover:border-rose-500 transition cursor-pointer flex items-start gap-3" onclick="confirmReset('factory')">
-                    <div class="mt-0.5 w-6 h-6 rounded-md bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs shrink-0">
-                        <i class="fa-solid fa-arrows-rotate"></i>
-                    </div>
-                    <div class="flex-1">
-                        <div class="flex items-center justify-between">
-                            <span class="font-cyber font-bold text-xs text-rose-300">2. Reset Total ke Data Pabrik (Factory Reset)</span>
-                            <span class="text-[9px] font-monoTech text-rose-400 bg-rose-500/10 border border-rose-500/30 px-2 py-0.5 rounded">BERSIH TOTAL</span>
-                        </div>
-                        <p class="text-[11px] text-chromeSilver/70 mt-1">
-                            Hapus seluruh tabel database dan bangun ulang 10 instansi resmi Kota Madiun dari awal dengan token baru.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pt-2 flex justify-end">
-                <button type="button" onclick="closeResetModal()" class="px-4 py-2 rounded-xl bg-cyberDark border border-chromeSilver/30 text-chromeSilver hover:text-chromeWhite text-xs font-tech transition">
-                    Tutup / Batalkan
+            <div class="pt-2 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeResetModal()" class="px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition text-xs">
+                    Batal
+                </button>
+                <button type="button" onclick="confirmReset('factory')" class="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold transition text-xs flex items-center gap-1.5">
+                    <i class="fa-solid fa-trash-can"></i>
+                    Ya, Bersihkan Data (0 Tamu)
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts: Anti-Glitch Architecture & Clean Rendering -->
     <script>
-        const CACHE_KEY = 'mbd_guests_cache_v2';
-        let searchTimeout;
-        let previousGuestCount = -1;
-        let isFirstLoad = true;
+        const CACHE_KEY = 'mbd_admin_guests_clean_v1';
+        let searchTimeout = null;
+        let lastRenderedHash = '';
+        let isFetching = false;
 
         function debounceFetch() {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => fetchGuests(false), 250);
+            searchTimeout = setTimeout(() => fetchGuests(false), 200);
         }
 
         let deletedGuestIds = new Set();
@@ -333,29 +298,14 @@
             } catch (e) {}
         }
 
-        function getCachedGuests() {
-            try {
-                const raw = localStorage.getItem(CACHE_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed)) {
-                        return parsed.filter(g => g && g.id && !deletedGuestIds.has(g.id));
-                    }
-                }
-            } catch (e) {}
-            return [];
-        }
-
-        function setCachedGuests(list) {
-            try {
-                const clean = Array.isArray(list) ? list.filter(g => g && g.id && !deletedGuestIds.has(g.id)) : [];
-                localStorage.setItem(CACHE_KEY, JSON.stringify(clean));
-            } catch (e) {}
-        }
-
+        // Fetch Guests from Server with Strict Cache-Busting
         async function fetchGuests(isSilent = false) {
-            const search = document.getElementById('searchInput').value;
-            const status = document.getElementById('filterStatus').value;
+            if (isFetching && isSilent) return;
+            isFetching = true;
+
+            const searchInput = document.getElementById('searchInput');
+            const search = searchInput ? searchInput.value.trim() : '';
+            const status = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : 'all';
 
             const url = new URL('/api/guests', window.location.origin);
             url.searchParams.set('t', Date.now());
@@ -365,49 +315,37 @@
             try {
                 const res = await fetch(url);
                 const json = await res.json();
-                const rawServerGuests = json.data || [];
-                const serverGuests = rawServerGuests.filter(g => g && g.id && !deletedGuestIds.has(g.id));
-
-                if (!search && status === 'all') {
-                    setCachedGuests(serverGuests);
+                if (json.success) {
+                    const guests = (json.data || []).filter(g => g && g.id && !deletedGuestIds.has(g.id));
+                    renderTable(guests);
                 }
-
-                // Cek jika ada tamu baru yang baru saja masuk
-                if (!isFirstLoad && serverGuests.length > previousGuestCount && previousGuestCount >= 0) {
-                    highlightLiveArrival();
-                }
-                previousGuestCount = serverGuests.length;
-                isFirstLoad = false;
-
-                renderTable(serverGuests);
             } catch (err) {
-                console.error('Error fetching guests:', err);
-                const fallback = getCachedGuests();
-                if (fallback.length > 0 && isFirstLoad) renderTable(fallback);
+                console.warn('[Admin] Fetch error:', err);
+            } finally {
+                isFetching = false;
             }
         }
 
-        function fetchStats() {
-            // Stats are reactively computed and rendered inside renderTable()
-        }
-
-        function highlightLiveArrival() {
-            const el = document.getElementById('statCheckedIn');
-            if (el) {
-                el.classList.add('text-emerald-400', 'scale-110');
-                setTimeout(() => {
-                    el.classList.remove('text-emerald-400', 'scale-110');
-                }, 1500);
-            }
-        }
-
+        // ANTI-GLITCH RENDERER: Only mutates the DOM when actual data changes!
         function renderTable(guests) {
-            const tbody = document.getElementById('guestTableBody');
+            const list = Array.isArray(guests) ? guests : [];
+            
+            // 1. Calculate hash of current data state
+            const currentHash = JSON.stringify(list.map(g => [
+                g.id, 
+                g.name, 
+                g.institution, 
+                g.status, 
+                g.checked_in_at, 
+                g.impression, 
+                g.feedback, 
+                g.message
+            ]));
 
-            // Sinkronisasi otomatis angka statistik di kartu atas secara instan
-            const total = guests ? guests.length : 0;
-            const checkedIn = guests ? guests.filter(g => g.status === 'checked_in').length : 0;
-            const pending = guests ? guests.filter(g => g.status !== 'checked_in').length : 0;
+            // 2. Update Stats Counter smoothly
+            const total = list.length;
+            const checkedIn = list.filter(g => g.status === 'checked_in').length;
+            const pending = list.filter(g => g.status !== 'checked_in').length;
             const rate = total > 0 ? Math.round((checkedIn / total) * 100) : 0;
 
             const elTotal = document.getElementById('statTotal');
@@ -415,55 +353,75 @@
             const elPending = document.getElementById('statPending');
             const elRate = document.getElementById('statRate');
 
-            if (elTotal) elTotal.innerText = total;
-            if (elChecked) elChecked.innerText = checkedIn;
-            if (elPending) elPending.innerText = pending;
-            if (elRate) elRate.innerHTML = `<i class="fa-solid fa-chart-pie"></i> ${rate}% Kehadiran`;
+            if (elTotal && elTotal.innerText !== String(total)) elTotal.innerText = total;
+            if (elChecked && elChecked.innerText !== String(checkedIn)) elChecked.innerText = checkedIn;
+            if (elPending && elPending.innerText !== String(pending)) elPending.innerText = pending;
+            if (elRate && elRate.innerText !== `${rate}%`) elRate.innerText = `${rate}%`;
 
-            if (!guests || guests.length === 0) {
+            // 3. If data didn't change, DO NOT touch the table DOM (Prevents glitch/flicker)
+            if (currentHash === lastRenderedHash) {
+                return;
+            }
+            lastRenderedHash = currentHash;
+
+            const tbody = document.getElementById('guestTableBody');
+            if (!tbody) return;
+
+            if (list.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="text-center py-10 text-warmTaupe">
-                            <i class="fa-solid fa-users text-2xl mb-2 block text-warmTaupe/50"></i>
-                            Belum ada tamu registrasi. Menunggu kehadiran tamu di Waroeng Latte.
+                        <td colspan="8" class="text-center py-12 text-slate-400">
+                            <i class="fa-solid fa-users text-2xl mb-2 block text-slate-600"></i>
+                            Belum ada data tamu terdaftar. Silakan lakukan pendaftaran melalui Buku Tamu HP.
                         </td>
                     </tr>
                 `;
                 return;
             }
 
-            tbody.innerHTML = guests.map((g, idx) => {
+            tbody.innerHTML = list.map((g, idx) => {
                 const isChecked = g.status === 'checked_in';
                 const statusBadge = isChecked 
-                    ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-champagne/20 text-champagne border border-champagne/40"><i class="fa-solid fa-check"></i> Terverifikasi</span>`
-                    : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-sapphire/30 text-warmTaupe border border-warmTaupe/30"><i class="fa-solid fa-clock"></i> Belum Hadir</span>`;
+                    ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                         <i class="fa-solid fa-check text-[10px]"></i> Hadir
+                       </span>`
+                    : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-800 text-slate-400 border border-slate-700">
+                         <i class="fa-solid fa-clock text-[10px]"></i> Belum Hadir
+                       </span>`;
 
-                const timeStr = g.checked_in_at ? new Date(g.checked_in_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB' : '-';
+                const timeStr = g.checked_in_at 
+                    ? new Date(g.checked_in_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
+                    : '-';
 
-                const sentimentHtml = g.message 
-                    ? `<div class="max-w-xs truncate text-ivory" title="${g.message}">"${g.message}"</div>
-                       <span class="inline-block mt-0.5 px-2 py-0.2 rounded text-[10px] bg-champagne/15 text-champagne border border-champagne/30">${g.emotion || 'Inspiratif'}</span>`
-                    : `<span class="text-warmTaupe/60 italic">Belum mengisi</span>`;
+                const impressionText = g.impression || (g.message && g.message !== '-' ? g.message : '');
+                const feedbackText = g.feedback || '';
+
+                const impressionHtml = impressionText 
+                    ? `<div class="max-w-xs text-slate-200 line-clamp-2" title="${escapeHtml(impressionText)}">“${escapeHtml(impressionText)}”</div>`
+                    : `<span class="text-slate-500 italic">Belum mengisi</span>`;
+
+                const feedbackHtml = feedbackText
+                    ? `<div class="max-w-xs text-amber-200/90 line-clamp-2" title="${escapeHtml(feedbackText)}">“${escapeHtml(feedbackText)}”</div>`
+                    : `<span class="text-slate-500 italic">-</span>`;
+
+                const guestName = escapeHtml(g.name || 'Tamu Undangan');
+                const guestInst = escapeHtml(g.institution || '-');
 
                 return `
-                    <tr class="hover:bg-sapphire/20 transition">
-                        <td class="py-3 px-4 text-center text-warmTaupe">${idx + 1}</td>
-                        <td class="py-3 px-4 font-bold text-ivory text-sm">${g.name || '<span class="text-warmTaupe/60 italic font-normal">-</span>'}</td>
-                        <td class="py-3 px-4 font-semibold text-champagne text-xs">${g.institution}</td>
-                        <td class="py-3 px-4">
-                            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-sapphire/40 text-warmTaupe border border-warmTaupe/25">
-                                ${g.category}
-                            </span>
-                        </td>
+                    <tr class="hover:bg-slate-800/50 transition">
+                        <td class="py-3 px-4 text-center text-slate-400">${idx + 1}</td>
+                        <td class="py-3 px-4 font-bold text-white text-xs">${guestName}</td>
+                        <td class="py-3 px-4 font-medium text-slate-300 text-xs">${guestInst}</td>
                         <td class="py-3 px-4">${statusBadge}</td>
-                        <td class="py-3 px-4 text-warmTaupe font-mono text-[11px]">${timeStr}</td>
-                        <td class="py-3 px-4">${sentimentHtml}</td>
+                        <td class="py-3 px-4 text-slate-400 font-mono text-[11px]">${timeStr}</td>
+                        <td class="py-3 px-4">${impressionHtml}</td>
+                        <td class="py-3 px-4">${feedbackHtml}</td>
                         <td class="py-3 px-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="reGreetGuest('${g.id}', '${g.name || g.institution}')" class="p-1.5 text-warmTaupe hover:text-neonCyan transition" title="Sapa Ulang Robot 3D di Layar Live">
+                                <button onclick="reGreetGuest('${g.id}', '${escapeHtml(g.name || g.institution)}')" class="p-1.5 rounded hover:bg-slate-700 text-slate-400 hover:text-cyan-300 transition" title="Sapa Ulang Robot 3D di Layar Live">
                                     <i class="fa-solid fa-robot"></i>
                                 </button>
-                                <button onclick="deleteGuest('${g.id}', '${g.name || g.institution}')" class="p-1.5 text-warmTaupe hover:text-rose-400 transition" title="Hapus Instansi">
+                                <button onclick="deleteGuest('${g.id}', '${escapeHtml(g.name || g.institution)}')" class="p-1.5 rounded hover:bg-slate-700 text-slate-400 hover:text-rose-400 transition" title="Hapus Data">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </div>
@@ -473,102 +431,68 @@
             }).join('');
         }
 
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Delete guest
         async function deleteGuest(id, name) {
-            if (!confirm(`Hapus instansi "${name}" dari sistem?`)) return;
+            if (!confirm(`Hapus data tamu "${name}"?`)) return;
 
             markGuestDeleted(id);
-
-            // Hapus seketika dari cache lokal dan tabel tampilan
-            const current = getCachedGuests();
-            const updated = current.filter(g => g.id !== id);
-            setCachedGuests(updated);
-            renderTable(updated);
+            lastRenderedHash = '';
+            fetchGuests(true);
 
             try {
-                // Gunakan POST /:id/delete agar aman dari pemblokiran metode DELETE oleh provider seluler/proxy
                 let res = await fetch(`/api/guests/${id}/delete`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id })
                 });
-
                 if (!res.ok) {
                     res = await fetch(`/api/guests/${id}`, { method: 'DELETE' });
                 }
-
                 const json = await res.json();
                 if (json.success) {
                     fetchGuests(true);
-                    fetchStats();
                 } else {
                     alert(json.error || 'Gagal menghapus');
-                    setCachedGuests(current);
-                    renderTable(current);
                 }
             } catch (err) {
-                console.warn('Delete network notice:', err);
+                console.warn('Delete error:', err);
                 fetchGuests(true);
             }
         }
 
-        function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); }
-        function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); }
-
-        function openResetModal() { document.getElementById('resetModal').classList.remove('hidden'); }
-        function closeResetModal() { document.getElementById('resetModal').classList.add('hidden'); }
-
-        async function confirmReset(mode) {
-            const promptText = mode === 'factory' 
-                ? 'PERINGATAN: Anda akan me-reset total database ke kondisi awal (factory reset). Lanjutkan?' 
-                : 'Konfirmasi: Bersihkan status kehadiran uji coba dan kembalikan ke 0 hadir?';
-            
-            if (!confirm(promptText)) return;
-
-            try {
-                const res = await fetch('/api/admin/reset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mode })
-                });
-                const json = await res.json();
-                if (json.success) {
-                    localStorage.removeItem(CACHE_KEY);
-                    previousGuestCount = 0;
-                    closeResetModal();
-                    alert(json.message || 'Reset berhasil.');
-                    renderTable([]);
-                    fetchGuests(false);
-                } else {
-                    alert(json.error || 'Gagal melakukan reset.');
-                }
-            } catch (err) {
-                alert('Gagal menghubungi server untuk reset.');
-            }
-        }
-
+        // Re-greet guest with 3D Robot
         async function reGreetGuest(id, name) {
             try {
-                const res = await fetch('/api/admin/greet', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ guestId: id })
-                });
+                const res = await fetch(`/api/guests/${id}/greet`, { method: 'POST' });
                 const json = await res.json();
                 if (json.success) {
-                    alert(`Robot 3D di layar live sedang menyapa ${name}!`);
+                    alert(`Robot AI di Layar Live sedang menyapa ${name}!`);
                 } else {
-                    alert(json.error || 'Gagal memicu sapaan robot');
+                    alert(json.error || 'Gagal memicu sapaan');
                 }
-            } catch (e) {
+            } catch (err) {
                 alert('Gagal menghubungi server.');
             }
         }
 
+        // Add guest modal
+        function openAddModal() { document.getElementById('addModal').classList.remove('hidden'); }
+        function closeAddModal() { document.getElementById('addModal').classList.add('hidden'); }
+
         async function submitAddGuest(e) {
             e.preventDefault();
             const name = document.getElementById('addName').value.trim();
-            const institution = document.getElementById('addInstitution').value;
-            const category = document.getElementById('addCategory').value;
+            const institution = document.getElementById('addInstitution').value.trim();
+            const category = document.getElementById('addCategory').value.trim() || 'Mitra / Tamu';
 
             try {
                 const res = await fetch('/api/guests', {
@@ -580,166 +504,83 @@
                 if (json.success) {
                     closeAddModal();
                     document.getElementById('addGuestForm').reset();
-                    fetchGuests();
-                    fetchStats();
+                    lastRenderedHash = '';
+                    fetchGuests(true);
                 } else {
-                    alert(json.error || 'Gagal menyimpan data');
+                    alert(json.error || 'Gagal menyimpan data tamu');
                 }
             } catch (err) {
                 alert('Gagal menghubungi server.');
             }
         }
 
-        // -----------------------------------------------------------------
-        // REAL-TIME AUTO-UPDATE ENGINE (SSE Push + 2.5s Polling + Window Focus)
-        // -----------------------------------------------------------------
+        // Reset modal
+        function openResetModal() { document.getElementById('resetModal').classList.remove('hidden'); }
+        function closeResetModal() { document.getElementById('resetModal').classList.add('hidden'); }
 
-        // 0. Global Real-time MQTT Broker Listener (<100ms Instant Table Injection)
-        function initDashboardMQTT() {
+        async function confirmReset(mode) {
             try {
-                if (typeof mqtt === 'undefined') return;
-                const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
-                    reconnectPeriod: 2500,
-                    connectTimeout: 5000
+                const res = await fetch('/api/admin/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode })
                 });
-                client.on('connect', () => {
-                    console.log('[MQTT] Dashboard connected to real-time broker!');
-                    client.subscribe('mbd_ai_exhibition_madiun_2026/events');
-                    client.subscribe('mbd_ai_exhibition_madiun_2026/state');
-                });
-                client.on('message', (topic, msg) => {
-                    try {
-                        if (topic === 'mbd_ai_exhibition_madiun_2026/state') {
-                            const stateObj = JSON.parse(msg.toString());
-                            if (Array.isArray(stateObj.deletedIds)) {
-                                stateObj.deletedIds.forEach(dId => markGuestDeleted(dId));
-                            }
-                            if (Array.isArray(stateObj.guests)) {
-                                const active = stateObj.guests.filter(g => g && g.id && !deletedGuestIds.has(g.id));
-                                setCachedGuests(active);
-                                renderTable(active);
-                            }
-                            return;
-                        }
-
-                        const parsed = JSON.parse(msg.toString());
-                        if (parsed.type === 'guest_checked_in') {
-                            const newGuest = parsed.data.guest;
-                            const newMsg = parsed.data.message;
-                            if (newGuest && !deletedGuestIds.has(newGuest.id)) {
-                                newGuest.message = newMsg?.text || '';
-                                newGuest.emotion = newMsg?.emotion || '';
-                                newGuest.sentiment = newMsg?.sentiment || '';
-                                const current = getCachedGuests();
-                                const exists = current.some(g => g.id === newGuest.id);
-                                if (!exists) {
-                                    const updated = [newGuest, ...current];
-                                    setCachedGuests(updated);
-                                    renderTable(updated);
-                                    highlightLiveArrival();
-                                }
-                            }
-                            fetchGuests(true);
-                        } else if (parsed.type === 'guest_deleted') {
-                            const delId = parsed.data?.id;
-                            if (delId) {
-                                markGuestDeleted(delId);
-                                const current = getCachedGuests();
-                                const updated = current.filter(g => g.id !== delId);
-                                setCachedGuests(updated);
-                                renderTable(updated);
-                            }
-                            fetchGuests(true);
-                        } else if (parsed.type === 'database_reset') {
-                            deletedGuestIds.clear();
-                            try { localStorage.removeItem('mbd_deleted_ids'); } catch (e) {}
-                            localStorage.removeItem(CACHE_KEY);
-                            previousGuestCount = 0;
-                            renderTable([]);
-                            fetchGuests(false);
-                        }
-                    } catch (e) {}
-                });
-            } catch (e) {
-                console.warn('[MQTT] Dashboard fallback:', e);
+                const json = await res.json();
+                if (json.success) {
+                    closeResetModal();
+                    deletedGuestIds.clear();
+                    try { localStorage.removeItem('mbd_deleted_ids'); } catch (e) {}
+                    lastRenderedHash = '';
+                    renderTable([]);
+                    fetchGuests(false);
+                    alert(json.message || 'Reset berhasil. Data tamu kembali ke 0.');
+                } else {
+                    alert(json.error || 'Gagal melakukan reset.');
+                }
+            } catch (err) {
+                alert('Gagal menghubungi server.');
             }
         }
 
-        // 1. SSE Push Listener (Sub-second real-time reaction)
-        function initDashboardSSE() {
+        // SSE Real-time Listener (Instant updates from check-in & feedback)
+        function initSSE() {
             try {
                 const sse = new EventSource('/api/live/stream');
-                sse.onmessage = (event) => {
+                sse.onmessage = (e) => {
                     try {
-                        const parsed = JSON.parse(event.data);
-                        if (parsed.type === 'guest_checked_in' || parsed.type === 'robot_greet') {
-                            fetchGuests(false);
-                        } else if (parsed.type === 'guest_deleted') {
-                            const delId = parsed.data?.id;
-                            if (delId) {
-                                const current = getCachedGuests();
-                                const updated = current.filter(g => g.id !== delId);
-                                setCachedGuests(updated);
-                                renderTable(updated);
-                            }
+                        const parsed = JSON.parse(e.data);
+                        if (parsed.type === 'guest_checked_in' || parsed.type === 'guest_feedback' || parsed.type === 'guest_deleted') {
                             fetchGuests(true);
                         } else if (parsed.type === 'database_reset') {
                             deletedGuestIds.clear();
-                            try {
-                                localStorage.removeItem('mbd_deleted_ids');
-                                localStorage.removeItem(CACHE_KEY);
-                            } catch (e) {}
-                            previousGuestCount = 0;
+                            lastRenderedHash = '';
                             renderTable([]);
                             fetchGuests(false);
-                            fetchStats();
                         }
-                    } catch (e) {}
+                    } catch (err) {}
                 };
                 sse.onerror = () => {
                     sse.close();
-                    setTimeout(initDashboardSSE, 4000);
+                    setTimeout(initSSE, 5000);
                 };
-            } catch (e) {
-                console.warn('SSE not supported:', e);
-            }
+            } catch (err) {}
         }
 
-        // 2. Smart Auto-Polling (Interval 2.5s untuk Vercel Serverless & Offline Sync)
-        let pollingInterval = null;
-        function startAutoPolling() {
-            if (pollingInterval) clearInterval(pollingInterval);
-            pollingInterval = setInterval(() => {
-                // Hindari refresh jika admin sedang aktif mengetik di kolom pencarian
-                const searchEl = document.getElementById('searchInput');
-                if (searchEl && document.activeElement === searchEl && searchEl.value.trim() !== '') {
-                    return;
-                }
-                fetchGuests(true);
-            }, 1500);
-        }
-
-        // 3. Trigger saat tab dibuka kembali / aktif
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                fetchGuests(false);
+        // Clean auto-poll every 3.5s when idle
+        setInterval(() => {
+            const searchEl = document.getElementById('searchInput');
+            if (searchEl && document.activeElement === searchEl && searchEl.value.trim() !== '') {
+                return;
             }
-        });
-        window.addEventListener('focus', () => {
-            fetchGuests(false);
-        });
+            fetchGuests(true);
+        }, 3500);
 
-        // Purge any stale client cache to prevent old number flashing
-        try {
-            localStorage.removeItem('mbd_guests_cache_v1');
-            localStorage.removeItem('mbd_guests_cache_v2');
-        } catch (e) {}
+        // Window focus refresh
+        window.addEventListener('focus', () => fetchGuests(true));
 
-        // Bootstrap on Load: Fetch fresh truth directly from server
+        // Bootstrap
         fetchGuests(false);
-        initDashboardMQTT();
-        initDashboardSSE();
-        startAutoPolling();
+        initSSE();
     </script>
 </body>
 </html>
