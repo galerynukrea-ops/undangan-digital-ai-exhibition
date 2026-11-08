@@ -64,62 +64,70 @@
     </header>
 
     <!-- Main Admin Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 w-full space-y-3.5">
 
-        <!-- 4 Metric Cards (Standard Admin Overview) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- 4 Metric Cards (Kompak & Hemat Tempat agar Fokus ke Data Tamu) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
             
             <!-- Card 1: Total Tamu -->
-            <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Tamu Terdata</p>
-                    <h3 id="statTotal" class="text-3xl font-extrabold text-white mt-1">--</h3>
-                    <p class="text-xs text-slate-400 mt-1">Semua pendaftar</p>
+            <div class="px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-lg bg-slate-900 border border-slate-800/90 shadow-sm flex items-center justify-between">
+                <div class="min-w-0">
+                    <p class="text-[10.5px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">Total Tamu</p>
+                    <div class="flex items-baseline gap-1.5 mt-0.5">
+                        <span id="statTotal" class="text-xl sm:text-2xl font-black text-white">--</span>
+                        <span class="text-[10.5px] text-slate-400 hidden sm:inline">pendaftar</span>
+                    </div>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-sm shrink-0">
                     <i class="fa-solid fa-users"></i>
                 </div>
             </div>
 
             <!-- Card 2: Tamu Hadir -->
-            <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Hadir di Venue</p>
-                    <h3 id="statCheckedIn" class="text-3xl font-extrabold text-emerald-400 mt-1">--</h3>
-                    <p class="text-xs text-slate-400 mt-1">Telah verifikasi kedatangan</p>
+            <div class="px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-lg bg-slate-900 border border-slate-800/90 shadow-sm flex items-center justify-between">
+                <div class="min-w-0">
+                    <p class="text-[10.5px] sm:text-[11px] font-bold text-emerald-400 uppercase tracking-wider truncate">Hadir di Venue</p>
+                    <div class="flex items-baseline gap-1.5 mt-0.5">
+                        <span id="statCheckedIn" class="text-xl sm:text-2xl font-black text-emerald-400">--</span>
+                        <span class="text-[10.5px] text-emerald-400/80 font-medium hidden sm:inline">terverifikasi</span>
+                    </div>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm shrink-0">
                     <i class="fa-solid fa-user-check"></i>
                 </div>
             </div>
 
             <!-- Card 3: Belum Hadir -->
-            <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Belum Hadir</p>
-                    <h3 id="statPending" class="text-3xl font-extrabold text-slate-300 mt-1">--</h3>
-                    <p class="text-xs text-slate-400 mt-1">Menunggu kedatangan</p>
+            <div class="px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-lg bg-slate-900 border border-slate-800/90 shadow-sm flex items-center justify-between">
+                <div class="min-w-0">
+                    <p class="text-[10.5px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">Belum Hadir</p>
+                    <div class="flex items-baseline gap-1.5 mt-0.5">
+                        <span id="statPending" class="text-xl sm:text-2xl font-black text-slate-200">--</span>
+                        <span class="text-[10.5px] text-slate-400 hidden sm:inline">menunggu</span>
+                    </div>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-sm shrink-0">
                     <i class="fa-solid fa-clock"></i>
                 </div>
             </div>
 
             <!-- Card 4: Persentase Kehadiran -->
-            <div class="p-5 rounded-xl bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Persentase Kehadiran</p>
-                    <h3 id="statRate" class="text-3xl font-extrabold text-cyan-400 mt-1">--%</h3>
-                    <p class="text-xs text-slate-400 mt-1">Rasio kehadiran tamu</p>
+            <div class="px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-lg bg-slate-900 border border-slate-800/90 shadow-sm flex items-center justify-between">
+                <div class="min-w-0">
+                    <p class="text-[10.5px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">Persentase</p>
+                    <div class="flex items-baseline gap-1.5 mt-0.5">
+                        <span id="statRate" class="text-xl sm:text-2xl font-black text-cyan-400">--%</span>
+                        <span class="text-[10.5px] text-cyan-400/80 font-medium hidden sm:inline">rasio</span>
+                    </div>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm shrink-0">
                     <i class="fa-solid fa-chart-pie"></i>
                 </div>
             </div>
         </div>
 
         <!-- Toolbar: Search, Filter, Actions (Download CSV, Tambah, Reset) -->
-        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div class="p-3 sm:px-4 sm:py-3 rounded-xl bg-slate-900 border border-slate-800 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             
             <!-- Left: Search & Filter -->
             <div class="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-3">
