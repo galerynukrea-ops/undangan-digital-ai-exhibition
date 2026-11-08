@@ -71,31 +71,26 @@
     <!-- Main Admin Container -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 w-full space-y-4">
 
-        <!-- BAR KONTROL DARURAT OPERATOR (Surface Pro 3 Live Wall Remote) -->
-        <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-rose-950/30 to-slate-900 border-2 border-rose-500/70 shadow-[0_0_30px_rgba(244,63,94,0.25)] flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/50 flex items-center justify-center text-rose-400 text-lg shrink-0">
-                    <i class="fa-solid fa-shield-halved animate-pulse"></i>
-                </div>
-                <div>
-                    <h3 class="text-xs sm:text-sm font-black text-rose-200 uppercase tracking-wider flex items-center gap-2">
-                        <span>Pusat Kontrol Darurat Layar Surface Pro 3</span>
-                        <span class="inline-block w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
-                    </h3>
-                    <p class="text-[11px] sm:text-xs text-slate-300">
-                        Kendalikan tampilan panggung proyektor Surface Pro 3 secara instan tanpa perlu menyentuh layar tablet.
-                    </p>
-                </div>
+        <!-- BAR KONTROL DARURAT OPERATOR (Kompak & Hemat Ruang) -->
+        <div class="px-3.5 py-2 rounded-xl bg-slate-900 border border-rose-500/40 shadow-sm flex flex-wrap items-center justify-between gap-2.5">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-rose-400 text-sm"></i>
+                <span class="text-xs font-bold text-rose-200 tracking-wide uppercase">
+                    Kontrol Darurat Layar:
+                </span>
+                <span class="text-[11px] text-slate-400 hidden sm:inline">
+                    Kendali instan panggung live proyektor dari meja admin
+                </span>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2.5">
+            <div class="flex items-center gap-2">
                 <!-- 1. Sembunyikan Pop-Up -->
                 <button 
                     onclick="triggerEmergencyHide()" 
-                    class="px-4 py-2.5 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_15px_rgba(225,29,72,0.4)] active:scale-95 transition flex items-center gap-2 cursor-pointer"
-                    title="Segera sembunyikan kartu sambutan yang sedang aktif di layar Surface Pro 3"
+                    class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
+                    title="Segera sembunyikan kartu sambutan di layar live"
                 >
-                    <i class="fa-solid fa-eye-slash text-sm"></i>
+                    <i class="fa-solid fa-eye-slash text-xs"></i>
                     Sembunyikan Pop-up
                 </button>
 
@@ -103,20 +98,20 @@
                 <button 
                     id="btnEmergencyMute"
                     onclick="triggerEmergencyMute()" 
-                    class="px-4 py-2.5 rounded-xl text-xs font-black bg-amber-600 hover:bg-amber-500 text-white shadow-[0_0_15px_rgba(217,119,6,0.4)] active:scale-95 transition flex items-center gap-2 cursor-pointer"
-                    title="Bisukan seketika pembacaan suara robot AI di Surface Pro 3"
+                    class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
+                    title="Mute / Unmute suara robot AI di layar live"
                 >
-                    <i class="fa-solid fa-volume-xmark text-sm"></i>
-                    Mute Suara Robot
+                    <i class="fa-solid fa-volume-xmark text-xs"></i>
+                    Mute Suara
                 </button>
 
-                <!-- 3. Hapus Tamu Terakhir dari Layar -->
+                <!-- 3. Hapus Tamu Terakhir -->
                 <button 
                     onclick="triggerEmergencyRemoveLast()" 
-                    class="px-4 py-2.5 rounded-xl text-xs font-black bg-slate-900 hover:bg-rose-950 text-rose-300 border-2 border-rose-500/60 shadow-md active:scale-95 transition flex items-center gap-2 cursor-pointer"
-                    title="Hapus tamu terakhir yang baru saja masuk dan bersihkan dari running text marquee"
+                    class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-800 hover:bg-rose-950 text-rose-300 border border-rose-500/40 shadow-sm active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
+                    title="Hapus tamu terakhir yang baru saja masuk dan bersihkan dari running text"
                 >
-                    <i class="fa-solid fa-trash-can text-sm text-rose-400"></i>
+                    <i class="fa-solid fa-trash-can text-xs text-rose-400"></i>
                     Hapus Tamu Terakhir
                 </button>
             </div>
@@ -651,7 +646,7 @@
         }
 
         // -------------------------------------------------------------
-        // EMERGENCY CONTROLS (KONTROL DARURAT UNTUK SURFACE PRO 3)
+        // EMERGENCY CONTROLS (KONTROL DARURAT OPERATOR)
         // -------------------------------------------------------------
         async function triggerEmergencyHide() {
             try {
@@ -663,7 +658,7 @@
                     }
                 });
                 const json = await res.json();
-                showToast(json.message || 'Pop-up berhasil disembunyikan dari layar Surface Pro 3!', json.success ? 'success' : 'error');
+                showToast(json.message || 'Pop-up berhasil disembunyikan dari layar live!', json.success ? 'success' : 'error');
             } catch (e) {
                 showToast('Gagal mengirim perintah darurat ke server.', 'error');
             }
@@ -685,11 +680,11 @@
                 const btn = document.getElementById('btnEmergencyMute');
                 if (btn) {
                     if (isEmergencyMuted) {
-                        btn.className = 'px-4 py-2.5 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-500 text-white shadow-md active:scale-95 transition flex items-center gap-2 cursor-pointer';
-                        btn.innerHTML = '<i class="fa-solid fa-volume-high text-sm"></i> Suara Dibisukan (Klik utk Unmute)';
+                        btn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow active:scale-95 transition flex items-center gap-1.5 cursor-pointer';
+                        btn.innerHTML = '<i class="fa-solid fa-volume-high text-xs"></i> Suara Dibisukan';
                     } else {
-                        btn.className = 'px-4 py-2.5 rounded-xl text-xs font-black bg-amber-600 hover:bg-amber-500 text-white shadow-md active:scale-95 transition flex items-center gap-2 cursor-pointer';
-                        btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-sm"></i> Mute Suara Robot';
+                        btn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow active:scale-95 transition flex items-center gap-1.5 cursor-pointer';
+                        btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-xs"></i> Mute Suara';
                     }
                 }
                 showToast(json.message || 'Status suara robot berhasil diperbarui.', 'success');
@@ -699,7 +694,7 @@
         }
 
         async function triggerEmergencyRemoveLast() {
-            if (!confirm('PERINGATAN DARURAT: Hapus tamu yang terakhir kali check-in dan bersihkan seketika dari running text Surface Pro 3?')) return;
+            if (!confirm('PERINGATAN DARURAT: Hapus tamu yang terakhir kali check-in dan bersihkan seketika dari running text layar live?')) return;
             try {
                 const res = await fetch('/api/emergency/remove-last', {
                     method: 'POST',
@@ -783,7 +778,7 @@
                 });
                 const json = await res.json();
                 if (json.success) {
-                    showToast(`Robot AI di Surface Pro 3 sedang menyapa ${name}!`, 'success');
+                    showToast(`Robot AI di Layar Live sedang menyapa ${name}!`, 'success');
                 } else {
                     alert(json.error || 'Gagal memicu sapaan');
                 }

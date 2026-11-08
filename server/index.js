@@ -509,23 +509,23 @@ app.post('/api/admin/verify', (req, res) => {
 });
 
 // -------------------------------------------------------------
-// EMERGENCY CONTROL API (Dikendalikan dari Dashboard Admin untuk Surface Pro 3)
+// EMERGENCY CONTROL API (Dikendalikan dari Dashboard Admin untuk Layar Live)
 // -------------------------------------------------------------
 
-// 1. Darurat: Sembunyikan Pop-Up Sambutan di Layar Surface Pro 3
+// 1. Darurat: Sembunyikan Pop-Up Sambutan di Layar Live
 app.post('/api/emergency/hide', requireAdmin, (req, res) => {
     broadcastEvent('emergency_hide', { timestamp: new Date().toISOString() });
-    res.json({ success: true, message: 'Perintah darurat: Pop-up di layar Surface Pro 3 berhasil disembunyikan.' });
+    res.json({ success: true, message: 'Perintah darurat: Pop-up di layar live berhasil disembunyikan.' });
 });
 
-// 2. Darurat: Mute / Unmute Suara Robot AI di Surface Pro 3
+// 2. Darurat: Mute / Unmute Suara Robot AI di Layar Live
 app.post('/api/emergency/mute', requireAdmin, (req, res) => {
     const muted = req.body?.muted !== false;
     broadcastEvent('emergency_mute', { muted, timestamp: new Date().toISOString() });
     res.json({ 
         success: true, 
         muted, 
-        message: muted ? 'Perintah darurat: Suara Robot AI di Surface Pro 3 dibisukan (MUTE).' : 'Suara Robot AI diaktifkan kembali.' 
+        message: muted ? 'Perintah darurat: Suara Robot AI di layar live dibisukan (MUTE).' : 'Suara Robot AI diaktifkan kembali.' 
     });
 });
 
@@ -546,7 +546,7 @@ app.post('/api/emergency/remove-last', requireAdmin, async (req, res) => {
         return res.json({
             success: true,
             removedGuest: lastGuest.name,
-            message: `Tamu "${lastGuest.name}" berhasil dihapus dan dibersihkan dari layar Surface Pro 3.`
+            message: `Tamu "${lastGuest.name}" berhasil dihapus dan dibersihkan dari layar live.`
         });
     } catch (err) {
         console.error('[Emergency] Error removing last guest:', err.message);
