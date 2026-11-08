@@ -6,12 +6,18 @@
     <title>Formulir Pesan & Saran • Digital AI Work Exhibition</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         @page {
             size: landscape;
             margin: 8mm;
+        }
+
+        * {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
 
         .cyber-grid {
@@ -62,48 +68,49 @@
 </head>
 <body class="min-h-screen bg-[#050A17] text-slate-100 font-sans antialiased flex flex-col justify-center items-center p-4 sm:p-6 lg:p-10 cyber-grid selection:bg-cyan-500 selection:text-black">
 
-    <!-- Main Landscape Container (Bersih, Fokus Penuh ke Barcode & Alamat Manual) -->
+    <!-- Main Landscape Container (Bersih, Lembut, Fokus Penuh ke Barcode & Alamat Manual) -->
     <main class="w-full max-w-7xl mx-auto my-auto">
         
         <div class="print-card-landscape w-full bg-[#0A1428] border-2 border-amber-400/70 rounded-3xl p-6 sm:p-8 lg:p-12 shadow-[0_0_60px_rgba(0,0,0,0.8)] relative overflow-hidden">
             
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
                 
-                <!-- KOLOM KIRI (7 Kolom): Informasi Acara, Judul Rapi & Link Manual Besar -->
-                <div class="lg:col-span-7 space-y-6 text-left">
+                <!-- KOLOM KIRI (7 Kolom): Informasi Acara, Judul Lembut & Link Manual Besar -->
+                <div class="lg:col-span-7 space-y-5 text-left">
                     
-                    <!-- Header Logo & Subjudul -->
-                    <div class="space-y-3 pb-4 border-b border-slate-800 print-border-dark">
-                        <div class="flex items-center gap-4">
-                            <img src="/images/logo-header.png?v=2" alt="Logo Digital AI Work Exhibition" class="h-16 sm:h-20 lg:h-24 w-auto object-contain drop-shadow-[0_0_20px_rgba(0,240,255,0.4)]" />
-                            <div>
-                                <span class="inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/40 print-bg-light print-text-dark">
-                                    EVALUASI AKHIR ACARA
-                                </span>
-                                <p class="text-xs sm:text-sm text-cyan-300 font-semibold mt-1 print-text-dark">
-                                    Digital AI Work Exhibition • Waroeng Latte Madiun
-                                </p>
-                            </div>
+                    <!-- Header Logo & Identitas Acara Rapi Tepat di Bawah Logo -->
+                    <div class="space-y-2 pb-4 border-b border-slate-800 print-border-dark">
+                        <div>
+                            <img src="/images/logo-header.png?v=2" alt="Logo Digital AI Work Exhibition" class="h-14 sm:h-16 lg:h-18 w-auto object-contain drop-shadow-[0_0_15px_rgba(0,240,255,0.35)]" />
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2.5 pt-1">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/40 print-bg-light print-text-dark">
+                                <i class="fa-solid fa-star text-[10px] text-amber-400"></i>
+                                Evaluasi Akhir Acara
+                            </span>
+                            <span class="text-xs sm:text-sm text-cyan-300 font-semibold print-text-dark">
+                                Digital AI Work Exhibition • Waroeng Latte Madiun
+                            </span>
                         </div>
                     </div>
 
-                    <!-- Judul Utama Rapi -->
-                    <div class="space-y-2">
-                        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white print-text-dark tracking-tight leading-snug">
+                    <!-- Judul Utama (Font Lembut, Modern, Proporsional) -->
+                    <div class="space-y-1.5">
+                        <h1 class="text-2xl sm:text-3xl lg:text-3xl font-bold text-white print-text-dark tracking-normal leading-snug">
                             Formulir Pesan, Kesan, Kritik & Saran
                         </h1>
-                        <p class="text-base sm:text-lg text-slate-300 print-text-muted leading-relaxed font-normal">
-                            Bapak / Ibu / Tamu Undangan dipersilakan men-scan barcode di samping menggunakan kamera ponsel Anda untuk memberikan apresiasi dan masukan pameran karya AI.
+                        <p class="text-sm sm:text-base text-slate-300 print-text-muted leading-relaxed font-normal">
+                            Bapak / Ibu / Tamu Undangan dipersilakan men-scan barcode di samping menggunakan kamera smartphone Anda untuk memberikan apresiasi dan masukan pameran karya AI.
                         </p>
                     </div>
 
                     <!-- Panduan Ringkas & Rapi -->
-                    <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 print-bg-light print-border-dark space-y-2">
+                    <div class="p-3.5 sm:p-4 rounded-2xl bg-slate-900/90 border border-slate-800 print-bg-light print-border-dark space-y-1.5">
                         <h4 class="text-xs sm:text-sm font-bold text-amber-300 print-text-dark uppercase tracking-wider flex items-center gap-2">
                             <i class="fa-solid fa-list-check text-cyan-400"></i>
                             Alur Pengisian Singkat:
                         </h4>
-                        <ol class="text-xs sm:text-sm text-slate-300 print-text-dark space-y-1.5 list-decimal list-inside leading-relaxed">
+                        <ol class="text-xs sm:text-sm text-slate-300 print-text-dark space-y-1 list-decimal list-inside leading-relaxed">
                             <li>Arahkan kamera HP ke barcode di sebelah kanan.</li>
                             <li>Pilih nama Anda sesuai registrasi awal di daftar yang muncul.</li>
                             <li>Tuliskan kesan, pesan, serta saran evaluasi Anda.</li>
@@ -124,7 +131,7 @@
                     </div>
 
                     <!-- Branding Penyelenggara -->
-                    <div class="pt-2 text-xs text-slate-400 print-text-muted">
+                    <div class="pt-1 text-xs text-slate-400 print-text-muted">
                         Dinas Tenaga Kerja, KUKM Kota Madiun & LPKS Pola Sukses Akademi
                     </div>
 
