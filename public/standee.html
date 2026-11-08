@@ -86,6 +86,8 @@
 
                     <!-- FORMULIR INPUT LANGSUNG DI TABLET (Besar, Nyaman Dibaca & Ditekan) -->
                     <form id="deskCheckinForm" onsubmit="submitDeskCheckin(event)" class="space-y-3 sm:space-y-4">
+                        <!-- Honeypot Anti-Spam Trap (Hidden from users) -->
+                        <input type="text" id="deskHoneypot" name="hp_website" class="hidden" style="display:none !important;" tabindex="-1" autocomplete="off">
                         
                         <!-- 1. Nama Lengkap Tamu -->
                         <div class="space-y-1">
@@ -245,13 +247,15 @@
             btn.disabled = true;
 
             try {
+                const honeypot = document.getElementById('deskHoneypot')?.value || '';
                 const res = await fetch('/api/checkin/submit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         name: name,
                         institution: institution,
-                        category: 'Mitra Undangan'
+                        category: 'Mitra Undangan',
+                        hp_website: honeypot
                     })
                 });
 

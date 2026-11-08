@@ -51,6 +51,8 @@
 
         <!-- FORM EVALUASI -->
         <form id="feedbackForm" onsubmit="handleFeedbackSubmit(event)" class="space-y-5">
+            <!-- Honeypot Anti-Spam Trap -->
+            <input type="text" id="feedbackHoneypot" name="hp_website" class="hidden" style="display:none !important;" tabindex="-1" autocomplete="off">
 
             <!-- 1. PILIH NAMA TAMU SESUAI REGISTRASI AWAL -->
             <div class="space-y-2">
@@ -326,6 +328,7 @@
             btn.disabled = true;
 
             try {
+                const honeypot = document.getElementById('feedbackHoneypot')?.value || '';
                 const res = await fetch('/api/checkin/feedback', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -334,7 +337,8 @@
                         guestName: guestName,
                         guestInstitution: guestInstitution,
                         impression: impression,
-                        feedback: critique
+                        feedback: critique,
+                        hp_website: honeypot
                     })
                 });
 

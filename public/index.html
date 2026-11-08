@@ -41,7 +41,7 @@
                 </div>
             </div>
 
-            <!-- Right: Quick Navigation to Other Pages -->
+            <!-- Right: Quick Navigation & Lock Button -->
             <nav class="flex flex-wrap items-center gap-2">
                 <a href="/checkin" target="_blank" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
                     <i class="fa-solid fa-mobile-screen text-indigo-400"></i>
@@ -59,12 +59,68 @@
                     <i class="fa-solid fa-qrcode text-amber-400"></i>
                     Barcode Pesan & Saran (Proyektor)
                 </a>
+                <!-- Kunci Panel Button -->
+                <button onclick="lockAdminPanel()" class="px-3.5 py-2 rounded-lg text-xs font-bold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 flex items-center gap-1.5 transition cursor-pointer" title="Kunci Dashboard Admin">
+                    <i class="fa-solid fa-lock text-rose-400"></i>
+                    Kunci Panel
+                </button>
             </nav>
         </div>
     </header>
 
     <!-- Main Admin Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 w-full space-y-3.5">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 w-full space-y-4">
+
+        <!-- BAR KONTROL DARURAT OPERATOR (Surface Pro 3 Live Wall Remote) -->
+        <div class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-rose-950/30 to-slate-900 border-2 border-rose-500/70 shadow-[0_0_30px_rgba(244,63,94,0.25)] flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/50 flex items-center justify-center text-rose-400 text-lg shrink-0">
+                    <i class="fa-solid fa-shield-halved animate-pulse"></i>
+                </div>
+                <div>
+                    <h3 class="text-xs sm:text-sm font-black text-rose-200 uppercase tracking-wider flex items-center gap-2">
+                        <span>Pusat Kontrol Darurat Layar Surface Pro 3</span>
+                        <span class="inline-block w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
+                    </h3>
+                    <p class="text-[11px] sm:text-xs text-slate-300">
+                        Kendalikan tampilan panggung proyektor Surface Pro 3 secara instan tanpa perlu menyentuh layar tablet.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2.5">
+                <!-- 1. Sembunyikan Pop-Up -->
+                <button 
+                    onclick="triggerEmergencyHide()" 
+                    class="px-4 py-2.5 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-500 text-white shadow-[0_0_15px_rgba(225,29,72,0.4)] active:scale-95 transition flex items-center gap-2 cursor-pointer"
+                    title="Segera sembunyikan kartu sambutan yang sedang aktif di layar Surface Pro 3"
+                >
+                    <i class="fa-solid fa-eye-slash text-sm"></i>
+                    Sembunyikan Pop-up
+                </button>
+
+                <!-- 2. Mute Suara Robot AI -->
+                <button 
+                    id="btnEmergencyMute"
+                    onclick="triggerEmergencyMute()" 
+                    class="px-4 py-2.5 rounded-xl text-xs font-black bg-amber-600 hover:bg-amber-500 text-white shadow-[0_0_15px_rgba(217,119,6,0.4)] active:scale-95 transition flex items-center gap-2 cursor-pointer"
+                    title="Bisukan seketika pembacaan suara robot AI di Surface Pro 3"
+                >
+                    <i class="fa-solid fa-volume-xmark text-sm"></i>
+                    Mute Suara Robot
+                </button>
+
+                <!-- 3. Hapus Tamu Terakhir dari Layar -->
+                <button 
+                    onclick="triggerEmergencyRemoveLast()" 
+                    class="px-4 py-2.5 rounded-xl text-xs font-black bg-slate-900 hover:bg-rose-950 text-rose-300 border-2 border-rose-500/60 shadow-md active:scale-95 transition flex items-center gap-2 cursor-pointer"
+                    title="Hapus tamu terakhir yang baru saja masuk dan bersihkan dari running text marquee"
+                >
+                    <i class="fa-solid fa-trash-can text-sm text-rose-400"></i>
+                    Hapus Tamu Terakhir
+                </button>
+            </div>
+        </div>
 
         <!-- 4 Metric Cards (Kompak & Hemat Tempat agar Fokus ke Data Tamu) -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
@@ -284,6 +340,57 @@
         </div>
     </div>
 
+    <!-- FULLSCREEN PIN LOCK OVERLAY (Terkunci Sebelum Memasukkan PIN admin111126) -->
+    <div id="adminPinOverlay" class="fixed inset-0 z-50 bg-[#050A18]/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-[#081226] border-2 border-cyan-400/80 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(0,240,255,0.35)] text-center space-y-5">
+            <div class="flex justify-center">
+                <img src="/images/logo-header.png?v=2" alt="Logo Digital AI Work Exhibition" class="h-16 w-auto object-contain drop-shadow-[0_0_15px_rgba(0,240,255,0.4)]" />
+            </div>
+            
+            <div class="space-y-1.5">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-cyan-500/15 text-cyan-300 border border-cyan-400/40 uppercase tracking-widest">
+                    <i class="fa-solid fa-shield-halved text-cyan-400"></i>
+                    Akses Terproteksi Panitia
+                </span>
+                <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    Dashboard Admin Buku Tamu
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-300 font-medium">
+                    Masukkan PIN Admin resmi untuk membuka panel kontrol data tamu dan tombol darurat.
+                </p>
+            </div>
+
+            <form onsubmit="verifyAdminPin(event)" class="space-y-3.5">
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="inputAdminPin" 
+                        required 
+                        placeholder="Ketik PIN Admin..."
+                        autocomplete="current-password"
+                        class="w-full px-4 py-3.5 bg-[#050A18] border-2 border-cyan-400/60 rounded-xl text-center text-white text-lg font-mono font-bold tracking-widest placeholder-slate-500 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/40"
+                    />
+                </div>
+                <div id="pinErrorNotice" class="hidden p-2.5 rounded-lg bg-rose-500/20 border border-rose-500/50 text-xs font-bold text-rose-300 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-circle-exclamation text-sm"></i>
+                    <span>PIN Salah! Akses ditolak.</span>
+                </div>
+                <button 
+                    type="submit" 
+                    id="btnSubmitPin"
+                    class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600 hover:from-cyan-300 hover:to-indigo-500 text-slate-950 font-black text-base tracking-wide shadow-[0_0_20px_rgba(0,240,255,0.4)] transition transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                >
+                    <i class="fa-solid fa-lock-open"></i>
+                    Buka Kunci Dashboard
+                </button>
+            </form>
+
+            <div class="text-[11px] text-slate-400 border-t border-slate-800 pt-3">
+                Pelatihan Berbasis Kompetensi • Digital AI Work Exhibition • Waroeng Latte Madiun
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts: Anti-Glitch Architecture & Clean Rendering -->
     <script>
         const CACHE_KEY = 'mbd_admin_guests_clean_v1';
@@ -465,6 +572,172 @@
                 .replace(/'/g, '&#039;');
         }
 
+        // -------------------------------------------------------------
+        // SECURITY & AUTHENTICATION (PIN admin111126)
+        // -------------------------------------------------------------
+        const ADMIN_PIN_KEY = 'mbd_admin_auth_pin';
+        function getAdminPin() {
+            return sessionStorage.getItem(ADMIN_PIN_KEY) || '';
+        }
+
+        function checkAuthStatus() {
+            const savedPin = getAdminPin();
+            const overlay = document.getElementById('adminPinOverlay');
+            if (savedPin === 'admin111126') {
+                if (overlay) overlay.classList.add('hidden');
+                fetchGuests(false);
+                loadStats();
+            } else {
+                if (overlay) overlay.classList.remove('hidden');
+                setTimeout(() => {
+                    const input = document.getElementById('inputAdminPin');
+                    if (input) input.focus();
+                }, 100);
+            }
+        }
+
+        async function verifyAdminPin(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('inputAdminPin');
+            const errorNotice = document.getElementById('pinErrorNotice');
+            const pinVal = input ? input.value.trim() : '';
+
+            try {
+                const res = await fetch('/api/admin/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: pinVal })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    sessionStorage.setItem(ADMIN_PIN_KEY, pinVal);
+                    if (errorNotice) errorNotice.classList.add('hidden');
+                    const overlay = document.getElementById('adminPinOverlay');
+                    if (overlay) overlay.classList.add('hidden');
+                    fetchGuests(false);
+                    loadStats();
+                } else {
+                    if (errorNotice) {
+                        errorNotice.classList.remove('hidden');
+                        errorNotice.innerText = json.error || 'PIN Salah! Akses ditolak.';
+                    }
+                    if (input) {
+                        input.value = '';
+                        input.focus();
+                    }
+                }
+            } catch (err) {
+                if (pinVal === 'admin111126') {
+                    sessionStorage.setItem(ADMIN_PIN_KEY, pinVal);
+                    const overlay = document.getElementById('adminPinOverlay');
+                    if (overlay) overlay.classList.add('hidden');
+                    fetchGuests(false);
+                    loadStats();
+                } else {
+                    if (errorNotice) errorNotice.classList.remove('hidden');
+                }
+            }
+        }
+
+        function lockAdminPanel() {
+            sessionStorage.removeItem(ADMIN_PIN_KEY);
+            const overlay = document.getElementById('adminPinOverlay');
+            if (overlay) overlay.classList.remove('hidden');
+            const input = document.getElementById('inputAdminPin');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // EMERGENCY CONTROLS (KONTROL DARURAT UNTUK SURFACE PRO 3)
+        // -------------------------------------------------------------
+        async function triggerEmergencyHide() {
+            try {
+                const res = await fetch('/api/emergency/hide', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-admin-pin': getAdminPin()
+                    }
+                });
+                const json = await res.json();
+                showToast(json.message || 'Pop-up berhasil disembunyikan dari layar Surface Pro 3!', json.success ? 'success' : 'error');
+            } catch (e) {
+                showToast('Gagal mengirim perintah darurat ke server.', 'error');
+            }
+        }
+
+        let isEmergencyMuted = false;
+        async function triggerEmergencyMute() {
+            isEmergencyMuted = !isEmergencyMuted;
+            try {
+                const res = await fetch('/api/emergency/mute', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-admin-pin': getAdminPin()
+                    },
+                    body: JSON.stringify({ muted: isEmergencyMuted })
+                });
+                const json = await res.json();
+                const btn = document.getElementById('btnEmergencyMute');
+                if (btn) {
+                    if (isEmergencyMuted) {
+                        btn.className = 'px-4 py-2.5 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-500 text-white shadow-md active:scale-95 transition flex items-center gap-2 cursor-pointer';
+                        btn.innerHTML = '<i class="fa-solid fa-volume-high text-sm"></i> Suara Dibisukan (Klik utk Unmute)';
+                    } else {
+                        btn.className = 'px-4 py-2.5 rounded-xl text-xs font-black bg-amber-600 hover:bg-amber-500 text-white shadow-md active:scale-95 transition flex items-center gap-2 cursor-pointer';
+                        btn.innerHTML = '<i class="fa-solid fa-volume-xmark text-sm"></i> Mute Suara Robot';
+                    }
+                }
+                showToast(json.message || 'Status suara robot berhasil diperbarui.', 'success');
+            } catch (e) {
+                showToast('Gagal mengubah status suara robot.', 'error');
+            }
+        }
+
+        async function triggerEmergencyRemoveLast() {
+            if (!confirm('PERINGATAN DARURAT: Hapus tamu yang terakhir kali check-in dan bersihkan seketika dari running text Surface Pro 3?')) return;
+            try {
+                const res = await fetch('/api/emergency/remove-last', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-admin-pin': getAdminPin()
+                    }
+                });
+                const json = await res.json();
+                if (json.success) {
+                    showToast(json.message, 'success');
+                    fetchGuests(false);
+                    loadStats();
+                } else {
+                    showToast(json.error || 'Gagal menghapus tamu terakhir.', 'error');
+                }
+            } catch (e) {
+                showToast('Gagal menghubungi server.', 'error');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-2xl text-xs sm:text-sm font-bold flex items-center gap-2.5 transition transform translate-y-5 opacity-0 ${
+                type === 'success' ? 'bg-emerald-600 text-white border-2 border-emerald-400' : 
+                type === 'error' ? 'bg-rose-600 text-white border-2 border-rose-400' : 'bg-slate-800 text-white border border-slate-700'
+            }`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-xmark' : 'fa-info-circle'} text-base"></i> <span>${escapeHtml(message)}</span>`;
+            document.body.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-5', 'opacity-0');
+            });
+            setTimeout(() => {
+                toast.classList.add('translate-y-5', 'opacity-0');
+                setTimeout(() => toast.remove(), 400);
+            }, 4500);
+        }
+
         // Delete guest
         async function deleteGuest(id, name) {
             if (!confirm(`Hapus data tamu "${name}"?`)) return;
@@ -476,15 +749,22 @@
             try {
                 let res = await fetch(`/api/guests/${id}/delete`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-admin-pin': getAdminPin()
+                    },
                     body: JSON.stringify({ id })
                 });
                 if (!res.ok) {
-                    res = await fetch(`/api/guests/${id}`, { method: 'DELETE' });
+                    res = await fetch(`/api/guests/${id}`, { 
+                        method: 'DELETE',
+                        headers: { 'x-admin-pin': getAdminPin() }
+                    });
                 }
                 const json = await res.json();
                 if (json.success) {
                     fetchGuests(true);
+                    showToast(`Data tamu "${name}" berhasil dihapus`, 'success');
                 } else {
                     alert(json.error || 'Gagal menghapus');
                 }
@@ -497,10 +777,13 @@
         // Re-greet guest with 3D Robot
         async function reGreetGuest(id, name) {
             try {
-                const res = await fetch(`/api/guests/${id}/greet`, { method: 'POST' });
+                const res = await fetch(`/api/guests/${id}/greet`, { 
+                    method: 'POST',
+                    headers: { 'x-admin-pin': getAdminPin() }
+                });
                 const json = await res.json();
                 if (json.success) {
-                    alert(`Robot AI di Layar Live sedang menyapa ${name}!`);
+                    showToast(`Robot AI di Surface Pro 3 sedang menyapa ${name}!`, 'success');
                 } else {
                     alert(json.error || 'Gagal memicu sapaan');
                 }
@@ -522,7 +805,10 @@
             try {
                 const res = await fetch('/api/guests', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-admin-pin': getAdminPin()
+                    },
                     body: JSON.stringify({ name, institution, category })
                 });
                 const json = await res.json();
@@ -531,6 +817,7 @@
                     document.getElementById('addGuestForm').reset();
                     lastRenderedHash = '';
                     fetchGuests(true);
+                    showToast('Tamu berhasil ditambahkan.', 'success');
                 } else {
                     alert(json.error || 'Gagal menyimpan data tamu');
                 }
@@ -548,7 +835,10 @@
                 isExplicitReset = true;
                 const res = await fetch('/api/admin/reset', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-admin-pin': getAdminPin()
+                    },
                     body: JSON.stringify({ mode })
                 });
                 const json = await res.json();
@@ -560,7 +850,7 @@
                     lastRenderedHash = '';
                     renderTable([]);
                     fetchGuests(false);
-                    alert(json.message || 'Reset berhasil. Data tamu kembali ke 0.');
+                    showToast('Reset berhasil. Data tamu kembali ke 0.', 'success');
                 } else {
                     isExplicitReset = false;
                     alert(json.error || 'Gagal melakukan reset.');
@@ -599,6 +889,7 @@
 
         // Clean auto-poll every 3.5s when idle
         setInterval(() => {
+            if (getAdminPin() !== 'admin111126') return;
             const searchEl = document.getElementById('searchInput');
             if (searchEl && document.activeElement === searchEl && searchEl.value.trim() !== '') {
                 return;
@@ -607,10 +898,12 @@
         }, 3500);
 
         // Window focus refresh
-        window.addEventListener('focus', () => fetchGuests(true));
+        window.addEventListener('focus', () => {
+            if (getAdminPin() === 'admin111126') fetchGuests(true);
+        });
 
-        // Bootstrap
-        fetchGuests(false);
+        // Bootstrap: Cek status PIN
+        checkAuthStatus();
         initSSE();
     </script>
 </body>

@@ -44,6 +44,8 @@
 
         <!-- FORM REGISTRASI KEHADIRAN (Font Besar, Rapi, Mudah Dibaca, 2 Input Saja) -->
         <form id="selfCheckinForm" onsubmit="submitSelfCheckin(event)" class="space-y-5">
+            <!-- Honeypot Anti-Spam Trap -->
+            <input type="text" id="selfHoneypot" name="hp_website" class="hidden" style="display:none !important;" tabindex="-1" autocomplete="off">
 
             <!-- 1. Nama Lengkap Tamu -->
             <div class="space-y-1.5">
@@ -200,13 +202,15 @@
             btn.disabled = true;
 
             try {
+                const honeypot = document.getElementById('selfHoneypot')?.value || '';
                 const res = await fetch('/api/checkin/submit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         name: guestName,
                         institution: institutionName,
-                        category: 'Mitra Undangan'
+                        category: 'Mitra Undangan',
+                        hp_website: honeypot
                     })
                 });
 

@@ -15,9 +15,23 @@ const { getCloudGuests, saveGuestToCloud, deleteGuestFromCloud, resetCloudGuests
 const { analyzeSentiment, localAnalyzeSentiment } = require('./aiService');
 const { generateVenueStandeePdf, PALETTE, EVENT_DETAILS } = require('./pdfService');
 const { addClient, broadcastEvent } = require('./sseService');
+const { checkProfanity, censorProfanity, sanitizeInput, checkRateLimit } = require('./securityFilter');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ADMIN_PIN = process.env.ADMIN_PIN || 'admin111126';
+
+// Middleware for Admin PIN Verification (Guards reset, delete, and emergency operations)
+function requireAdmin(req, res, next) {
+    const providedPin = req.headers['x-admin-pin'] || req.body?.pin || req.query?.pin;
+    if (providedPin === ADMIN_PIN) {
+        return next();
+    }
+    return res.status(401).json({
+        success: false,
+        error: 'Akses ditolak: PIN Admin salah atau belum diautentikasi.'
+    });
+}
 
 // Helper to get local network IPv4 address for smartphone access
 function getLocalIpAddress() {
@@ -472,21 +486,76 @@ async function handleDeleteGuest(id, res) {
     }
 }
 
-app.delete('/api/guests/:id', async (req, res) => {
+app.delete('/api/guests/:id', requireAdmin, async (req, res) => {
     await handleDeleteGuest(req.params.id, res);
 });
 
-app.post('/api/guests/:id/delete', async (req, res) => {
+app.post('/api/guests/:id/delete', requireAdmin, async (req, res) => {
     await handleDeleteGuest(req.params.id, res);
 });
 
-app.post('/api/guests/delete', async (req, res) => {
+app.post('/api/guests/delete', requireAdmin, async (req, res) => {
     const id = req.body?.id || req.query?.id;
     await handleDeleteGuest(id, res);
 });
 
+// Admin PIN Verification Endpoint
+app.post('/api/admin/verify', (req, res) => {
+    const pin = req.body?.pin || req.headers['x-admin-pin'];
+    if (pin === ADMIN_PIN) {
+        return res.json({ success: true, message: 'Autentikasi PIN Berhasil' });
+    }
+    return res.status(401).json({ success: false, error: 'PIN Admin tidak sesuai' });
+});
+
+// -------------------------------------------------------------
+// EMERGENCY CONTROL API (Dikendalikan dari Dashboard Admin untuk Surface Pro 3)
+// -------------------------------------------------------------
+
+// 1. Darurat: Sembunyikan Pop-Up Sambutan di Layar Surface Pro 3
+app.post('/api/emergency/hide', requireAdmin, (req, res) => {
+    broadcastEvent('emergency_hide', { timestamp: new Date().toISOString() });
+    res.json({ success: true, message: 'Perintah darurat: Pop-up di layar Surface Pro 3 berhasil disembunyikan.' });
+});
+
+// 2. Darurat: Mute / Unmute Suara Robot AI di Surface Pro 3
+app.post('/api/emergency/mute', requireAdmin, (req, res) => {
+    const muted = req.body?.muted !== false;
+    broadcastEvent('emergency_mute', { muted, timestamp: new Date().toISOString() });
+    res.json({ 
+        success: true, 
+        muted, 
+        message: muted ? 'Perintah darurat: Suara Robot AI di Surface Pro 3 dibisukan (MUTE).' : 'Suara Robot AI diaktifkan kembali.' 
+    });
+});
+
+// 3. Darurat: Hapus Tamu Terakhir & Bersihkan dari Layar / Running Text
+app.post('/api/emergency/remove-last', requireAdmin, async (req, res) => {
+    try {
+        const lastGuest = db.prepare(`SELECT * FROM guests WHERE status = 'checked_in' ORDER BY checked_in_at DESC LIMIT 1`).get();
+        if (!lastGuest) {
+            return res.status(404).json({ success: false, error: 'Tidak ada tamu yang hadir saat ini untuk dihapus.' });
+        }
+        await deleteGuestFromCloud(lastGuest.id);
+        db.prepare('DELETE FROM guests WHERE id = ?').run(lastGuest.id);
+        db.prepare('DELETE FROM guest_messages WHERE guest_id = ?').run(lastGuest.id);
+        
+        broadcastEvent('guest_deleted', { id: lastGuest.id, timestamp: new Date().toISOString() });
+        broadcastEvent('emergency_hide', { targetId: lastGuest.id, timestamp: new Date().toISOString() });
+        
+        return res.json({
+            success: true,
+            removedGuest: lastGuest.name,
+            message: `Tamu "${lastGuest.name}" berhasil dihapus dan dibersihkan dari layar Surface Pro 3.`
+        });
+    } catch (err) {
+        console.error('[Emergency] Error removing last guest:', err.message);
+        res.status(500).json({ success: false, error: 'Gagal mengeksekusi penghapusan darurat' });
+    }
+});
+
 // 5. Reset Testing & Attendance Data (Wipes all sample guests to 0 for simulation)
-app.all(['/api/admin/reset', '/api/reset'], async (req, res) => {
+app.all(['/api/admin/reset', '/api/reset'], requireAdmin, async (req, res) => {
     try {
         const mode = (req.body?.mode || req.query?.mode || 'factory').toLowerCase();
         
@@ -607,25 +676,50 @@ app.get('/api/institutions', (req, res) => {
 app.post('/api/checkin/submit', async (req, res) => {
     try {
         const body = req.body || {};
+
+        // 1. Honeypot Anti-Bot Trap (Bila terisi bot otomatis didrop)
+        if (body.hp_website || body.bot_trap) {
+            console.warn('[Security] Bot trap triggered, discarding submission silently.');
+            return res.json({ success: true, message: 'Verifikasi berhasil' });
+        }
+
+        // 2. Rate Limiting: Maksimal 2 registrasi per 15 detik per IP/perangkat
+        const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1').split(',')[0].trim();
+        const rateStatus = checkRateLimit(clientIp, 2, 15000);
+        if (!rateStatus.allowed) {
+            return res.status(429).json({
+                success: false,
+                error: 'Terlalu banyak permintaan. Mohon tunggu beberapa detik sebelum melakukan konfirmasi berikutnya.'
+            });
+        }
+
         const token = body.token;
-        const name = body.name || body.guest_name;
-        const institution = body.institution;
-        const newInstitution = body.newInstitution;
-        const category = body.category;
-        const message = body.message || body.guest_message;
+        const rawName = (body.name || body.guest_name || '').trim();
+        const rawInst = (body.newInstitution || body.institution || '').trim();
+        const rawCategory = (body.category || '').trim();
+        const rawMessage = (body.message || body.guest_message || '').trim();
 
-        let targetInst = (newInstitution || institution || '').trim();
+        // 3. Sanitasi Input Ketat (Strip script/HTML, batasi karakter)
+        let targetName = sanitizeInput(rawName, 50);
+        let targetInst = sanitizeInput(rawInst, 50);
         if (targetInst === '__NEW__') targetInst = '';
-        if (!targetInst) {
-            targetInst = 'Tamu Undangan';
-        }
+        if (!targetInst) targetInst = 'Tamu Undangan';
+        if (!targetName) targetName = targetInst !== 'Tamu Undangan' ? targetInst : 'Tamu Kehormatan';
+        let finalCategory = sanitizeInput(rawCategory, 40) || 'Mitra / Tamu';
+        let guestMessage = sanitizeInput(rawMessage, 300) || 'Sukses selalu untuk seluruh talenta muda & kemajuan kecerdasan artifisial di Kota Madiun!';
 
-        let targetName = (name || '').trim();
-        if (!targetName) {
-            targetName = targetInst !== 'Tamu Undangan' ? targetInst : 'Tamu Kehormatan';
+        // 4. Sensor Kata Kotor / Profanity Filter
+        const profanityName = checkProfanity(targetName);
+        const profanityInst = checkProfanity(targetInst);
+        if (profanityName.isProfane || profanityInst.isProfane) {
+            return res.status(400).json({
+                success: false,
+                error: 'Mohon gunakan nama atau instansi yang santun untuk ditampilkan di layar acara.'
+            });
         }
-
-        let finalCategory = (category && category.trim()) ? category.trim() : 'Mitra / Tamu';
+        if (checkProfanity(guestMessage).isProfane) {
+            guestMessage = censorProfanity(guestMessage);
+        }
 
         let guest = null;
         if (token) {
@@ -656,7 +750,6 @@ app.post('/api/checkin/submit', async (req, res) => {
         }
 
         // Fast instant sentiment analysis via local Indonesian lexicon (<1ms, zero network latency, zero timeout risk)
-        const guestMessage = (message && message.trim()) || 'Sukses selalu untuk seluruh talenta muda & kemajuan kecerdasan artifisial di Kota Madiun!';
         const aiResult = localAnalyzeSentiment(guestMessage);
 
         const msgId = uuidv4();
@@ -749,9 +842,29 @@ app.post('/api/checkin/submit', async (req, res) => {
 app.post('/api/checkin/feedback', async (req, res) => {
     try {
         const body = req.body || {};
+
+        // 1. Honeypot check
+        if (body.hp_website || body.bot_trap) {
+            return res.json({ success: true, message: 'Masukan berhasil dikirim' });
+        }
+
+        // 2. Rate Limiting
+        const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1').split(',')[0].trim();
+        const rateStatus = checkRateLimit(clientIp, 2, 15000);
+        if (!rateStatus.allowed) {
+            return res.status(429).json({
+                success: false,
+                error: 'Terlalu banyak permintaan. Mohon tunggu beberapa detik sebelum mengirim lagi.'
+            });
+        }
+
         const guestId = body.guestId || body.guest_id;
-        const impression = (body.impression || body.pesanKesan || '').trim();
-        const feedback = (body.feedback || body.kritikSaran || '').trim();
+        let impression = sanitizeInput(body.impression || body.pesanKesan || '', 300);
+        let feedback = sanitizeInput(body.feedback || body.kritikSaran || '', 300);
+
+        // 3. Sensor kata kotor
+        if (checkProfanity(impression).isProfane) impression = censorProfanity(impression);
+        if (checkProfanity(feedback).isProfane) feedback = censorProfanity(feedback);
 
         let guest = null;
         if (guestId && guestId !== '__MANUAL__') {
@@ -759,12 +872,15 @@ app.post('/api/checkin/feedback', async (req, res) => {
         }
 
         if (!guest && (body.guestName || body.name)) {
-            const rawName = (body.guestName || body.name).trim();
+            const rawName = sanitizeInput(body.guestName || body.name, 50);
             if (rawName) {
+                if (checkProfanity(rawName).isProfane) {
+                    return res.status(400).json({ success: false, error: 'Mohon gunakan nama yang santun.' });
+                }
                 guest = db.prepare('SELECT * FROM guests WHERE LOWER(name) = LOWER(?)').get(rawName);
                 if (!guest) {
                     const newId = uuidv4();
-                    const inst = (body.guestInstitution || body.institution || 'Tamu Undangan').trim();
+                    const inst = sanitizeInput(body.guestInstitution || body.institution || 'Tamu Undangan', 50);
                     const nowIso = new Date().toISOString();
                     db.prepare(`
                         INSERT INTO guests (id, name, institution, category, qr_token, status, checked_in_at, created_at)

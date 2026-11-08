@@ -383,6 +383,33 @@
             }
         }
 
+        // EMERGENCY CONTROLS FROM ADMIN DASHBOARD (Surface Pro 3 Remote Receiver)
+        function emergencyHidePopup() {
+            console.warn('[EMERGENCY] Hide popup command executed from Admin Dashboard!');
+            if (popupDismissTimer) clearTimeout(popupDismissTimer);
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            if (window.Robot3D) {
+                window.Robot3D.stopActiveSpeech();
+                window.Robot3D.flyToCenter();
+            }
+            const popup = document.getElementById('welcomePopup');
+            if (popup) {
+                popup.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
+                popup.classList.add('-translate-x-[150%]', 'opacity-0', 'pointer-events-none');
+            }
+            arrivalQueue.length = 0;
+            isProcessingArrival = false;
+        }
+
+        function emergencySetMute(forceMuted) {
+            console.warn('[EMERGENCY] Audio mute command executed from Admin Dashboard:', forceMuted);
+            if (typeof forceMuted === 'boolean') {
+                if (isAudioMuted !== forceMuted) toggleAudio();
+            } else {
+                toggleAudio();
+            }
+        }
+
         window.addEventListener('keydown', (e) => {
             if (typeof window.enableAudioFromOverlay === 'function') {
                 window.enableAudioFromOverlay(true);
@@ -700,7 +727,13 @@
                         }
 
                         const parsed = JSON.parse(msg.toString());
-                        if (parsed.type === 'guest_checked_in' || parsed.type === 'robot_greet') {
+                        if (parsed.type === 'emergency_hide') {
+                            emergencyHidePopup();
+                            return;
+                        } else if (parsed.type === 'emergency_mute') {
+                            emergencySetMute(parsed.data?.muted);
+                            return;
+                        } else if (parsed.type === 'guest_checked_in' || parsed.type === 'robot_greet') {
                             const guestObj = parsed.data?.guest || parsed.data;
                             if (guestObj && guestObj.id) {
                                 checkedInGuests = mergeGuestList(checkedInGuests, [guestObj]);
@@ -773,7 +806,11 @@
             eventSource.onmessage = (event) => {
                 try {
                     const parsed = JSON.parse(event.data);
-                    if (parsed.type === 'guest_checked_in' || parsed.type === 'robot_greet') {
+                    if (parsed.type === 'emergency_hide') {
+                        emergencyHidePopup();
+                    } else if (parsed.type === 'emergency_mute') {
+                        emergencySetMute(parsed.data?.muted);
+                    } else if (parsed.type === 'guest_checked_in' || parsed.type === 'robot_greet') {
                         const gId = parsed.data?.guest?.id || parsed.data?.id;
                         if (gId) greetedGuestIds.add(gId);
                         triggerGuestArrivalSequence(parsed.data);
