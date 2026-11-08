@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Layar Barcode Pesan & Saran (Landscape Proyektor) • Digital AI Work Exhibition</title>
+    <title>Formulir Pesan & Saran • Digital AI Work Exhibition</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/style.css">
@@ -16,9 +16,9 @@
 
         .cyber-grid {
             background-image: 
-                linear-gradient(to right, rgba(0, 240, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
-            background-size: 32px 32px;
+                linear-gradient(to right, rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+            background-size: 36px 36px;
         }
 
         @media print {
@@ -31,7 +31,7 @@
             .no-print {
                 display: none !important;
             }
-            .print-landscape-card {
+            .print-card-landscape {
                 border: 2px solid #0f172a !important;
                 box-shadow: none !important;
                 background: white !important;
@@ -60,161 +60,97 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#060B18] text-slate-100 font-sans antialiased flex flex-col justify-between p-3 sm:p-5 lg:p-8 cyber-grid selection:bg-cyan-500 selection:text-black">
+<body class="min-h-screen bg-[#050A17] text-slate-100 font-sans antialiased flex flex-col justify-center items-center p-4 sm:p-6 lg:p-10 cyber-grid selection:bg-cyan-500 selection:text-black">
 
-    <!-- Top Action Bar (Toolbar Layar & Operator Proyektor, Hidden on Print) -->
-    <header class="no-print w-full max-w-7xl mx-auto mb-4 flex flex-wrap items-center justify-between gap-3 p-3 sm:px-4 rounded-xl bg-slate-900/90 border border-slate-800 backdrop-blur shadow-md">
-        <div class="flex items-center gap-2.5 text-xs sm:text-sm text-slate-300">
-            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400">
-                <i class="fa-solid fa-display text-sm"></i>
-            </span>
-            <span class="font-bold text-white">Mode Landscape Proyektor</span>
-            <span class="text-slate-400 hidden sm:inline">• Dioptimalkan untuk Layar Proyektor 16:9 & Cetak A4 Landscape</span>
-        </div>
-
-        <div class="flex items-center gap-2">
-            <a 
-                href="/feedback" 
-                target="_blank"
-                class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition"
-            >
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                Buka Form HP
-            </a>
-            <button 
-                type="button" 
-                onclick="toggleFullscreen()" 
-                id="btnFullscreen"
-                class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-            >
-                <i class="fa-solid fa-expand"></i>
-                Layar Penuh (F11)
-            </button>
-            <button 
-                type="button" 
-                onclick="window.print()" 
-                class="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-            >
-                <i class="fa-solid fa-print"></i>
-                Cetak Landscape
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Landscape Container (16:9 Aspect Ratio Ready for Hall Projector) -->
-    <main class="w-full max-w-7xl mx-auto flex-1 flex items-center justify-center">
+    <!-- Main Landscape Container (Bersih, Fokus Penuh ke Barcode & Alamat Manual) -->
+    <main class="w-full max-w-7xl mx-auto my-auto">
         
-        <div class="print-landscape-card w-full bg-[#0B152A] border-2 border-amber-400/60 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-[0_0_50px_rgba(245,158,11,0.15)] relative overflow-hidden">
+        <div class="print-card-landscape w-full bg-[#0A1428] border-2 border-amber-400/70 rounded-3xl p-6 sm:p-8 lg:p-12 shadow-[0_0_60px_rgba(0,0,0,0.8)] relative overflow-hidden">
             
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
                 
-                <!-- KOLOM KIRI (7 Kolom): Header, Judul Besar & Panduan Langkah -->
+                <!-- KOLOM KIRI (7 Kolom): Informasi Acara, Judul Rapi & Link Manual Besar -->
                 <div class="lg:col-span-7 space-y-6 text-left">
                     
-                    <!-- Branding Header -->
-                    <div class="flex items-center gap-4">
-                        <img src="/images/logo-header.png?v=2" alt="Logo Digital AI Work Exhibition" class="h-14 sm:h-16 lg:h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(0,240,255,0.4)]" />
-                        <div>
-                            <span class="inline-block px-3 py-0.5 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/40 print-bg-light print-text-dark">
-                                EVALUASI & APRESIASI AKHIR ACARA
-                            </span>
-                            <p class="text-xs sm:text-sm text-cyan-300 font-semibold mt-1 print-text-dark">
-                                Waroeng Latte Madiun • Pelatihan Berbasis Kompetensi
-                            </p>
+                    <!-- Header Logo & Subjudul -->
+                    <div class="space-y-3 pb-4 border-b border-slate-800 print-border-dark">
+                        <div class="flex items-center gap-4">
+                            <img src="/images/logo-header.png?v=2" alt="Logo Digital AI Work Exhibition" class="h-16 sm:h-20 lg:h-24 w-auto object-contain drop-shadow-[0_0_20px_rgba(0,240,255,0.4)]" />
+                            <div>
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/40 print-bg-light print-text-dark">
+                                    EVALUASI AKHIR ACARA
+                                </span>
+                                <p class="text-xs sm:text-sm text-cyan-300 font-semibold mt-1 print-text-dark">
+                                    Digital AI Work Exhibition • Waroeng Latte Madiun
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Main Headings -->
+                    <!-- Judul Utama Rapi -->
                     <div class="space-y-2">
-                        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white print-text-dark tracking-tight leading-tight">
-                            Pesan, Kesan, Kritik & Saran
+                        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white print-text-dark tracking-tight leading-snug">
+                            Formulir Pesan, Kesan, Kritik & Saran
                         </h1>
-                        <p class="text-sm sm:text-base lg:text-lg text-slate-300 print-text-muted leading-relaxed font-normal">
-                            Bapak / Ibu / Tamu Undangan dipersilakan men-scan barcode di samping untuk memberikan kesan, pesan, serta saran evaluasi pameran karya kolaborasi AI.
+                        <p class="text-base sm:text-lg text-slate-300 print-text-muted leading-relaxed font-normal">
+                            Bapak / Ibu / Tamu Undangan dipersilakan men-scan barcode di samping menggunakan kamera ponsel Anda untuk memberikan apresiasi dan masukan pameran karya AI.
                         </p>
                     </div>
 
-                    <!-- 4 Panduan Langkah Singkat (2x2 Grid) -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                        
-                        <div class="p-3.5 rounded-xl bg-slate-900/90 print-bg-light border border-slate-800 print-border-dark flex items-start gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 print-text-dark flex items-center justify-center font-black text-sm shrink-0">
-                                1
-                            </div>
-                            <div>
-                                <h4 class="text-xs sm:text-sm font-bold text-white print-text-dark">Scan Barcode</h4>
-                                <p class="text-xs text-slate-400 print-text-muted leading-snug">Buka kamera HP Anda dan arahkan ke layar.</p>
-                            </div>
-                        </div>
-
-                        <div class="p-3.5 rounded-xl bg-slate-900/90 print-bg-light border border-slate-800 print-border-dark flex items-start gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 print-text-dark flex items-center justify-center font-black text-sm shrink-0">
-                                2
-                            </div>
-                            <div>
-                                <h4 class="text-xs sm:text-sm font-bold text-white print-text-dark">Pilih Nama Anda</h4>
-                                <p class="text-xs text-slate-400 print-text-muted leading-snug">Pilih sesuai nama saat registrasi awal.</p>
-                            </div>
-                        </div>
-
-                        <div class="p-3.5 rounded-xl bg-slate-900/90 print-bg-light border border-slate-800 print-border-dark flex items-start gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 print-text-dark flex items-center justify-center font-black text-sm shrink-0">
-                                3
-                            </div>
-                            <div>
-                                <h4 class="text-xs sm:text-sm font-bold text-white print-text-dark">Pesan & Kesan</h4>
-                                <p class="text-xs text-slate-400 print-text-muted leading-snug">Tuliskan apresiasi karya talenta AI muda.</p>
-                            </div>
-                        </div>
-
-                        <div class="p-3.5 rounded-xl bg-slate-900/90 print-bg-light border border-slate-800 print-border-dark flex items-start gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 print-text-dark flex items-center justify-center font-black text-sm shrink-0">
-                                4
-                            </div>
-                            <div>
-                                <h4 class="text-xs sm:text-sm font-bold text-white print-text-dark">Kritik & Saran</h4>
-                                <p class="text-xs text-slate-400 print-text-muted leading-snug">Berikan masukan konstruktif ke depan.</p>
-                            </div>
-                        </div>
-
+                    <!-- Panduan Ringkas & Rapi -->
+                    <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 print-bg-light print-border-dark space-y-2">
+                        <h4 class="text-xs sm:text-sm font-bold text-amber-300 print-text-dark uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-cyan-400"></i>
+                            Alur Pengisian Singkat:
+                        </h4>
+                        <ol class="text-xs sm:text-sm text-slate-300 print-text-dark space-y-1.5 list-decimal list-inside leading-relaxed">
+                            <li>Arahkan kamera HP ke barcode di sebelah kanan.</li>
+                            <li>Pilih nama Anda sesuai registrasi awal di daftar yang muncul.</li>
+                            <li>Tuliskan kesan, pesan, serta saran evaluasi Anda.</li>
+                        </ol>
                     </div>
 
-                    <!-- Direct URL & Institution Footer -->
-                    <div class="pt-3 border-t border-slate-800 print-border-dark flex flex-wrap items-center justify-between gap-3">
-                        <div class="text-xs sm:text-sm text-slate-300 print-text-dark">
-                            <span class="text-slate-400">Atau akses manual via browser:</span>
-                            <strong id="feedbackUrlDisplay" class="font-mono text-cyan-300 print-text-dark ml-1 font-bold">
+                    <!-- KOTAK LINK MANUAL BESAR (Jika Tamu Kesulitan Scan Barcode) -->
+                    <div class="p-4 sm:p-5 rounded-2xl bg-cyan-950/40 border-2 border-cyan-400/50 print-bg-light print-border-dark space-y-2">
+                        <p class="text-xs sm:text-sm font-bold text-cyan-200 print-text-dark flex items-center gap-2">
+                            <i class="fa-solid fa-globe text-cyan-400 text-base"></i>
+                            Kamera HP Tidak Bisa Scan? Ketik Alamat Ini di Browser HP:
+                        </p>
+                        <div class="flex items-center gap-2 pt-0.5">
+                            <span class="text-base sm:text-xl lg:text-2xl font-black font-mono text-cyan-300 print-text-dark tracking-wide select-all bg-slate-950/80 px-4 py-2 rounded-xl border border-cyan-400/40 shadow-inner inline-block">
                                 bukutamuexhibition.vercel.app/feedback
-                            </strong>
+                            </span>
                         </div>
-                        <div class="text-[11px] sm:text-xs text-slate-400 print-text-muted font-medium">
-                            Disnaker-KUKM Kota Madiun & LPKS Pola Sukses Akademi
-                        </div>
+                    </div>
+
+                    <!-- Branding Penyelenggara -->
+                    <div class="pt-2 text-xs text-slate-400 print-text-muted">
+                        Dinas Tenaga Kerja, KUKM Kota Madiun & LPKS Pola Sukses Akademi
                     </div>
 
                 </div>
 
-                <!-- KOLOM KANAN (5 Kolom): QR CODE RAKSASA (Mudah di-scan bersamaan dari kejauhan) -->
+                <!-- KOLOM KANAN (5 Kolom): BARCODE RAKSASA FOKUS PENUH -->
                 <div class="lg:col-span-5 flex flex-col items-center justify-center text-center space-y-4">
                     
-                    <!-- Giant QR Code Display Frame -->
-                    <div class="p-4 sm:p-5 lg:p-6 bg-white rounded-3xl shadow-[0_0_40px_rgba(255,255,255,0.25)] border-4 border-amber-400 print-border-dark relative inline-block transition hover:scale-[1.02] duration-300">
+                    <!-- Kotak QR Code Raksasa (Maksimal untuk Layar Proyektor) -->
+                    <div class="p-4 sm:p-6 lg:p-7 bg-white rounded-3xl shadow-[0_0_50px_rgba(255,255,255,0.3)] border-4 border-amber-400 print-border-dark inline-block transition hover:scale-[1.01] duration-300">
                         <img 
                             id="feedbackBarcodeImg" 
                             src="/api/venue/feedback-barcode/png" 
-                            alt="QR Code Feedback Pameran AI" 
-                            class="w-64 h-64 sm:w-72 sm:h-72 lg:w-80 lg:h-80 object-contain mx-auto"
+                            alt="Barcode Form Feedback Tamu" 
+                            class="w-72 h-72 sm:w-84 sm:h-84 lg:w-96 lg:h-96 xl:w-[410px] xl:h-[410px] object-contain mx-auto"
                         />
                     </div>
 
-                    <!-- Scan Call to Action Badge -->
-                    <div class="space-y-1.5">
-                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-cyan-500/20 border border-amber-400/50 text-amber-300 print-bg-light print-text-dark text-xs sm:text-sm font-bold shadow-sm">
-                            <i class="fa-solid fa-camera text-cyan-400 animate-pulse"></i>
-                            Scan Langsung Bersama dari Kursi Anda
+                    <!-- Petunjuk Bawah Barcode -->
+                    <div class="space-y-1">
+                        <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 print-bg-light print-text-dark text-sm sm:text-base font-bold shadow-sm">
+                            <i class="fa-solid fa-camera text-cyan-400 text-lg animate-pulse"></i>
+                            Scan Langsung dari Tempat Duduk Anda
                         </div>
                         <p class="text-xs text-slate-400 print-text-muted">
-                            Kamera HP otomatis membaca kode QR tanpa perlu mendekat ke layar proyektor.
+                            Kamera ponsel otomatis mendeteksi tautan formulir evaluasi
                         </p>
                     </div>
 
@@ -226,43 +162,15 @@
 
     </main>
 
-    <!-- Footer Credit (Hidden on Print) -->
-    <footer class="no-print text-center text-xs text-slate-500 py-3">
-        Tekan tombol <strong class="text-slate-300">F11</strong> atau klik <strong class="text-slate-300">Layar Penuh</strong> untuk tampilan proyektor maksimal tanpa bilah peramban.
-    </footer>
-
     <script>
-        // Resolve dynamic base URL on client side
         function initBarcode() {
             const host = window.location.origin;
             const targetUrl = `${host}/feedback`;
-            
-            document.getElementById('feedbackUrlDisplay').innerText = targetUrl.replace(/^https?:\/\//, '');
-            document.getElementById('feedbackBarcodeImg').src = `/api/venue/feedback-barcode/png?url=${encodeURIComponent(targetUrl)}&t=${Date.now()}`;
-        }
-
-        // Fullscreen toggle for presentation operator
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-                document.getElementById('btnFullscreen').innerHTML = '<i class="fa-solid fa-compress"></i> Perkecil Layar';
-            } else {
-                document.exitFullscreen().catch(() => {});
-                document.getElementById('btnFullscreen').innerHTML = '<i class="fa-solid fa-expand"></i> Layar Penuh (F11)';
+            const img = document.getElementById('feedbackBarcodeImg');
+            if (img) {
+                img.src = `/api/venue/feedback-barcode/png?url=${encodeURIComponent(targetUrl)}&t=${Date.now()}`;
             }
         }
-
-        document.addEventListener('fullscreenchange', () => {
-            const btn = document.getElementById('btnFullscreen');
-            if (btn) {
-                if (document.fullscreenElement) {
-                    btn.innerHTML = '<i class="fa-solid fa-compress"></i> Perkecil Layar';
-                } else {
-                    btn.innerHTML = '<i class="fa-solid fa-expand"></i> Layar Penuh (F11)';
-                }
-            }
-        });
-
         document.addEventListener('DOMContentLoaded', initBarcode);
     </script>
 </body>
