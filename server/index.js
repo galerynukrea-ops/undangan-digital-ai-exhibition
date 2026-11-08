@@ -78,6 +78,19 @@ function resolveCheckinUrl(req) {
     return `http://${getLocalIpAddress()}:${PORT}/checkin`;
 }
 
+// Helper to resolve post-event feedback URL dynamically
+function resolveFeedbackUrl(req) {
+    if (req.query.url && req.query.url.trim() !== '') {
+        return req.query.url.trim();
+    }
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const proto = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    if (process.env.VERCEL || (host && !host.includes('localhost') && !host.includes('127.0.0.1'))) {
+        return `https://${host || 'bukutamuexhibition.vercel.app'}/feedback`;
+    }
+    return `http://${getLocalIpAddress()}:${PORT}/feedback`;
+}
+
 // -------------------------------------------------------------
 // REST API: Network Info for Smartphone Testing
 // -------------------------------------------------------------
@@ -97,6 +110,8 @@ app.get('/api/network-info', (req, res) => {
         port: PORT,
         baseUrl,
         checkinUrl: `${baseUrl}/checkin`,
+        feedbackUrl: `${baseUrl}/feedback`,
+        feedbackPrintUrl: `${baseUrl}/feedback/print`,
         liveUrl: `${baseUrl}/live`,
         standeeUrl: `${baseUrl}/standee`
     });
@@ -537,6 +552,31 @@ app.get('/api/venue/barcode/png', async (req, res) => {
     }
 });
 
+// 4. PNG Stream for Post-Event Feedback Barcode (Points to /feedback)
+app.get('/api/venue/feedback-barcode/png', async (req, res) => {
+    try {
+        const feedbackUrl = resolveFeedbackUrl(req);
+
+        const qrBuffer = await QRCode.toBuffer(feedbackUrl, {
+            errorCorrectionLevel: 'H',
+            width: 500,
+            margin: 1,
+            color: {
+                dark: '#070D1E',
+                light: '#FFFFFF'
+            }
+        });
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        res.send(qrBuffer);
+    } catch (err) {
+        console.error('[QR] Error generating feedback barcode:', err.message);
+        res.status(500).send('Gagal membuat Barcode Feedback');
+    }
+});
+
 // -------------------------------------------------------------
 // REST API: Get Preset Institutions List (10 Instansi Resmi Madiun)
 // -------------------------------------------------------------
@@ -705,7 +745,7 @@ app.post('/api/checkin/submit', async (req, res) => {
     }
 });
 
-// Post-Event Feedback: Pesan & Kesan serta Kritik & Saran (Disarankan diisi setelah acara selesai)
+// Post-Event Feedback: Pesan & Kesan serta Kritik & Saran (Diisi via Barcode saat acara selesai)
 app.post('/api/checkin/feedback', async (req, res) => {
     try {
         const body = req.body || {};
@@ -713,19 +753,36 @@ app.post('/api/checkin/feedback', async (req, res) => {
         const impression = (body.impression || body.pesanKesan || '').trim();
         const feedback = (body.feedback || body.kritikSaran || '').trim();
 
-        if (!guestId) {
-            return res.status(400).json({ success: false, error: 'ID Tamu diperlukan' });
+        let guest = null;
+        if (guestId && guestId !== '__MANUAL__') {
+            guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(guestId);
         }
 
-        const guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(guestId);
+        if (!guest && (body.guestName || body.name)) {
+            const rawName = (body.guestName || body.name).trim();
+            if (rawName) {
+                guest = db.prepare('SELECT * FROM guests WHERE LOWER(name) = LOWER(?)').get(rawName);
+                if (!guest) {
+                    const newId = uuidv4();
+                    const inst = (body.guestInstitution || body.institution || 'Tamu Undangan').trim();
+                    const nowIso = new Date().toISOString();
+                    db.prepare(`
+                        INSERT INTO guests (id, name, institution, category, qr_token, status, checked_in_at, created_at)
+                        VALUES (?, ?, ?, ?, ?, 'checked_in', ?, ?)
+                    `).run(newId, rawName, inst, 'Mitra Undangan', generateToken(), nowIso, nowIso);
+                    guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(newId);
+                }
+            }
+        }
+
         if (!guest) {
-            return res.status(404).json({ success: false, error: 'Data tamu tidak ditemukan' });
+            return res.status(400).json({ success: false, error: 'Silakan pilih nama Anda atau masukkan nama lengkap Anda.' });
         }
 
         const combinedText = [impression, feedback].filter(Boolean).join(' | ') || 'Pesan dan saran terkirim';
         const aiResult = localAnalyzeSentiment(combinedText);
 
-        const existingMsg = db.prepare('SELECT * FROM guest_messages WHERE guest_id = ?').get(guestId);
+        const existingMsg = db.prepare('SELECT * FROM guest_messages WHERE guest_id = ?').get(guest.id);
         if (existingMsg) {
             db.prepare(`
                 UPDATE guest_messages 
@@ -748,7 +805,7 @@ app.post('/api/checkin/feedback', async (req, res) => {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
             `).run(
                 msgId,
-                guestId,
+                guest.id,
                 combinedText,
                 impression,
                 feedback,
@@ -778,7 +835,7 @@ app.post('/api/checkin/feedback', async (req, res) => {
         });
 
         broadcastEvent('guest_feedback', {
-            guestId,
+            guestId: guest.id,
             name: guest.name,
             institution: guest.institution,
             impression,
@@ -1108,6 +1165,22 @@ app.get('/live', (req, res) => {
 
 app.get('/scanner', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'scanner.html'));
+});
+
+app.get('/feedback', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'feedback.html'));
+});
+
+app.get('/feedback/print', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'feedback-print.html'));
+});
+
+app.get('/feedback/barcode', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'feedback-print.html'));
+});
+
+app.get('/standee-feedback', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'public', 'feedback-print.html'));
 });
 
 // Start Server (Only listen if not in serverless Vercel environment)

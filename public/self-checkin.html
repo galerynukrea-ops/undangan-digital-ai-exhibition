@@ -40,32 +40,16 @@
                     Kolaborasi Talenta Muda & Artificial Intelligence
                 </p>
             </div>
-
-            <div class="p-3 rounded-xl bg-[#081020] border border-cyan-500/30 text-xs sm:text-sm text-slate-300 space-y-1 text-left sm:text-center">
-                <p class="font-bold text-cyan-300 flex items-center justify-start sm:justify-center gap-2">
-                    <i class="fa-regular fa-calendar-check text-purple-400 text-base"></i>
-                    Rabu, 11 November 2026 • 10.00 WIB s/d Selesai
-                </p>
-                <p class="text-slate-200 flex items-center justify-start sm:justify-center gap-2">
-                    <i class="fa-solid fa-location-dot text-rose-400 text-base"></i>
-                    Waroeng Latte, Jl. H.A. Salim / Cokroaminoto No.88, Kota Madiun
-                </p>
-            </div>
         </header>
 
-        <!-- FORM REGISTRASI KEHADIRAN (Font Besar, Mudah Dibaca, 2 Input Saja) -->
+        <!-- FORM REGISTRASI KEHADIRAN (Font Besar, Rapi, Mudah Dibaca, 2 Input Saja) -->
         <form id="selfCheckinForm" onsubmit="submitSelfCheckin(event)" class="space-y-5">
 
             <!-- 1. Nama Lengkap Tamu -->
             <div class="space-y-1.5">
-                <label for="selfName" class="block text-base sm:text-lg font-bold text-white flex items-center justify-between">
-                    <span class="flex items-center gap-2">
-                        <i class="fa-solid fa-user-check text-cyan-400 text-lg"></i>
-                        Nama Lengkap Bapak / Ibu *
-                    </span>
-                    <span class="text-xs font-semibold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
-                        Disapa Robot AI
-                    </span>
+                <label for="selfName" class="block text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-user-check text-cyan-400 text-lg"></i>
+                    Nama Lengkap Bapak / Ibu *
                 </label>
                 <input 
                     type="text" 
@@ -74,18 +58,17 @@
                     placeholder="Contoh: Bpk. Bambang Sutrisno" 
                     class="w-full px-4 py-3.5 sm:py-4 bg-[#070D1E] border-2 border-cyan-400/50 rounded-xl text-white text-base sm:text-lg font-semibold placeholder-slate-400 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/40 transition shadow-inner"
                 >
+                <p class="text-xs text-cyan-300/80 flex items-center gap-1.5 font-medium pl-1">
+                    <i class="fa-solid fa-robot text-cyan-400"></i>
+                    Nama Anda akan otomatis disapa oleh Robot AI di Layar Proyektor
+                </p>
             </div>
 
             <!-- 2. Asal Instansi / Perusahaan (Tamu Mengisi Sendiri Secara Bebas) -->
             <div class="space-y-1.5">
-                <label for="selfInstitution" class="block text-base sm:text-lg font-bold text-white flex items-center justify-between">
-                    <span class="flex items-center gap-2">
-                        <i class="fa-solid fa-building text-cyan-400 text-lg"></i>
-                        Asal Instansi / Perusahaan / Lembaga *
-                    </span>
-                    <span class="text-xs font-semibold text-slate-300">
-                        Ketik Bebas
-                    </span>
+                <label for="selfInstitution" class="block text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-building text-cyan-400 text-lg"></i>
+                    Asal Instansi / Perusahaan / Lembaga *
                 </label>
                 <input 
                     type="text" 
@@ -107,84 +90,26 @@
             </button>
         </form>
 
-        <!-- LAYAR SETELAH SELESAI MENGISI (SUCCESS STATE) -->
-        <section id="selfSuccess" class="hidden space-y-6 text-center">
+        <!-- LAYAR SETELAH SELESAI MENGISI (SUCCESS STATE: Bersih & Hangat) -->
+        <section id="selfSuccess" class="hidden space-y-5 text-center">
             
-            <div class="p-6 rounded-2xl bg-[#081226] border-2 border-emerald-400/70 shadow-[0_0_35px_rgba(16,185,129,0.3)] space-y-3">
+            <div class="p-6 sm:p-8 rounded-2xl bg-[#081226] border-2 border-emerald-400/70 shadow-[0_0_35px_rgba(16,185,129,0.3)] space-y-4">
                 <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-3xl border-2 border-emerald-400/60 shadow-[0_0_20px_rgba(16,185,129,0.5)]">
                     <i class="fa-solid fa-circle-check"></i>
                 </div>
-                <h2 id="successGuestTitle" class="text-xl sm:text-2xl font-black text-white leading-tight">
+                <h2 id="successGuestTitle" class="text-2xl sm:text-3xl font-black text-white leading-tight">
                     Selamat Datang!
                 </h2>
-                <p id="successGuestSub" class="text-sm sm:text-base text-cyan-200 font-semibold">
+                <p id="successGuestSub" class="text-base sm:text-lg text-cyan-200 font-semibold">
                     Kehadiran Anda Telah Terverifikasi di Sistem.
                 </p>
-                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-xs sm:text-sm font-bold">
-                    <i class="fa-solid fa-robot text-cyan-400"></i>
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-sm font-bold">
+                    <i class="fa-solid fa-robot text-cyan-400 text-base"></i>
                     Nama Anda telah tampil & disapa di Layar Utama Proyektor
                 </div>
             </div>
 
-            <!-- Bagian Pesan & Kesan serta Kritik & Saran (Disarankan diisi setelah acara selesai) -->
-            <div class="p-5 sm:p-6 rounded-2xl bg-[#091326] border-2 border-amber-400/50 text-left space-y-4 shadow-lg">
-                <div class="p-3.5 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs sm:text-sm leading-relaxed space-y-1">
-                    <p class="font-bold text-amber-300 flex items-center gap-2 text-sm sm:text-base">
-                        <i class="fa-solid fa-circle-exclamation text-base"></i>
-                        Disarankan Mengisi Setelah Acara Selesai:
-                    </p>
-                    <p>
-                        Bapak/Ibu/Tamu Undangan disarankan untuk mengisi formulir <strong>Pesan & Kesan</strong> serta <strong>Kritik & Saran</strong> di bawah ini setelah seluruh rangkaian acara pameran selesai (atau sekarang bila berkenan).
-                    </p>
-                </div>
-
-                <form id="feedbackForm" onsubmit="submitFeedback(event)" class="space-y-4">
-                    <!-- 1. Pesan dan Kesan -->
-                    <div class="space-y-1.5">
-                        <label for="feedbackImpression" class="block text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-heart text-rose-400"></i>
-                            Pesan dan Kesan Anda:
-                        </label>
-                        <textarea 
-                            id="feedbackImpression" 
-                            rows="3" 
-                            placeholder="Tuliskan kesan dan pesan Anda terhadap pameran dan karya talenta AI muda..." 
-                            class="w-full px-4 py-3 bg-[#070D1E] border border-cyan-400/40 rounded-xl text-white text-sm sm:text-base placeholder-slate-400 focus:outline-none focus:border-cyan-300 focus:ring-1 focus:ring-cyan-400"
-                        ></textarea>
-                    </div>
-
-                    <!-- 2. Kritik dan Saran -->
-                    <div class="space-y-1.5">
-                        <label for="feedbackCritique" class="block text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-comment-dots text-cyan-400"></i>
-                            Kritik dan Saran:
-                        </label>
-                        <textarea 
-                            id="feedbackCritique" 
-                            rows="3" 
-                            placeholder="Tuliskan kritik dan saran konstruktif untuk pengembangan kami ke depan..." 
-                            class="w-full px-4 py-3 bg-[#070D1E] border border-cyan-400/40 rounded-xl text-white text-sm sm:text-base placeholder-slate-400 focus:outline-none focus:border-cyan-300 focus:ring-1 focus:ring-cyan-400"
-                        ></textarea>
-                    </div>
-
-                    <button 
-                        type="submit" 
-                        id="btnSubmitFeedback" 
-                        class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-sm sm:text-base shadow-[0_0_20px_rgba(16,185,129,0.35)] transition flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                        <i class="fa-solid fa-paper-plane"></i>
-                        Kirim Pesan, Kesan & Saran
-                    </button>
-                </form>
-
-                <!-- Feedback Success Notice -->
-                <div id="feedbackSuccessAlert" class="hidden p-4 rounded-xl bg-emerald-950/80 border border-emerald-400 text-emerald-200 text-sm font-semibold flex items-center gap-3">
-                    <i class="fa-solid fa-circle-check text-emerald-400 text-xl shrink-0"></i>
-                    <span>Terima kasih banyak! Pesan, kesan, kritik, dan saran Anda telah tersimpan dengan aman.</span>
-                </div>
-            </div>
-
-            <div class="text-xs sm:text-sm font-bold text-emerald-400 tracking-wider pt-2 border-t border-cyan-500/25">
+            <div class="text-xs sm:text-sm font-bold text-emerald-400 tracking-wider py-1 border-t border-cyan-500/25">
                 ✨ SELAMAT MENIKMATI PAMERAN MENEMBUS BATAS DIGITAL ✨
             </div>
         </section>
@@ -331,53 +256,6 @@
                 alert('Koneksi internet tidak stabil. Silakan periksa jaringan dan ketuk Konfirmasi sekali lagi.');
             } finally {
                 btn.innerHTML = `<i class="fa-solid fa-check-double text-xl"></i> Konfirmasi Kehadiran Saya`;
-                btn.disabled = false;
-            }
-        }
-
-        async function submitFeedback(e) {
-            e.preventDefault();
-
-            if (!currentGuestId) {
-                alert('Sesi registrasi tidak ditemukan. Silakan muat ulang halaman.');
-                return;
-            }
-
-            const impression = document.getElementById('feedbackImpression').value.trim();
-            const critique = document.getElementById('feedbackCritique').value.trim();
-
-            if (!impression && !critique) {
-                alert('Silakan isi kolom Pesan & Kesan atau Kritik & Saran terlebih dahulu.');
-                return;
-            }
-
-            const btn = document.getElementById('btnSubmitFeedback');
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mengirimkan...`;
-            btn.disabled = true;
-
-            try {
-                const res = await fetch('/api/checkin/feedback', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        guestId: currentGuestId,
-                        impression: impression,
-                        feedback: critique
-                    })
-                });
-
-                const json = await res.json();
-                if (json.success) {
-                    document.getElementById('feedbackForm').classList.add('hidden');
-                    document.getElementById('feedbackSuccessAlert').classList.remove('hidden');
-                } else {
-                    alert(json.error || 'Gagal mengirimkan pesan & saran.');
-                }
-            } catch (err) {
-                console.error('[Feedback error]', err);
-                alert('Gagal mengirimkan pesan. Silakan coba kembali.');
-            } finally {
-                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Kirim Pesan, Kesan & Saran`;
                 btn.disabled = false;
             }
         }

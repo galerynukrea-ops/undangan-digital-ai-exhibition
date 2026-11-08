@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulir Pesan, Kesan, Kritik & Saran • Digital AI Work Exhibition</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+    <script>
+        // Init Mobile Real-time MQTT connection for immediate feedback sync
+        let phoneMqtt = null;
+        try {
+            phoneMqtt = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { reconnectPeriod: 3000, connectTimeout: 5000 });
+            window.phoneMqtt = phoneMqtt;
+        } catch (e) {}
+    </script>
+</head>
+<body class="min-h-screen bg-[#070D1E] text-slate-100 flex flex-col justify-between px-3 sm:px-4 py-6 font-sans antialiased selection:bg-cyan-500 selection:text-black">
+
+    <!-- Container Card (Responsive, High Contrast, Large Readable Inputs) -->
+    <main class="max-w-lg mx-auto w-full bg-[#0D182E] border-2 border-cyan-400/50 rounded-2xl p-5 sm:p-7 shadow-[0_10px_40px_rgba(0,0,0,0.6)] space-y-6">
+
+        <!-- Header: Official Logo & Title -->
+        <header class="text-center space-y-3 pb-4 border-b border-cyan-500/25">
+            <div class="flex justify-center">
+                <img src="/images/logo-header.png?v=2" alt="Digital AI Work Exhibition Logo" class="h-16 sm:h-20 w-auto object-contain drop-shadow-[0_0_15px_rgba(0,240,255,0.4)]" />
+            </div>
+
+            <div>
+                <span class="inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-bold uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                    Evaluasi & Masukan Tamu Undangan
+                </span>
+                <h1 class="text-xl sm:text-2xl font-black text-white mt-1.5 tracking-tight leading-snug">
+                    Pesan, Kesan, Kritik & Saran
+                </h1>
+                <p class="text-xs sm:text-sm text-cyan-200/90 font-medium mt-1">
+                    Digital AI Work Exhibition • Waroeng Latte Madiun
+                </p>
+            </div>
+
+            <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 text-xs sm:text-sm text-amber-200 text-left flex items-start gap-2.5">
+                <i class="fa-solid fa-circle-info text-amber-400 text-base mt-0.5 shrink-0"></i>
+                <span>
+                    Bapak/Ibu/Tamu Undangan disilakan mengisi formulir ini <strong>setelah seluruh rangkaian acara pameran selesai</strong> sebagai bahan evaluasi dan apresiasi kami.
+                </span>
+            </div>
+        </header>
+
+        <!-- FORM EVALUASI -->
+        <form id="feedbackForm" onsubmit="handleFeedbackSubmit(event)" class="space-y-5">
+
+            <!-- 1. PILIH NAMA TAMU SESUAI REGISTRASI AWAL -->
+            <div class="space-y-2">
+                <label for="guestSelect" class="block text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-id-card-clip text-cyan-400 text-lg"></i>
+                    Pilih Nama Anda Sesuai Registrasi *
+                </label>
+                
+                <div class="relative">
+                    <select 
+                        id="guestSelect" 
+                        required 
+                        onchange="onGuestSelectChange()"
+                        class="w-full px-4 py-3.5 sm:py-4 bg-[#070D1E] border-2 border-cyan-400/50 rounded-xl text-white text-base sm:text-lg font-semibold focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/40 transition shadow-inner appearance-none pr-10 cursor-pointer"
+                    >
+                        <option value="">-- Sedang memuat daftar nama tamu... --</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-cyan-400">
+                        <i class="fa-solid fa-chevron-down text-lg"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-300 pl-1">
+                    Pilih nama yang sebelumnya Anda masukkan saat registrasi kedatangan.
+                </p>
+            </div>
+
+            <!-- Manual Name & Institution Fields (Hidden by default, shown if guest chooses manual) -->
+            <div id="manualGuestContainer" class="hidden space-y-4 p-4 rounded-xl bg-[#081224] border border-cyan-500/40">
+                <div class="space-y-1.5">
+                    <label for="manualName" class="block text-sm sm:text-base font-bold text-white">
+                        Nama Lengkap Anda:
+                    </label>
+                    <input 
+                        type="text" 
+                        id="manualName" 
+                        placeholder="Contoh: Bpk. Bambang Sutrisno"
+                        class="w-full px-3.5 py-3 bg-[#070D1E] border border-cyan-400/50 rounded-xl text-white text-base font-semibold placeholder-slate-400 focus:outline-none focus:border-cyan-300"
+                    >
+                </div>
+                <div class="space-y-1.5">
+                    <label for="manualInstitution" class="block text-sm sm:text-base font-bold text-white">
+                        Asal Instansi / Perusahaan:
+                    </label>
+                    <input 
+                        type="text" 
+                        id="manualInstitution" 
+                        placeholder="Contoh: Kelurahan Winongo / RS Santa Clara / Umum"
+                        class="w-full px-3.5 py-3 bg-[#070D1E] border border-cyan-400/50 rounded-xl text-white text-base font-semibold placeholder-slate-400 focus:outline-none focus:border-cyan-300"
+                    >
+                </div>
+            </div>
+
+            <!-- 2. KOLOM PESAN DAN KESAN -->
+            <div class="space-y-1.5">
+                <label for="feedbackImpression" class="block text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-heart text-rose-400 text-lg"></i>
+                    Pesan dan Kesan Anda *
+                </label>
+                <textarea 
+                    id="feedbackImpression" 
+                    rows="3" 
+                    required
+                    placeholder="Tuliskan kesan dan pesan Anda terhadap pameran dan karya talenta AI muda..." 
+                    class="w-full px-4 py-3.5 bg-[#070D1E] border-2 border-cyan-400/50 rounded-xl text-white text-base font-medium placeholder-slate-400 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/40 transition shadow-inner"
+                ></textarea>
+            </div>
+
+            <!-- 3. KOLOM KRITIK DAN SARAN -->
+            <div class="space-y-1.5">
+                <label for="feedbackCritique" class="block text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-comment-dots text-cyan-400 text-lg"></i>
+                    Kritik dan Saran Konstruktif *
+                </label>
+                <textarea 
+                    id="feedbackCritique" 
+                    rows="3" 
+                    required
+                    placeholder="Tuliskan kritik dan masukan konstruktif untuk perbaikan dan pengembangan kami ke depan..." 
+                    class="w-full px-4 py-3.5 bg-[#070D1E] border-2 border-cyan-400/50 rounded-xl text-white text-base font-medium placeholder-slate-400 focus:outline-none focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/40 transition shadow-inner"
+                ></textarea>
+            </div>
+
+            <!-- TOMBOL KIRIM -->
+            <button 
+                type="submit" 
+                id="btnSubmitFeedback" 
+                class="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-base sm:text-lg tracking-wide shadow-[0_0_25px_rgba(16,185,129,0.4)] transition transform active:scale-95 flex items-center justify-center gap-2.5 cursor-pointer mt-2"
+            >
+                <i class="fa-solid fa-paper-plane text-lg"></i>
+                Kirim Pesan, Kesan & Saran
+            </button>
+        </form>
+
+        <!-- LAYAR SUKSES SETELAH KIRIM -->
+        <section id="feedbackSuccessView" class="hidden space-y-6 text-center">
+            <div class="p-6 sm:p-8 rounded-2xl bg-[#081226] border-2 border-emerald-400/70 shadow-[0_0_35px_rgba(16,185,129,0.3)] space-y-3">
+                <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-3xl border-2 border-emerald-400/60 shadow-[0_0_20px_rgba(16,185,129,0.5)]">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h2 id="feedbackGuestName" class="text-xl sm:text-2xl font-black text-white leading-tight">
+                    Terima Kasih Banyak!
+                </h2>
+                <p class="text-sm sm:text-base text-cyan-200 font-semibold">
+                    Pesan, kesan, kritik, dan saran Anda telah tersimpan dengan aman di sistem panitia.
+                </p>
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-xs sm:text-sm font-bold">
+                    <i class="fa-solid fa-sparkles text-amber-400"></i>
+                    Apresiasi & masukan Anda sangat berharga bagi kemajuan talenta muda AI Madiun
+                </div>
+            </div>
+
+            <div class="text-xs sm:text-sm font-bold text-emerald-400 tracking-wider pt-1 border-t border-cyan-500/25">
+                ✨ SAMPAI JUMPA DI EVENT INOVASI DIGITAL BERIKUTNYA ✨
+            </div>
+        </section>
+
+        <!-- CALL TO ACTION: FOLLOW INSTAGRAM RESMI -->
+        <section class="p-4 sm:p-5 rounded-2xl bg-[#081224] border-2 border-purple-500/40 space-y-3 shadow-lg">
+            <div class="text-center space-y-0.5">
+                <h3 class="text-sm sm:text-base font-bold text-white flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-instagram text-pink-400 text-lg"></i>
+                    Ikuti Update Resmi di Instagram:
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-300">
+                    Dapatkan info pelatihan kerja, dokumentasi acara, dan lowongan kerja terbaru.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                <!-- CTA 1: Infonaker Kota Madiun -->
+                <a 
+                    href="https://www.instagram.com/infonakermadiunkota" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    class="p-3 rounded-xl bg-gradient-to-r from-purple-900/60 to-pink-900/40 hover:from-purple-800/80 hover:to-pink-800/60 border border-pink-500/40 flex items-center gap-3 transition active:scale-95 group shadow-sm"
+                >
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white text-xl shrink-0 shadow">
+                        <i class="fa-brands fa-instagram"></i>
+                    </div>
+                    <div class="text-left overflow-hidden">
+                        <span class="block text-xs sm:text-sm font-black text-pink-200 group-hover:text-white truncate">
+                            @infonakermadiunkota
+                        </span>
+                        <span class="block text-[11px] text-slate-300 leading-tight truncate">
+                            Disnaker-KUKM Kota Madiun
+                        </span>
+                    </div>
+                </a>
+
+                <!-- CTA 2: Pola Sukses Akademi -->
+                <a 
+                    href="https://www.instagram.com/polasuksesakademi" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    class="p-3 rounded-xl bg-gradient-to-r from-purple-900/60 to-pink-900/40 hover:from-purple-800/80 hover:to-pink-800/60 border border-pink-500/40 flex items-center gap-3 transition active:scale-95 group shadow-sm"
+                >
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white text-xl shrink-0 shadow">
+                        <i class="fa-brands fa-instagram"></i>
+                    </div>
+                    <div class="text-left overflow-hidden">
+                        <span class="block text-xs sm:text-sm font-black text-pink-200 group-hover:text-white truncate">
+                            @polasuksesakademi
+                        </span>
+                        <span class="block text-[11px] text-slate-300 leading-tight truncate">
+                            LPKS Pola Sukses Akademi
+                        </span>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-slate-400 py-4">
+        &copy; 2026 Dinas Tenaga Kerja, KUKM Kota Madiun & LPKS Pola Sukses Akademi
+    </footer>
+
+    <script>
+        let cachedGuests = [];
+
+        // Load checked-in & registered guests on page load
+        async function loadGuestOptions() {
+            const select = document.getElementById('guestSelect');
+            try {
+                const res = await fetch('/api/guests');
+                const json = await res.json();
+                
+                let list = [];
+                if (json.success && Array.isArray(json.data)) {
+                    list = json.data;
+                } else if (Array.isArray(json)) {
+                    list = json;
+                }
+
+                // Clean and sort by guest name alphabetically
+                list = list.filter(g => g && g.name && g.name.trim() !== '');
+                list.sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' }));
+                cachedGuests = list;
+
+                if (list.length === 0) {
+                    select.innerHTML = '<option value="">-- Belum ada tamu yang terdaftar --</option><option value="__MANUAL__">+ Tulis Nama Saya Secara Manual</option>';
+                    return;
+                }
+
+                let html = '<option value="">-- Ketuk di sini & pilih nama Anda --</option>';
+                list.forEach(g => {
+                    const inst = g.institution ? ` (${g.institution})` : '';
+                    html += `<option value="${g.id}">${g.name}${inst}</option>`;
+                });
+                html += '<option value="__MANUAL__" class="font-bold text-amber-300">+ Nama Saya Tidak Ada di Daftar (Ketik Manual)</option>';
+                select.innerHTML = html;
+            } catch (err) {
+                console.error('Failed to load guests:', err);
+                select.innerHTML = '<option value="">-- Gagal memuat nama (Ketik Manual) --</option><option value="__MANUAL__" selected>+ Tulis Nama Saya Secara Manual</option>';
+                document.getElementById('manualGuestContainer').classList.remove('hidden');
+            }
+        }
+
+        function onGuestSelectChange() {
+            const val = document.getElementById('guestSelect').value;
+            const manualBox = document.getElementById('manualGuestContainer');
+            if (val === '__MANUAL__') {
+                manualBox.classList.remove('hidden');
+                document.getElementById('manualName').required = true;
+            } else {
+                manualBox.classList.add('hidden');
+                document.getElementById('manualName').required = false;
+            }
+        }
+
+        async function handleFeedbackSubmit(e) {
+            e.preventDefault();
+
+            const selectVal = document.getElementById('guestSelect').value;
+            let guestId = selectVal;
+            let guestName = '';
+            let guestInstitution = '';
+
+            if (!selectVal) {
+                alert('Silakan pilih nama Anda terlebih dahulu dari daftar.');
+                document.getElementById('guestSelect').focus();
+                return;
+            }
+
+            if (selectVal === '__MANUAL__') {
+                guestName = document.getElementById('manualName').value.trim();
+                guestInstitution = document.getElementById('manualInstitution').value.trim() || 'Tamu Undangan';
+                if (!guestName) {
+                    alert('Silakan masukkan nama lengkap Anda.');
+                    document.getElementById('manualName').focus();
+                    return;
+                }
+                guestId = null;
+            } else {
+                const found = cachedGuests.find(g => String(g.id) === String(selectVal));
+                if (found) {
+                    guestName = found.name;
+                    guestInstitution = found.institution;
+                }
+            }
+
+            const impression = document.getElementById('feedbackImpression').value.trim();
+            const critique = document.getElementById('feedbackCritique').value.trim();
+
+            if (!impression && !critique) {
+                alert('Silakan isi kolom Pesan & Kesan atau Kritik & Saran.');
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitFeedback');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mengirimkan...`;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/checkin/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        guestId: guestId,
+                        guestName: guestName,
+                        guestInstitution: guestInstitution,
+                        impression: impression,
+                        feedback: critique
+                    })
+                });
+
+                const json = await res.json();
+                if (json.success) {
+                    // Send real-time broadcast via MQTT
+                    try {
+                        if (window.phoneMqtt && window.phoneMqtt.connected) {
+                            window.phoneMqtt.publish('mbd_ai_exhibition_madiun_2026/events', JSON.stringify({
+                                type: 'guest_feedback',
+                                guestId: guestId,
+                                name: guestName,
+                                institution: guestInstitution,
+                                impression: impression,
+                                feedback: critique,
+                                timestamp: new Date().toISOString()
+                            }));
+                        }
+                    } catch (e) {}
+
+                    // Show success screen
+                    document.getElementById('feedbackForm').classList.add('hidden');
+                    const succ = document.getElementById('feedbackSuccessView');
+                    succ.classList.remove('hidden');
+                    if (guestName) {
+                        document.getElementById('feedbackGuestName').innerText = `Terima Kasih Banyak, ${guestName}!`;
+                    }
+                    succ.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert(json.error || 'Gagal mengirimkan pesan & saran.');
+                }
+            } catch (err) {
+                console.error('Feedback error:', err);
+                alert('Koneksi internet bermasalah. Silakan periksa jaringan dan coba lagi.');
+            } finally {
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane text-lg"></i> Kirim Pesan, Kesan & Saran`;
+                btn.disabled = false;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', loadGuestOptions);
+    </script>
+</body>
+</html>

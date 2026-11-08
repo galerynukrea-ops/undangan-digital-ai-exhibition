@@ -10,6 +10,22 @@
       "destination": "/self-checkin.html"
     },
     {
+      "source": "/feedback",
+      "destination": "/feedback.html"
+    },
+    {
+      "source": "/feedback/print",
+      "destination": "/feedback-print.html"
+    },
+    {
+      "source": "/feedback/barcode",
+      "destination": "/feedback-print.html"
+    },
+    {
+      "source": "/standee-feedback",
+      "destination": "/feedback-print.html"
+    },
+    {
       "source": "/standee",
       "destination": "/standee.html"
     },
