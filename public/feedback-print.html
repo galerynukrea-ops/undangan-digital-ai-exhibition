@@ -16,8 +16,14 @@
             margin: 8mm;
         }
 
-        * {
-            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        body, input, button, select, textarea, h1, h2, h3, h4, h5, h6, p, label, span, div {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        /* Protect FontAwesome icon glyphs */
+        i, .fa, .fa-solid, .fa-regular, .fa-brands, [class*="fa-"] {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
+            font-style: normal;
         }
 
         .cyber-grid {
