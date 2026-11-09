@@ -211,7 +211,7 @@
                         <i class="fa-solid fa-clock-rotate-left text-cyan-400"></i>
                         Tampilan otomatis kembali ke barcode
                     </span>
-                    <span id="popupTimerSec" class="font-mono text-cyan-300 font-bold">8 detik</span>
+                    <span id="popupTimerSec" class="font-mono text-cyan-300 font-bold">5 detik</span>
                 </div>
                 <div class="w-full bg-slate-800/80 rounded-full h-2 overflow-hidden border border-slate-700">
                     <div id="popupProgressBar" class="h-full bg-gradient-to-r from-cyan-400 via-amber-400 to-rose-400 rounded-full transition-all duration-100" style="width: 100%;"></div>
@@ -502,7 +502,7 @@
         // 4. Orkestrasi Animasi Gelembung & Kartu Tamu
         // ==========================================
         let popupTimerInterval = null;
-        let countdownSeconds = 8;
+        let countdownSeconds = 5;
 
         function showFeedbackSurprise(data) {
             getAudioContext();
@@ -584,8 +584,8 @@
                 { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.6)" }
             );
 
-            // Jalankan Timer Countdown Bar (8 Detik)
-            startCountdownBar(8);
+            // Jalankan Timer Countdown Bar (5 Detik)
+            startCountdownBar(5);
         }
 
         function startCountdownBar(seconds) {
