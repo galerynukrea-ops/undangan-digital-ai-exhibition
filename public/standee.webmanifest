@@ -1,0 +1,22 @@
+{
+  "name": "Meja Registrasi Tamu • Digital AI Exhibition",
+  "short_name": "Meja Tamu",
+  "description": "Buku Tamu Digital & Scan Barcode Meja Registrasi",
+  "start_url": "/standee",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#050A18",
+  "theme_color": "#050A18",
+  "icons": [
+    {
+      "src": "/images/logo-header.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/logo-header.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

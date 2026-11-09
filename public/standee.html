@@ -2,8 +2,14 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Meja Registrasi Tamu • Samsung Tab S6 Lite Desk</title>
+    <!-- PWA & Fullscreen Kiosk Capabilities -->
+    <link rel="manifest" href="/standee.webmanifest">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#050A18">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -194,6 +200,29 @@
 
     </main>
 
+    <!-- TOMBOL PWA / FULLSCREEN KHUSUS STAND TABLET (Pojok Kiri Bawah, Kecil & Elegan) -->
+    <div class="fixed bottom-2.5 left-2.5 z-50 flex items-center gap-1.5 no-print">
+        <button 
+            id="btnToggleFs" 
+            onclick="handleFullscreenToggle()" 
+            class="px-2.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-[#071328] text-cyan-400 hover:text-cyan-200 border border-cyan-500/40 hover:border-cyan-300 flex items-center gap-1.5 text-[11px] font-bold shadow-[0_0_15px_rgba(0,240,255,0.2)] backdrop-blur-md opacity-60 hover:opacity-100 active:scale-95 transition-all cursor-pointer select-none"
+            title="Ketuk untuk Layar Penuh (Fullscreen Kiosk Mode)"
+        >
+            <i id="fsIcon" class="fa-solid fa-expand text-xs"></i>
+            <span id="fsText" class="text-[10px] sm:text-[10.5px] font-semibold tracking-wide">Layar Penuh</span>
+        </button>
+
+        <button 
+            id="btnInstallPwa" 
+            onclick="handlePwaInstall()" 
+            class="hidden px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/50 flex items-center gap-1.5 text-[11px] font-bold shadow-md backdrop-blur-md opacity-80 hover:opacity-100 active:scale-95 transition-all cursor-pointer select-none"
+            title="Pasang aplikasi ke Layar Utama Tablet (PWA Kiosk)"
+        >
+            <i class="fa-solid fa-download text-xs"></i>
+            <span class="text-[10px] sm:text-[10.5px] font-semibold tracking-wide">Install PWA</span>
+        </button>
+    </div>
+
     <script>
         let currentTargetUrl = 'https://bukutamuexhibition.vercel.app/checkin';
 
@@ -297,6 +326,77 @@
                 btn.disabled = false;
             }
         }
+
+        // -------------------------------------------------------------
+        // FULLSCREEN & PWA KIOSK CONTROLLER (Samsung Tab S6 Lite)
+        // -------------------------------------------------------------
+        let deferredPwaPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPwaPrompt = e;
+            const btnPwa = document.getElementById('btnInstallPwa');
+            if (btnPwa) btnPwa.classList.remove('hidden');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredPwaPrompt = null;
+            const btnPwa = document.getElementById('btnInstallPwa');
+            if (btnPwa) btnPwa.classList.add('hidden');
+        });
+
+        function handlePwaInstall() {
+            if (deferredPwaPrompt) {
+                deferredPwaPrompt.prompt();
+                deferredPwaPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User installed the Standee PWA');
+                    }
+                    deferredPwaPrompt = null;
+                    const btnPwa = document.getElementById('btnInstallPwa');
+                    if (btnPwa) btnPwa.classList.add('hidden');
+                });
+            }
+        }
+
+        function handleFullscreenToggle() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+
+            const requestFs = docEl.requestFullscreen || docEl.webkitRequestFullScreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+            const exitFs = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+
+            const isFs = doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement;
+
+            if (!isFs) {
+                if (requestFs) {
+                    requestFs.call(docEl).catch(err => {
+                        console.warn('Fullscreen error:', err);
+                    });
+                }
+            } else {
+                if (exitFs) {
+                    exitFs.call(doc);
+                }
+            }
+        }
+
+        function updateFullscreenUi() {
+            const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+            const icon = document.getElementById('fsIcon');
+            const text = document.getElementById('fsText');
+            if (icon) {
+                icon.className = isFs ? 'fa-solid fa-compress text-xs' : 'fa-solid fa-expand text-xs';
+            }
+            if (text) {
+                text.innerText = isFs ? 'Kecilkan' : 'Layar Penuh';
+            }
+        }
+
+        document.addEventListener('fullscreenchange', updateFullscreenUi);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenUi);
+        document.addEventListener('mozfullscreenchange', updateFullscreenUi);
+        document.addEventListener('MSFullscreenChange', updateFullscreenUi);
 
         window.addEventListener('load', fetchNetworkInfo);
     </script>
