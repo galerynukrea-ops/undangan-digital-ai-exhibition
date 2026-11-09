@@ -2,8 +2,14 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Live Hologram Display • Pelatihan Berbasis Kompetensi • Digital AI Work Exhibition</title>
+    <!-- PWA & Kiosk Capabilities -->
+    <link rel="manifest" href="/live.webmanifest">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#030712">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -246,8 +252,13 @@
         </div>
 
         <!-- Right Controls & Clock -->
-        <div class="shrink-0 flex items-center space-x-3">
-            <span id="audioStatusPill" class="px-2.5 py-1 rounded text-[10px] font-tech font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5 cursor-pointer transition hover:bg-emerald-500/30 shadow" onclick="toggleAudio()" title="Klik atau tekan M untuk Mute/Unmute">
+        <div class="shrink-0 flex items-center space-x-2.5">
+            <!-- Tombol Layar Penuh (Fullscreen Kiosk) -->
+            <button id="liveFsBtn" onclick="toggleLiveFullscreen()" class="px-2.5 py-1 rounded text-[10px] font-tech font-bold bg-neonCyan/15 hover:bg-neonCyan/25 text-neonCyan border border-neonCyan/40 flex items-center gap-1.5 cursor-pointer transition shadow active:scale-95 select-none" title="Klik atau tekan F11 / F untuk Layar Penuh">
+                <i id="liveFsIcon" class="fa-solid fa-expand text-[10px]"></i>
+                <span id="liveFsText" class="hidden sm:inline">LAYAR PENUH</span>
+            </button>
+            <span id="audioStatusPill" class="px-2.5 py-1 rounded text-[10px] font-tech font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5 cursor-pointer transition hover:bg-emerald-500/30 shadow select-none" onclick="toggleAudio()" title="Klik atau tekan M untuk Mute/Unmute">
                 <i id="audioIcon" class="fa-solid fa-volume-high text-[10px]"></i> <span id="audioText" class="hidden sm:inline">AI SUARA ONLINE</span>
             </span>
             <div class="text-right pl-2 border-l border-neonCyan/25">
@@ -351,6 +362,19 @@
 
     </footer>
 
+    <!-- TOMBOL PWA / FULLSCREEN MENGAMBANG KHUSUS LAYAR LIVE -->
+    <div class="fixed bottom-12 left-3 z-40 no-print">
+        <button 
+            id="floatFsBtn" 
+            onclick="toggleLiveFullscreen()" 
+            class="px-2.5 py-1.5 rounded-lg bg-cyberDark/80 hover:bg-cyberBlack text-neonCyan border border-neonCyan/40 hover:border-neonCyan flex items-center gap-1.5 text-[10px] font-tech font-bold shadow-[0_0_15px_rgba(0,240,255,0.3)] backdrop-blur-md opacity-60 hover:opacity-100 active:scale-95 transition-all cursor-pointer select-none"
+            title="Ketuk untuk Layar Penuh (F11 / F)"
+        >
+            <i id="floatFsIcon" class="fa-solid fa-expand text-xs"></i>
+            <span id="floatFsText" class="hidden sm:inline">LAYAR PENUH</span>
+        </button>
+    </div>
+
     <!-- LOGIC & SSE STREAM CONTROLLER -->
     <script>
         // Real-time Clock
@@ -410,17 +434,60 @@
             }
         }
 
+        // -------------------------------------------------------------
+        // FULLSCREEN CONTROLLER FOR LIVE WALL
+        // -------------------------------------------------------------
+        function toggleLiveFullscreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+
+            const requestFs = docEl.requestFullscreen || docEl.webkitRequestFullScreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+            const exitFs = doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
+
+            const isFs = doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement;
+
+            if (!isFs) {
+                if (requestFs) {
+                    requestFs.call(docEl).catch(err => {
+                        console.warn('Live fullscreen error:', err);
+                    });
+                }
+            } else {
+                if (exitFs) {
+                    exitFs.call(doc);
+                }
+            }
+        }
+
+        function updateLiveFullscreenUi() {
+            const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+            
+            // Header button
+            const icon = document.getElementById('liveFsIcon');
+            const text = document.getElementById('liveFsText');
+            if (icon) icon.className = isFs ? 'fa-solid fa-compress text-[10px]' : 'fa-solid fa-expand text-[10px]';
+            if (text) text.innerText = isFs ? 'KECILKAN' : 'LAYAR PENUH';
+
+            // Floating corner button
+            const floatIcon = document.getElementById('floatFsIcon');
+            const floatText = document.getElementById('floatFsText');
+            if (floatIcon) floatIcon.className = isFs ? 'fa-solid fa-compress text-xs' : 'fa-solid fa-expand text-xs';
+            if (floatText) floatText.innerText = isFs ? 'KECILKAN' : 'LAYAR PENUH';
+        }
+
+        document.addEventListener('fullscreenchange', updateLiveFullscreenUi);
+        document.addEventListener('webkitfullscreenchange', updateLiveFullscreenUi);
+        document.addEventListener('mozfullscreenchange', updateLiveFullscreenUi);
+        document.addEventListener('MSFullscreenChange', updateLiveFullscreenUi);
+
         window.addEventListener('keydown', (e) => {
             if (typeof window.enableAudioFromOverlay === 'function') {
                 window.enableAudioFromOverlay(true);
             }
             if (e.key === 'm' || e.key === 'M') toggleAudio();
-            if (e.key === 'F11') {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(() => {});
-                } else {
-                    document.exitFullscreen().catch(() => {});
-                }
+            if (e.key === 'F11' || e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                toggleLiveFullscreen();
             }
         });
 

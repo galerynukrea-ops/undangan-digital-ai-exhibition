@@ -1,0 +1,22 @@
+{
+  "name": "Live Hologram Display • Digital AI Exhibition",
+  "short_name": "Live Wall",
+  "description": "Layar Panggung Utama Hologram 3D & Real-time Live Wall",
+  "start_url": "/live",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#030712",
+  "theme_color": "#030712",
+  "icons": [
+    {
+      "src": "/images/logo-menembus-batas-digital.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/logo-menembus-batas-digital.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
