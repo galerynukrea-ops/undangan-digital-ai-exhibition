@@ -4,12 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulir Pesan & Saran • Digital AI Work Exhibition</title>
+    
+    <!-- Meta Theme & Web App -->
+    <meta name="theme-color" content="#050A17">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
+    <!-- GSAP, Canvas Confetti & MQTT for Real-time Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+
     <style>
         @page {
             size: landscape;
@@ -18,6 +30,10 @@
 
         body, input, button, select, textarea, h1, h2, h3, h4, h5, h6, p, label, span, div {
             font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
         }
 
         /* Protect FontAwesome icon glyphs */
@@ -31,6 +47,37 @@
                 linear-gradient(to right, rgba(0, 240, 255, 0.04) 1px, transparent 1px),
                 linear-gradient(to bottom, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
             background-size: 36px 36px;
+        }
+
+        /* Holographic sphere glowing bubble styling */
+        .hologram-bubble {
+            background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95), rgba(0, 240, 255, 0.8) 25%, rgba(14, 165, 233, 0.5) 55%, rgba(245, 158, 11, 0.7) 80%, rgba(5, 10, 23, 0.2) 100%);
+            box-shadow: 
+                0 0 50px rgba(0, 240, 255, 0.8),
+                0 0 100px rgba(245, 158, 11, 0.5),
+                inset -15px -15px 35px rgba(0, 0, 0, 0.6),
+                inset 15px 15px 30px rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+        }
+
+        /* Glassmorphism Card for Feedback */
+        .glass-feedback-card {
+            background: linear-gradient(135deg, rgba(10, 20, 40, 0.94) 0%, rgba(5, 12, 28, 0.98) 100%);
+            border: 2px solid rgba(0, 240, 255, 0.6);
+            box-shadow: 
+                0 0 70px rgba(0, 240, 255, 0.35),
+                0 0 120px rgba(245, 158, 11, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        /* Pulse glow animation */
+        @keyframes gentlePulse {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.03); opacity: 1; }
+        }
+        .anim-gentle-pulse {
+            animation: gentlePulse 3s ease-in-out infinite;
         }
 
         @media print {
@@ -72,10 +119,110 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-[#050A17] text-slate-100 font-sans antialiased flex flex-col justify-center items-center p-4 sm:p-6 lg:p-10 cyber-grid selection:bg-cyan-500 selection:text-black">
+<body class="min-h-screen bg-[#050A17] text-slate-100 font-sans antialiased flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8 cyber-grid selection:bg-cyan-500 selection:text-black relative overflow-x-hidden">
 
-    <!-- Main Landscape Container (Bersih, Lembut, Fokus Penuh ke Barcode & Alamat Manual) -->
-    <main class="w-full max-w-7xl mx-auto my-auto">
+    <!-- Canvas Khusus Partikel Ledakan Shockwave -->
+    <canvas id="burstCanvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+    <!-- ELEMEN GELEMBUNG MENGEMBANG & MELEDAK (Initially Hidden) -->
+    <div id="bubbleContainer" class="fixed inset-0 z-40 flex items-center justify-center pointer-events-none opacity-0 hidden">
+        <div id="feedbackBubble" class="hologram-bubble w-48 h-48 sm:w-64 sm:h-64 rounded-full relative flex items-center justify-center transform scale-0">
+            <!-- Kilau Refleksi Cahaya -->
+            <div class="absolute top-4 left-6 w-12 h-6 sm:w-16 sm:h-8 rounded-full bg-white/70 transform -rotate-45 blur-[1px]"></div>
+            <div class="text-center px-4">
+                <i class="fa-solid fa-sparkles text-3xl sm:text-4xl text-amber-300 drop-shadow-[0_0_15px_rgba(255,255,255,0.9)] animate-spin" style="animation-duration: 6s;"></i>
+                <div class="text-[11px] sm:text-xs font-black uppercase tracking-widest text-white drop-shadow mt-1">Feedback Masuk...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL / POPUP KARTU PESAN & SARAN APRESIASI TAMU (After Explosion) -->
+    <div id="feedbackPopupModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10 pointer-events-none opacity-0 hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-md pointer-events-auto" onclick="closeFeedbackPopup()"></div>
+        
+        <div id="feedbackPopupCard" class="glass-feedback-card relative z-10 w-full max-w-3xl rounded-3xl p-6 sm:p-8 md:p-10 pointer-events-auto transform scale-90 opacity-0 overflow-hidden">
+            
+            <!-- Glow Accent Rings -->
+            <div class="absolute -top-24 -right-24 w-60 h-60 rounded-full bg-cyan-500/20 blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-60 h-60 rounded-full bg-amber-500/20 blur-3xl pointer-events-none"></div>
+
+            <!-- Top Header Badge & Close Button -->
+            <div class="flex items-center justify-between pb-4 border-b border-cyan-500/30">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold uppercase tracking-widest bg-gradient-to-r from-cyan-500/30 to-amber-500/30 text-amber-300 border border-amber-400/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]">
+                        <i class="fa-solid fa-sparkles text-amber-400 animate-spin" style="animation-duration: 4s;"></i>
+                        Apresiasi Tamu Baru!
+                    </span>
+                    <span class="text-xs text-cyan-300 hidden sm:inline-block font-mono tracking-wider">
+                        • LIVE EXHIBITION EVALUATION
+                    </span>
+                </div>
+                <button onclick="closeFeedbackPopup()" class="w-9 h-9 rounded-full bg-slate-800/80 hover:bg-rose-500/80 text-slate-300 hover:text-white transition flex items-center justify-center border border-slate-700">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Guest Identity Section -->
+            <div class="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+                        <i class="fa-solid fa-user-check text-cyan-300"></i> Dari Tamu Terhormat:
+                    </div>
+                    <h2 id="popupGuestName" class="text-2xl sm:text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-amber-200 tracking-tight">
+                        Bpk. Bambang Sutrisno
+                    </h2>
+                </div>
+                <div class="sm:text-right">
+                    <span id="popupGuestInst" class="inline-block px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-400/40 shadow-sm">
+                        Kelurahan Winongo
+                    </span>
+                </div>
+            </div>
+
+            <!-- Message / Impression Section (Kesan & Pesan) -->
+            <div class="mt-6 p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-amber-400/40 relative shadow-inner">
+                <i class="fa-solid fa-quote-left text-3xl sm:text-4xl text-amber-400/20 absolute top-3 left-3 pointer-events-none"></i>
+                <div class="relative z-10 space-y-1.5 pl-2 sm:pl-4">
+                    <div class="text-[11px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-heart text-rose-400"></i>
+                        Kesan & Pesan Acara:
+                    </div>
+                    <p id="popupImpression" class="text-base sm:text-lg md:text-xl font-medium text-slate-100 leading-relaxed italic">
+                        "Pameran karya AI yang sangat menginspirasi! Hasil karya para peserta pelatihan sangat kreatif dan menunjukkan potensi luar biasa anak muda Madiun."
+                    </p>
+                </div>
+            </div>
+
+            <!-- Feedback / Critique Section (Kritik & Saran) -->
+            <div id="popupFeedbackWrap" class="mt-4 p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/30 space-y-1">
+                <div class="text-[11px] sm:text-xs font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-lightbulb text-amber-300"></i>
+                    Saran & Masukan Evaluasi:
+                </div>
+                <p id="popupFeedback" class="text-xs sm:text-sm text-slate-200 leading-relaxed pl-1">
+                    "Semoga pelatihan berkelanjutan seperti ini rutin diselenggarakan oleh Disnaker Kota Madiun setiap tahunnya."
+                </p>
+            </div>
+
+            <!-- Bottom Progress Countdown Bar -->
+            <div class="mt-6 pt-2">
+                <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock-rotate-left text-cyan-400"></i>
+                        Tampilan otomatis kembali ke barcode
+                    </span>
+                    <span id="popupTimerSec" class="font-mono text-cyan-300 font-bold">8 detik</span>
+                </div>
+                <div class="w-full bg-slate-800/80 rounded-full h-2 overflow-hidden border border-slate-700">
+                    <div id="popupProgressBar" class="h-full bg-gradient-to-r from-cyan-400 via-amber-400 to-rose-400 rounded-full transition-all duration-100" style="width: 100%;"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MAIN LANDSCAPE CONTAINER PROYEKTOR (Tampilan Standar Barcode & Panduan) -->
+    <main class="w-full max-w-7xl mx-auto my-auto relative z-10">
         
         <div class="print-card-landscape w-full bg-[#0A1428] border-2 border-amber-400/70 rounded-3xl p-6 sm:p-8 lg:p-12 shadow-[0_0_60px_rgba(0,0,0,0.8)] relative overflow-hidden">
             
@@ -84,7 +231,7 @@
                 <!-- KOLOM KIRI (7 Kolom): Informasi Acara, Judul Lembut & Link Manual Besar -->
                 <div class="lg:col-span-7 space-y-5 text-left">
                     
-                    <!-- Header Logo & Identitas Acara Rapi Ditengahkan & Diperbesar -->
+                    <!-- Header Logo & Identitas Acara Ditengahkan & Diperbesar -->
                     <div class="space-y-3 pb-4 border-b border-slate-800 print-border-dark flex flex-col items-center justify-center text-center">
                         <div class="flex justify-center w-full">
                             <img src="/images/logo-header.png?v=2" alt="Logo Digital AI Work Exhibition" class="h-18 sm:h-20 md:h-24 lg:h-28 w-auto object-contain drop-shadow-[0_0_20px_rgba(0,240,255,0.4)] mx-auto" />
@@ -136,9 +283,13 @@
                         </div>
                     </div>
 
-                    <!-- Branding Penyelenggara -->
-                    <div class="pt-1 text-xs text-slate-400 print-text-muted">
-                        Dinas Tenaga Kerja, KUKM Kota Madiun & LPKS Pola Sukses Akademi
+                    <!-- Branding Penyelenggara & Status Realtime -->
+                    <div class="pt-1 flex flex-wrap items-center justify-between text-xs text-slate-400 print-text-muted gap-2">
+                        <span>Dinas Tenaga Kerja, KUKM Kota Madiun & LPKS Pola Sukses Akademi</span>
+                        <span id="liveFeedbackStatus" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[11px]">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            Live Feedback Ready
+                        </span>
                     </div>
 
                 </div>
@@ -175,7 +326,28 @@
 
     </main>
 
+    <!-- FLOATING CONTROLS (FULLSCREEN, AUDIO TOGGLE, SIMULASI TEST) -->
+    <div class="fixed bottom-4 right-4 z-40 no-print flex items-center gap-2">
+        <button id="btnTestAnimation" title="Uji Coba Animasi Gelembung Meledak" onclick="triggerTestFeedback()" class="px-3.5 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-amber-300 hover:text-amber-200 border border-amber-400/40 text-xs font-semibold backdrop-blur shadow-lg flex items-center gap-2 transition active:scale-95">
+            <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+            <span class="hidden md:inline">Test Ledakan</span>
+        </button>
+
+        <button id="btnToggleAudio" title="Nyalakan / Matikan Suara Efek" onclick="toggleAudio()" class="px-3.5 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-cyan-400/40 text-xs font-semibold backdrop-blur shadow-lg flex items-center gap-2 transition active:scale-95">
+            <i id="audioIcon" class="fa-solid fa-volume-high text-cyan-400"></i>
+            <span id="audioText" class="hidden md:inline">Audio: On</span>
+        </button>
+
+        <button id="btnToggleFs" title="Layar Penuh Proyektor" onclick="toggleFullscreen()" class="px-3.5 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700 text-xs font-semibold backdrop-blur shadow-lg flex items-center gap-2 transition active:scale-95">
+            <i id="fsIcon" class="fa-solid fa-expand text-cyan-400"></i>
+            <span class="hidden md:inline">Fullscreen</span>
+        </button>
+    </div>
+
     <script>
+        // ==========================================
+        // 1. Inisialisasi Barcode Otomatis
+        // ==========================================
         function initBarcode() {
             const host = window.location.origin;
             const targetUrl = `${host}/feedback`;
@@ -184,7 +356,439 @@
                 img.src = `/api/venue/feedback-barcode/png?url=${encodeURIComponent(targetUrl)}&t=${Date.now()}`;
             }
         }
-        document.addEventListener('DOMContentLoaded', initBarcode);
+
+        // ==========================================
+        // 2. Synthesizer Efek Suara (Web Audio API)
+        // ==========================================
+        let audioCtx = null;
+        let isAudioMuted = false;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtx = new AudioContext();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function toggleAudio() {
+            isAudioMuted = !isAudioMuted;
+            const icon = document.getElementById('audioIcon');
+            const txt = document.getElementById('audioText');
+            if (isAudioMuted) {
+                icon.className = 'fa-solid fa-volume-xmark text-rose-400';
+                txt.textContent = 'Audio: Off';
+            } else {
+                icon.className = 'fa-solid fa-volume-high text-cyan-400';
+                txt.textContent = 'Audio: On';
+                // Trigger unlock
+                getAudioContext();
+            }
+        }
+
+        // Suara gelembung mengembang & ledakan harmonik
+        function playBubbleSound() {
+            if (isAudioMuted) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                // Nada Gelembung Mengembang (Frequency sweep naik lembut)
+                const oscRising = ctx.createOscillator();
+                const gainRising = ctx.createGain();
+                oscRising.type = 'sine';
+                oscRising.frequency.setValueAtTime(220, now);
+                oscRising.frequency.exponentialRampToValueAtTime(750, now + 0.85);
+
+                gainRising.gain.setValueAtTime(0.01, now);
+                gainRising.gain.exponentialRampToValueAtTime(0.18, now + 0.6);
+                gainRising.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+
+                oscRising.connect(gainRising);
+                gainRising.connect(ctx.destination);
+                oscRising.start(now);
+                oscRising.stop(now + 0.85);
+
+                // Ledakan "Pop & Chime" Kristal Saat Gelembung Meletus (Tepat di detik ke-0.85)
+                setTimeout(() => {
+                    if (isAudioMuted || !audioCtx) return;
+                    const popNow = audioCtx.currentTime;
+
+                    // Pop Thud (Low body)
+                    const oscPop = audioCtx.createOscillator();
+                    const gainPop = audioCtx.createGain();
+                    oscPop.type = 'triangle';
+                    oscPop.frequency.setValueAtTime(320, popNow);
+                    oscPop.frequency.exponentialRampToValueAtTime(80, popNow + 0.18);
+
+                    gainPop.gain.setValueAtTime(0.35, popNow);
+                    gainPop.gain.exponentialRampToValueAtTime(0.001, popNow + 0.22);
+
+                    oscPop.connect(gainPop);
+                    gainPop.connect(audioCtx.destination);
+                    oscPop.start(popNow);
+                    oscPop.stop(popNow + 0.22);
+
+                    // Harmoni Kemilau (Majestic Chords: C#5, E5, G#5, C#6)
+                    const freqs = [554.37, 659.25, 830.61, 1108.73];
+                    freqs.forEach((f, idx) => {
+                        const oscChime = audioCtx.createOscillator();
+                        const gainChime = audioCtx.createGain();
+                        oscChime.type = 'sine';
+                        oscChime.frequency.setValueAtTime(f, popNow + (idx * 0.04));
+
+                        const startTime = popNow + (idx * 0.04);
+                        gainChime.gain.setValueAtTime(0.12, startTime);
+                        gainChime.gain.exponentialRampToValueAtTime(0.001, startTime + 1.2);
+
+                        oscChime.connect(gainChime);
+                        gainChime.connect(audioCtx.destination);
+                        oscChime.start(startTime);
+                        oscChime.stop(startTime + 1.25);
+                    });
+                }, 850);
+            } catch (e) {
+                console.warn('[Audio] Notice:', e);
+            }
+        }
+
+        // ==========================================
+        // 3. Efek Partikel Ledakan Shockwave (Canvas Confetti)
+        // ==========================================
+        function fireParticleShockwave() {
+            try {
+                const burstCanvas = document.getElementById('burstCanvas');
+                const myConfetti = confetti.create(burstCanvas, { resize: true, useWorker: true });
+
+                // Shockwave partikel emas, cyan, putih berkilau
+                myConfetti({
+                    particleCount: 100,
+                    spread: 360,
+                    startVelocity: 42,
+                    origin: { x: 0.5, y: 0.5 },
+                    colors: ['#00F0FF', '#F59E0B', '#38BDF8', '#FFFFFF', '#FDE047'],
+                    ticks: 200,
+                    gravity: 0.6,
+                    scalar: 1.2,
+                    shapes: ['circle', 'square']
+                });
+
+                // Ledakan lapis kedua (Bintang / Sparkles)
+                setTimeout(() => {
+                    myConfetti({
+                        particleCount: 60,
+                        spread: 180,
+                        startVelocity: 55,
+                        origin: { x: 0.5, y: 0.5 },
+                        colors: ['#FFFFFF', '#38BDF8', '#F59E0B'],
+                        ticks: 240,
+                        gravity: 0.45,
+                        scalar: 1.5,
+                        shapes: ['star']
+                    });
+                }, 120);
+            } catch (err) {
+                console.warn('[Confetti] Notice:', err);
+            }
+        }
+
+        // ==========================================
+        // 4. Orkestrasi Animasi Gelembung & Kartu Tamu
+        // ==========================================
+        let popupTimerInterval = null;
+        let countdownSeconds = 8;
+
+        function showFeedbackSurprise(data) {
+            getAudioContext();
+            playBubbleSound();
+
+            const bubbleContainer = document.getElementById('bubbleContainer');
+            const feedbackBubble = document.getElementById('feedbackBubble');
+            const popupModal = document.getElementById('feedbackPopupModal');
+            const popupCard = document.getElementById('feedbackPopupCard');
+
+            // Set Content
+            document.getElementById('popupGuestName').textContent = data.name || 'Tamu Terhormat';
+            document.getElementById('popupGuestInst').textContent = data.institution || 'Tamu Undangan';
+            
+            const impressionText = data.impression || data.pesanKesan || 'Terima kasih atas terselenggaranya acara ini.';
+            document.getElementById('popupImpression').textContent = `"${impressionText}"`;
+
+            const feedbackWrap = document.getElementById('popupFeedbackWrap');
+            const feedbackText = data.feedback || data.kritikSaran || '';
+            if (feedbackText.trim()) {
+                document.getElementById('popupFeedback').textContent = feedbackText;
+                feedbackWrap.classList.remove('hidden');
+            } else {
+                feedbackWrap.classList.add('hidden');
+            }
+
+            // Jika popup sedang terbuka dari tamu sebelumnya, tutup dulu sekejap
+            if (!popupModal.classList.contains('hidden')) {
+                clearInterval(popupTimerInterval);
+                gsap.killTweensOf(popupCard);
+            }
+
+            // Reset Bubble
+            bubbleContainer.classList.remove('hidden');
+            bubbleContainer.style.opacity = '1';
+            gsap.set(feedbackBubble, { scale: 0, opacity: 0, rotation: 0 });
+
+            // Timeline Animasi Gelembung Mengembang & Meletus
+            const tl = gsap.timeline();
+
+            // 1. Gelembung muncul dari tengah dengan pantulan elastis
+            tl.to(feedbackBubble, {
+                scale: 1,
+                opacity: 1,
+                duration: 0.45,
+                ease: "back.out(2)"
+            })
+            // 2. Berdenyut dan membesar semakin kuat (antisipasi meledak)
+            .to(feedbackBubble, {
+                scale: 1.25,
+                rotation: 12,
+                duration: 0.35,
+                ease: "power2.in"
+            })
+            // 3. MELEDAK / PECAH! (Burst)
+            .to(feedbackBubble, {
+                scale: 2.2,
+                opacity: 0,
+                duration: 0.18,
+                ease: "power4.out",
+                onComplete: () => {
+                    bubbleContainer.classList.add('hidden');
+                    fireParticleShockwave();
+                    revealFeedbackCard();
+                }
+            });
+        }
+
+        function revealFeedbackCard() {
+            const popupModal = document.getElementById('feedbackPopupModal');
+            const popupCard = document.getElementById('feedbackPopupCard');
+
+            popupModal.classList.remove('hidden');
+            gsap.to(popupModal, { opacity: 1, duration: 0.25 });
+
+            // Kartu Meluncur Keluar dari Pusat Ledakan
+            gsap.fromTo(popupCard, 
+                { scale: 0.6, opacity: 0, y: 30 },
+                { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.6)" }
+            );
+
+            // Jalankan Timer Countdown Bar (8 Detik)
+            startCountdownBar(8);
+        }
+
+        function startCountdownBar(seconds) {
+            clearInterval(popupTimerInterval);
+            countdownSeconds = seconds;
+            const bar = document.getElementById('popupProgressBar');
+            const txt = document.getElementById('popupTimerSec');
+            
+            bar.style.width = '100%';
+            txt.textContent = `${countdownSeconds} detik`;
+
+            const totalMs = seconds * 1000;
+            const stepMs = 100;
+            let elapsed = 0;
+
+            popupTimerInterval = setInterval(() => {
+                elapsed += stepMs;
+                const remainingRatio = Math.max(0, 1 - (elapsed / totalMs));
+                bar.style.width = `${remainingRatio * 100}%`;
+                
+                const remainSec = Math.ceil((totalMs - elapsed) / 1000);
+                txt.textContent = `${remainSec} detik`;
+
+                if (elapsed >= totalMs) {
+                    clearInterval(popupTimerInterval);
+                    closeFeedbackPopup();
+                }
+            }, stepMs);
+        }
+
+        function closeFeedbackPopup() {
+            clearInterval(popupTimerInterval);
+            const popupModal = document.getElementById('feedbackPopupModal');
+            const popupCard = document.getElementById('feedbackPopupCard');
+
+            gsap.to(popupCard, {
+                scale: 0.8,
+                opacity: 0,
+                duration: 0.3,
+                ease: "power2.in"
+            });
+            gsap.to(popupModal, {
+                opacity: 0,
+                duration: 0.35,
+                delay: 0.1,
+                onComplete: () => {
+                    popupModal.classList.add('hidden');
+                }
+            });
+        }
+
+        // ==========================================
+        // 5. Dual Real-time Listener (MQTT & SSE)
+        // ==========================================
+        let lastReceivedTimestamp = 0;
+
+        function handleIncomingEvent(eventData) {
+            if (!eventData) return;
+
+            // Handle Emergency Hide
+            if (eventData.type === 'emergency_hide') {
+                closeFeedbackPopup();
+                return;
+            }
+
+            // Handle Emergency Mute
+            if (eventData.type === 'emergency_mute') {
+                isAudioMuted = !!eventData.muted;
+                const icon = document.getElementById('audioIcon');
+                const txt = document.getElementById('audioText');
+                icon.className = isAudioMuted ? 'fa-solid fa-volume-xmark text-rose-400' : 'fa-solid fa-volume-high text-cyan-400';
+                txt.textContent = isAudioMuted ? 'Audio: Off' : 'Audio: On';
+                return;
+            }
+
+            // Process guest_feedback
+            if (eventData.type === 'guest_feedback') {
+                const now = Date.now();
+                // Deduplicate if received via both MQTT and SSE within 2000ms
+                if (now - lastReceivedTimestamp < 2000) return;
+                lastReceivedTimestamp = now;
+
+                const payload = eventData.data || eventData;
+                showFeedbackSurprise(payload);
+            }
+        }
+
+        // 5a. HiveMQ Global Real-time MQTT
+        function connectMqtt() {
+            try {
+                const client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', {
+                    reconnectPeriod: 3000,
+                    connectTimeout: 5000
+                });
+
+                client.on('connect', () => {
+                    console.log('[MQTT] Connected to HiveMQ Broker for projector feedback.');
+                    client.subscribe('mbd_ai_exhibition_madiun_2026/events');
+                });
+
+                client.on('message', (topic, message) => {
+                    try {
+                        const parsed = JSON.parse(message.toString());
+                        handleIncomingEvent(parsed);
+                    } catch (e) {}
+                });
+
+                client.on('error', (err) => console.warn('[MQTT] Error:', err.message));
+            } catch (err) {
+                console.warn('[MQTT] Init notice:', err);
+            }
+        }
+
+        // 5b. Local Server-Sent Events (SSE) Fallback
+        function connectSSE() {
+            try {
+                const evtSource = new EventSource('/api/live/stream');
+                evtSource.onmessage = (e) => {
+                    try {
+                        const parsed = JSON.parse(e.data);
+                        handleIncomingEvent(parsed);
+                    } catch (err) {}
+                };
+                evtSource.onerror = () => {
+                    // SSE auto reconnects
+                };
+            } catch (e) {}
+        }
+
+        // ==========================================
+        // 6. Simulator Uji Coba Animasi (Operator Trigger)
+        // ==========================================
+        function triggerTestFeedback() {
+            const sampleFeedbacks = [
+                {
+                    name: 'Bpk. Bambang Sutrisno, S.E.',
+                    institution: 'Kelurahan Winongo Madiun',
+                    impression: 'Luar biasa! Pameran AI ini membuka wawasan baru tentang efisiensi kerja masa depan di Kota Madiun.',
+                    feedback: 'Mohon sering diadakan workshop lanjutan untuk aparatur desa/kelurahan.'
+                },
+                {
+                    name: 'Ibu Ratna Dewi Astuti',
+                    institution: 'Klinik & Laboratorium Terpadu',
+                    impression: 'Karya peserta sangat profesional dan langsung siap pakai di dunia industri nyata.',
+                    feedback: 'Fasilitas dan materi pelatihan sangat recommended.'
+                },
+                {
+                    name: 'Sdr. Dimas Prasetya',
+                    institution: 'Pelaku UMKM Kuliner Madiun',
+                    impression: 'Keren banget animasi dan presentasi digitalnya. Sangat menginspirasi pelaku usaha lokal!',
+                    feedback: 'Harapannya diadakan pendampingan langsung ke sentra UMKM.'
+                }
+            ];
+
+            const picked = sampleFeedbacks[Math.floor(Math.random() * sampleFeedbacks.length)];
+            showFeedbackSurprise(picked);
+        }
+
+        // ==========================================
+        // 7. Kontrol Fullscreen & Keyboard Shortcut
+        // ==========================================
+        function toggleFullscreen() {
+            const icon = document.getElementById('fsIcon');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    icon.className = 'fa-solid fa-compress text-cyan-400';
+                }).catch(err => console.warn(err));
+            } else {
+                document.exitFullscreen().then(() => {
+                    icon.className = 'fa-solid fa-expand text-cyan-400';
+                }).catch(err => console.warn(err));
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const icon = document.getElementById('fsIcon');
+            if (icon) {
+                icon.className = document.fullscreenElement ? 'fa-solid fa-compress text-cyan-400' : 'fa-solid fa-expand text-cyan-400';
+            }
+        });
+
+        // Keyboard Shortcut: Space (Test), F / F11 (Fullscreen), M (Mute), Escape (Close)
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.code === 'Space') {
+                e.preventDefault();
+                triggerTestFeedback();
+            } else if (e.key === 'f' || e.key === 'F') {
+                e.preventDefault();
+                toggleFullscreen();
+            } else if (e.key === 'm' || e.key === 'M') {
+                toggleAudio();
+            } else if (e.key === 'Escape') {
+                closeFeedbackPopup();
+            }
+        });
+
+        // Inisialisasi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            initBarcode();
+            connectMqtt();
+            connectSSE();
+        });
     </script>
 </body>
 </html>
