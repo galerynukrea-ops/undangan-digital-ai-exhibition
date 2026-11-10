@@ -11,7 +11,7 @@ const crypto = require('node:crypto');
 const uuidv4 = () => crypto.randomUUID();
 
 const { db, generateToken, resetAttendanceOnly, seedDatabase, sampleInstitutions } = require('./db');
-const { getCloudGuests, saveGuestToCloud, deleteGuestFromCloud, resetCloudGuests, getLastCloudError, isGuestDeleted, getDeletedGuestIds } = require('./cloudStore');
+const { getCloudGuests, saveGuestToCloud, deleteGuestFromCloud, resetCloudGuests, getLastCloudError, isGuestDeleted, getDeletedGuestIds, getResetEpoch, isBeforeResetEpoch } = require('./cloudStore');
 const { analyzeSentiment, localAnalyzeSentiment } = require('./aiService');
 const { generateVenueStandeePdf, PALETTE, EVENT_DETAILS } = require('./pdfService');
 const { addClient, broadcastEvent } = require('./sseService');
@@ -131,7 +131,7 @@ app.get('/api/network-info', (req, res) => {
     });
 });
 
-// Bi-directional Consensus Synchronizer (Zero Data-Loss, Accretive Safe with Tombstones)
+// Bi-directional Consensus Synchronizer (Zero Data-Loss, Accretive Safe with Tombstones & Reset Epoch Guard)
 async function syncLocalDbWithCloud() {
     try {
         const deletedIds = getDeletedGuestIds();
@@ -140,6 +140,18 @@ async function syncLocalDbWithCloud() {
                 try {
                     db.prepare('DELETE FROM guests WHERE id = ?').run(dId);
                     db.prepare('DELETE FROM guest_messages WHERE guest_id = ?').run(dId);
+                } catch (e) {}
+            }
+        }
+
+        // 1. Purge any stale local SQLite records that belong to before the latest reset epoch
+        const allLocal = db.prepare('SELECT id, created_at, checked_in_at FROM guests').all() || [];
+        for (const row of allLocal) {
+            const time = row.created_at || row.checked_in_at;
+            if (isBeforeResetEpoch(time)) {
+                try {
+                    db.prepare('DELETE FROM guests WHERE id = ?').run(row.id);
+                    db.prepare('DELETE FROM guest_messages WHERE guest_id = ?').run(row.id);
                 } catch (e) {}
             }
         }
@@ -158,6 +170,7 @@ async function syncLocalDbWithCloud() {
 
             for (const g of cloudGuests) {
                 if (!g.id || !g.name || isGuestDeleted(g.id)) continue;
+                if (isBeforeResetEpoch(g.created_at || g.checked_in_at)) continue;
                 try {
                     insertGuest.run(
                         g.id,
@@ -187,7 +200,7 @@ async function syncLocalDbWithCloud() {
             }
         }
 
-        // If local DB has guests that Cloud Store doesn't have yet, push them to Cloud Store
+        // If local DB has new guests that Cloud Store doesn't have yet, push them to Cloud Store
         if (Array.isArray(cloudGuests)) {
             const cloudIds = new Set(cloudGuests.map(g => g.id));
             const localGuests = db.prepare(`
@@ -197,6 +210,14 @@ async function syncLocalDbWithCloud() {
             `).all() || [];
 
             for (const lg of localGuests) {
+                if (isBeforeResetEpoch(lg.created_at || lg.checked_in_at)) {
+                    // Stale guest from before reset: purge from sqlite, NEVER upload!
+                    try {
+                        db.prepare('DELETE FROM guests WHERE id = ?').run(lg.id);
+                        db.prepare('DELETE FROM guest_messages WHERE guest_id = ?').run(lg.id);
+                    } catch (e) {}
+                    continue;
+                }
                 if (lg.id && lg.name && !cloudIds.has(lg.id) && !isGuestDeleted(lg.id)) {
                     await saveGuestToCloud(lg);
                 }
@@ -554,20 +575,27 @@ app.post('/api/emergency/remove-last', requireAdmin, async (req, res) => {
     }
 });
 
-// 5. Reset Testing & Attendance Data (Wipes all sample guests to 0 for simulation)
+// 5. Reset Testing & Attendance Data (Authoritative wipe: 0 guests across all containers & screens)
 app.all(['/api/admin/reset', '/api/reset'], requireAdmin, async (req, res) => {
     try {
         const mode = (req.body?.mode || req.query?.mode || 'factory').toLowerCase();
+        const resetTimestamp = new Date().toISOString();
         
-        // Reset local DB & Global Cloud Store
-        await resetCloudGuests();
+        // Reset local DB & Global Cloud Store with authoritative Reset Epoch
+        await resetCloudGuests(resetTimestamp);
         seedDatabase();
 
-        broadcastEvent('database_reset', { mode, timestamp: new Date().toISOString() });
+        broadcastEvent('database_reset', { 
+            mode, 
+            resetTimestamp, 
+            timestamp: resetTimestamp 
+        });
+
         return res.json({
             success: true,
             mode,
-            message: 'Seluruh data contoh berhasil dibersihkan (0 tamu). Sistem siap untuk simulasi registrasi baru.'
+            resetTimestamp,
+            message: 'Seluruh data tamu dan masukan evaluasi berhasil dibersihkan permanen (0 tamu).'
         });
     } catch (err) {
         console.error('[API] Error reset database:', err.message);

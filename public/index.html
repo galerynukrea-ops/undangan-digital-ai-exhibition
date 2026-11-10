@@ -433,7 +433,15 @@
                 const res = await fetch(url);
                 const json = await res.json();
                 if (json.success) {
-                    const guests = (json.data || []).filter(g => g && g.id && !deletedGuestIds.has(g.id));
+                    const adminResetEpoch = parseInt(localStorage.getItem('mbd_admin_reset_epoch') || '0', 10);
+                    const guests = (json.data || []).filter(g => {
+                        if (!g || !g.id || deletedGuestIds.has(g.id)) return false;
+                        if (adminResetEpoch) {
+                            const gTime = new Date(g.created_at || g.checked_in_at || 0).getTime();
+                            if (gTime < adminResetEpoch) return false;
+                        }
+                        return true;
+                    });
 
                     // ANTI-FLICKER GUARD:
                     // If serverless container cold-started and briefly returned 0, but we already have guests displayed,
@@ -840,7 +848,10 @@
                 if (json.success) {
                     closeResetModal();
                     deletedGuestIds.clear();
-                    try { localStorage.removeItem('mbd_deleted_ids'); } catch (e) {}
+                    try { 
+                        localStorage.removeItem('mbd_deleted_ids'); 
+                        localStorage.setItem('mbd_admin_reset_epoch', Date.now().toString());
+                    } catch (e) {}
                     activeDisplayedGuests = [];
                     lastRenderedHash = '';
                     renderTable([]);
@@ -868,6 +879,10 @@
                         } else if (parsed.type === 'database_reset') {
                             isExplicitReset = true;
                             deletedGuestIds.clear();
+                            try {
+                                localStorage.removeItem('mbd_deleted_ids');
+                                localStorage.setItem('mbd_admin_reset_epoch', Date.now().toString());
+                            } catch (e) {}
                             activeDisplayedGuests = [];
                             lastRenderedHash = '';
                             renderTable([]);

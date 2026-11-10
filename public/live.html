@@ -549,7 +549,15 @@
                 const json = await res.json();
                 if (json.success) {
                     const stats = json.data;
-                    const incomingList = (stats.allCheckins || stats.recentCheckins || []).filter(g => g && g.id && !deletedGuestIds.has(g.id));
+                    const liveResetEpoch = parseInt(localStorage.getItem('mbd_live_reset_epoch') || '0', 10);
+                    const incomingList = (stats.allCheckins || stats.recentCheckins || []).filter(g => {
+                        if (!g || !g.id || deletedGuestIds.has(g.id)) return false;
+                        if (liveResetEpoch) {
+                            const gTime = new Date(g.created_at || g.checked_in_at || 0).getTime();
+                            if (gTime < liveResetEpoch) return false;
+                        }
+                        return true;
+                    });
                     
                     // ANTI-FLICKER GUARD:
                     // If cold-start lambda returns 0, but screen already has active checked-in guests,
@@ -845,6 +853,7 @@
                             try {
                                 localStorage.removeItem('mbd_live_guests');
                                 localStorage.removeItem('mbd_deleted_ids');
+                                localStorage.setItem('mbd_live_reset_epoch', Date.now().toString());
                             } catch (e) {}
                             if (popupDismissTimer) clearTimeout(popupDismissTimer);
                             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -906,6 +915,7 @@
                         try {
                             localStorage.removeItem('mbd_live_guests');
                             localStorage.removeItem('mbd_deleted_ids');
+                            localStorage.setItem('mbd_live_reset_epoch', Date.now().toString());
                         } catch (e) {}
                         if (popupDismissTimer) clearTimeout(popupDismissTimer);
                         if ('speechSynthesis' in window) window.speechSynthesis.cancel();

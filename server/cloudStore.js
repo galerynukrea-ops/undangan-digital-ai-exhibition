@@ -1,7 +1,7 @@
 /**
- * CLOUD STORE & REAL-TIME STATE SYNCHRONIZER (With Distributed Consensus)
+ * CLOUD STORE & REAL-TIME STATE SYNCHRONIZER (With Distributed Consensus & Reset Epoch)
  * Multi-layer persistence: In-Memory + Local JSON + MQTT Retained State.
- * Prevents split-brain and disappearing guests across Vercel serverless containers.
+ * Prevents split-brain, disappearing guests, and phantom resurrection across Vercel serverless containers.
  * Digital Work AI Exhibition • Waroeng Latte Madiun
  */
 
@@ -18,17 +18,27 @@ const INITIAL_VIP_GUESTS = [];
 let memoryGuests = [];
 let deletedGuestIds = new Set();
 let hasLoadedRetained = false;
+let resetEpoch = 0; // Epoch timestamp (ms): any guest created before this is completely void
 
 function loadLocalState() {
     try {
         if (fs.existsSync(STATE_FILE)) {
             const raw = fs.readFileSync(STATE_FILE, 'utf-8');
             const parsed = JSON.parse(raw);
+            if (parsed.resetEpoch) {
+                resetEpoch = typeof parsed.resetEpoch === 'number' 
+                    ? parsed.resetEpoch 
+                    : new Date(parsed.resetEpoch).getTime() || 0;
+            }
             if (Array.isArray(parsed.deletedIds)) {
                 deletedGuestIds = new Set(parsed.deletedIds);
             }
             if (Array.isArray(parsed.guests) && parsed.guests.length > 0) {
-                memoryGuests = parsed.guests.filter(g => !deletedGuestIds.has(g.id));
+                memoryGuests = parsed.guests.filter(g => {
+                    if (!g || !g.id || deletedGuestIds.has(g.id)) return false;
+                    const gTime = new Date(g.created_at || g.checked_in_at || 0).getTime();
+                    return !resetEpoch || gTime >= resetEpoch;
+                });
                 return;
             }
         }
@@ -44,6 +54,7 @@ function persistLocalState() {
         fs.writeFileSync(STATE_FILE, JSON.stringify({
             guests: memoryGuests,
             deletedIds: Array.from(deletedGuestIds),
+            resetEpoch,
             lastUpdated: new Date().toISOString()
         }, null, 2), 'utf-8');
     } catch (e) {}
@@ -72,21 +83,40 @@ function getOrInitMqtt() {
                     hasLoadedRetained = true;
                     if (!msg || msg.length === 0) return;
                     const parsed = JSON.parse(msg.toString());
+                    
+                    const incomingEpoch = parsed.resetEpoch
+                        ? (typeof parsed.resetEpoch === 'number' ? parsed.resetEpoch : new Date(parsed.resetEpoch).getTime())
+                        : 0;
+
+                    // If a newer reset occurred anywhere, wipe local memory immediately
+                    if (incomingEpoch && incomingEpoch > resetEpoch) {
+                        resetEpoch = incomingEpoch;
+                        memoryGuests = [];
+                        deletedGuestIds.clear();
+                    }
+
                     if (Array.isArray(parsed.deletedIds)) {
                         parsed.deletedIds.forEach(id => deletedGuestIds.add(id));
                     }
+
                     if (Array.isArray(parsed.guests)) {
-                        const map = new Map();
-                        memoryGuests.forEach(g => { if (g.id && !deletedGuestIds.has(g.id)) map.set(g.id, g); });
-                        parsed.guests.forEach(g => {
-                            if (g.id && !deletedGuestIds.has(g.id)) {
-                                const existing = map.get(g.id) || {};
-                                map.set(g.id, { ...existing, ...g });
-                            }
-                        });
-                        memoryGuests = Array.from(map.values()).sort(
-                            (a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0)
-                        );
+                        if (parsed.guests.length === 0) {
+                            // Authoritative reset: wipe memory list completely!
+                            memoryGuests = [];
+                        } else {
+                            const map = new Map();
+                            parsed.guests.forEach(g => {
+                                if (g && g.id && !deletedGuestIds.has(g.id)) {
+                                    const gTime = new Date(g.created_at || g.checked_in_at || 0).getTime();
+                                    if (!resetEpoch || gTime >= resetEpoch) {
+                                        map.set(g.id, g);
+                                    }
+                                }
+                            });
+                            memoryGuests = Array.from(map.values()).sort(
+                                (a, b) => new Date(b.checked_in_at || 0) - new Date(a.checked_in_at || 0)
+                            );
+                        }
                         persistLocalState();
                     }
                 } catch (e) {}
@@ -123,6 +153,7 @@ async function broadcastState() {
             const payload = JSON.stringify({
                 guests: memoryGuests,
                 deletedIds: Array.from(deletedGuestIds),
+                resetEpoch,
                 lastUpdated: new Date().toISOString()
             });
             await new Promise((resolve) => {
@@ -133,7 +164,6 @@ async function broadcastState() {
 }
 
 async function getCloudGuests() {
-    // If local memory is empty on cold container, give HiveMQ up to 700ms to deliver retained state
     if (memoryGuests.length === 0 && !hasLoadedRetained) {
         await new Promise((resolve) => {
             ensureMqttConnected();
@@ -149,7 +179,11 @@ async function getCloudGuests() {
         });
         hasLoadedRetained = true;
     }
-    return memoryGuests.filter(g => !deletedGuestIds.has(g.id));
+    return memoryGuests.filter(g => {
+        if (!g || !g.id || deletedGuestIds.has(g.id)) return false;
+        const gTime = new Date(g.created_at || g.checked_in_at || 0).getTime();
+        return !resetEpoch || gTime >= resetEpoch;
+    });
 }
 
 function isGuestDeleted(guestId) {
@@ -160,11 +194,23 @@ function getDeletedGuestIds() {
     return deletedGuestIds;
 }
 
+function getResetEpoch() {
+    return resetEpoch;
+}
+
+function isBeforeResetEpoch(isoOrTimestamp) {
+    if (!resetEpoch || !isoOrTimestamp) return false;
+    const t = new Date(isoOrTimestamp).getTime();
+    return !isNaN(t) && t < resetEpoch;
+}
+
 async function saveGuestToCloud(guestRecord) {
     if (!guestRecord || !guestRecord.name) return false;
-    if (deletedGuestIds.has(guestRecord.id)) {
-        return false;
-    }
+    if (deletedGuestIds.has(guestRecord.id)) return false;
+
+    // Do not save old guests that were created prior to the reset epoch
+    const recordTime = new Date(guestRecord.created_at || guestRecord.checked_in_at || 0).getTime();
+    if (resetEpoch && recordTime < resetEpoch) return false;
 
     const existingIdx = memoryGuests.findIndex(g => g.id === guestRecord.id);
     if (existingIdx >= 0) {
@@ -187,7 +233,8 @@ async function deleteGuestFromCloud(guestId) {
     return true;
 }
 
-async function resetCloudGuests() {
+async function resetCloudGuests(customEpochIso) {
+    resetEpoch = customEpochIso ? new Date(customEpochIso).getTime() : Date.now();
     memoryGuests = [];
     deletedGuestIds.clear();
     persistLocalState();
@@ -197,6 +244,7 @@ async function resetCloudGuests() {
             const emptyPayload = JSON.stringify({
                 guests: [],
                 deletedIds: [],
+                resetEpoch,
                 lastUpdated: new Date().toISOString()
             });
             await new Promise((resolve) => {
@@ -213,5 +261,7 @@ module.exports = {
     resetCloudGuests,
     isGuestDeleted,
     getDeletedGuestIds,
+    getResetEpoch,
+    isBeforeResetEpoch,
     getLastCloudError: () => null
 };
