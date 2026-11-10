@@ -848,13 +848,22 @@ app.post('/api/checkin/feedback', async (req, res) => {
             return res.json({ success: true, message: 'Masukan berhasil dikirim' });
         }
 
-        // 2. Rate Limiting
+        // 2. Anti-Spam Rate Limiting (Keyed per user/device to never block multiple guests on same venue Wi-Fi)
         const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1').split(',')[0].trim();
-        const rateStatus = checkRateLimit(clientIp, 2, 15000);
-        if (!rateStatus.allowed) {
+        const guestFingerprint = body.guestId || body.guestName || body.name || 'anon';
+        const userRateStatus = checkRateLimit(`fb_guest_${clientIp}_${guestFingerprint}`, 4, 15000);
+        if (!userRateStatus.allowed) {
             return res.status(429).json({
                 success: false,
-                error: 'Terlalu banyak permintaan. Mohon tunggu beberapa detik sebelum mengirim lagi.'
+                error: 'Terlalu banyak permintaan dari perangkat Anda. Mohon tunggu beberapa detik.'
+            });
+        }
+        // Generous venue burst limit: up to 60 distinct feedback submissions per minute
+        const venueRateStatus = checkRateLimit(`fb_venue_${clientIp}`, 60, 60000);
+        if (!venueRateStatus.allowed) {
+            return res.status(429).json({
+                success: false,
+                error: 'Sistem sedang memproses antrean data tamu. Mohon coba lagi sebentar.'
             });
         }
 
@@ -950,7 +959,10 @@ app.post('/api/checkin/feedback', async (req, res) => {
             emotion: aiResult.emotion
         });
 
+        const feedbackId = body.feedbackId || `fb_${Date.now()}_${uuidv4().slice(0, 8)}`;
+
         broadcastEvent('guest_feedback', {
+            feedbackId,
             guestId: guest.id,
             name: guest.name,
             institution: guest.institution,

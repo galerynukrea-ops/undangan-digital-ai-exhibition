@@ -327,12 +327,15 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mengirimkan...`;
             btn.disabled = true;
 
+            const feedbackId = `fb_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
             try {
                 const honeypot = document.getElementById('feedbackHoneypot')?.value || '';
                 const res = await fetch('/api/checkin/feedback', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        feedbackId: feedbackId,
                         guestId: guestId,
                         guestName: guestName,
                         guestInstitution: guestInstitution,
@@ -344,11 +347,12 @@
 
                 const json = await res.json();
                 if (json.success) {
-                    // Send real-time broadcast via MQTT
+                    // Send real-time broadcast via MQTT (deduplicated by feedbackId)
                     try {
                         if (window.phoneMqtt && window.phoneMqtt.connected) {
                             window.phoneMqtt.publish('mbd_ai_exhibition_madiun_2026/events', JSON.stringify({
                                 type: 'guest_feedback',
+                                feedbackId: feedbackId,
                                 guestId: guestId,
                                 name: guestName,
                                 institution: guestInstitution,
