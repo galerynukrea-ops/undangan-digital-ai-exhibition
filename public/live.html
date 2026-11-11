@@ -409,9 +409,14 @@
 
         // EMERGENCY CONTROLS FROM ADMIN DASHBOARD (Surface Pro 3 Remote Receiver)
         function emergencyHidePopup() {
-            console.warn('[EMERGENCY] Hide popup command executed from Admin Dashboard!');
-            if (popupDismissTimer) clearTimeout(popupDismissTimer);
-            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            console.warn('[EMERGENCY] Hide popup command executed!');
+            if (popupDismissTimer) {
+                clearTimeout(popupDismissTimer);
+                popupDismissTimer = null;
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
             if (window.Robot3D) {
                 window.Robot3D.stopActiveSpeech();
                 window.Robot3D.flyToCenter();
@@ -421,8 +426,9 @@
                 popup.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
                 popup.classList.add('-translate-x-[150%]', 'opacity-0', 'pointer-events-none');
             }
-            arrivalQueue.length = 0;
+            currentDisplayedGuest = null;
             isProcessingArrival = false;
+            if (typeof updateQueueBadge === 'function') updateQueueBadge();
         }
 
         function emergencySetMute(forceMuted) {
@@ -505,26 +511,79 @@
         let totalCount = 0;
         let popupDismissTimer = null;
         let isLiveResetting = false;
+        let currentDisplayedGuest = null;
 
         let deletedGuestIds = new Set();
+        let deletedGuestNames = new Set();
         try {
             const rawDel = JSON.parse(localStorage.getItem('mbd_deleted_ids') || '[]');
             if (Array.isArray(rawDel)) rawDel.forEach(id => deletedGuestIds.add(id));
+            const rawDelNames = JSON.parse(localStorage.getItem('mbd_deleted_names') || '[]');
+            if (Array.isArray(rawDelNames)) rawDelNames.forEach(n => deletedGuestNames.add(n.toLowerCase()));
         } catch (e) {}
 
-        function markGuestDeleted(id) {
-            if (!id) return;
-            deletedGuestIds.add(id);
+        function isGuestDeleted(id, name) {
+            if (id && deletedGuestIds.has(id)) return true;
+            if (name && deletedGuestNames.has(name.trim().toLowerCase())) return true;
+            return false;
+        }
+
+        function markGuestDeleted(id, name) {
+            if (id) deletedGuestIds.add(id);
+            if (name) deletedGuestNames.add(name.trim().toLowerCase());
             try {
                 localStorage.setItem('mbd_deleted_ids', JSON.stringify(Array.from(deletedGuestIds)));
+                localStorage.setItem('mbd_deleted_names', JSON.stringify(Array.from(deletedGuestNames)));
             } catch (e) {}
+        }
+
+        function handleGuestDeleted(delId, delName) {
+            console.warn('[Live] Guest deletion received:', delId, delName);
+            markGuestDeleted(delId, delName);
+            if (delId) greetedGuestIds.add(delId);
+
+            // 1. Purge all matching items from arrivalQueue immediately
+            for (let i = arrivalQueue.length - 1; i >= 0; i--) {
+                const item = arrivalQueue[i];
+                const g = item.guest || item;
+                const matchId = delId && g.id && String(g.id) === String(delId);
+                const matchName = delName && g.name && delName.trim().toLowerCase() === g.name.trim().toLowerCase();
+                if (matchId || matchName) {
+                    arrivalQueue.splice(i, 1);
+                }
+            }
+            updateQueueBadge();
+
+            // 2. If the deleted guest is currently active on screen or being spoken:
+            if (currentDisplayedGuest) {
+                const cId = currentDisplayedGuest.id;
+                const cName = currentDisplayedGuest.name;
+                const matchId = delId && cId && String(delId) === String(cId);
+                const matchName = delName && cName && delName.trim().toLowerCase() === cName.trim().toLowerCase();
+                if (matchId || matchName) {
+                    console.warn('[Live] Aborting speech and popup for deleted guest:', cName);
+                    emergencyHidePopup();
+                }
+            }
+
+            // 3. Purge from checkedInGuests
+            checkedInGuests = checkedInGuests.filter(g => !isGuestDeleted(g.id, g.name));
+            try { localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests)); } catch (e) {}
+            updateBottomMarquee(checkedInGuests);
+
+            const counterEl = document.getElementById('counterText');
+            if (counterEl) {
+                counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedInGuests.length}</span> TAMU HADIR`;
+            }
+
+            loadStats();
         }
 
         function mergeGuestList(current, incoming) {
             const map = new Map();
-            (current || []).forEach(g => { if (g && g.id && !deletedGuestIds.has(g.id)) map.set(g.id, g); });
+            (current || []).forEach(g => { if (g && g.id && !isGuestDeleted(g.id, g.name)) map.set(g.id, g); });
             (incoming || []).forEach(g => {
-                if (g && g.id && !deletedGuestIds.has(g.id)) {
+                if (g && g.id && !isGuestDeleted(g.id, g.name)) {
                     const existing = map.get(g.id) || {};
                     map.set(g.id, { ...existing, ...g });
                 }
@@ -538,7 +597,7 @@
         try {
             const cached = JSON.parse(localStorage.getItem('mbd_live_guests') || '[]');
             if (Array.isArray(cached) && cached.length > 0) {
-                checkedInGuests = cached.filter(g => g && g.id && !deletedGuestIds.has(g.id));
+                checkedInGuests = cached.filter(g => g && g.id && !isGuestDeleted(g.id, g.name));
             }
         } catch (e) {}
 
@@ -637,6 +696,7 @@
         // FIFO QUEUE SYSTEM FOR WELCOME POPUP (Urut, Tidak Menumpuk, 10 Detik per Tamu)
         const arrivalQueue = [];
         let isProcessingArrival = false;
+        const queuedOrSpokenGuestIds = new Map(); // id -> timestamp
 
         function updateQueueBadge() {
             const queueEl = document.getElementById('popQueueIndicator');
@@ -651,6 +711,39 @@
         // Trigger / Masukkan tamu ke antrean kedatangan
         function triggerGuestArrivalSequence(guestData) {
             if (!guestData) return;
+            const guest = guestData.guest || guestData;
+            const guestId = guest.id || guest.qr_token;
+            const guestName = guest.name || guest.institution || '';
+
+            // 1. Guard: Jika tamu ini sudah dihapus, dilarang keras masuk antrean atau disapa
+            if (isGuestDeleted(guestId, guestName)) {
+                console.log('[Live] Mengabaikan tamu yang telah dihapus:', guestName);
+                return;
+            }
+
+            // 2. Strict Deduplication: Cegah pemicuan berulang tamu yang sama dalam 45 detik
+            const now = Date.now();
+            if (guestId) {
+                const lastTime = queuedOrSpokenGuestIds.get(guestId) || 0;
+                if (now - lastTime < 45000) {
+                    console.log('[Live] Mengabaikan duplikasi sinyal kedatangan tamu:', guestName);
+                    return;
+                }
+                queuedOrSpokenGuestIds.set(guestId, now);
+            }
+
+            // 3. Guard: Jangan masukkan jika tamu ini sudah ada dalam antrean aktif
+            const alreadyInQueue = arrivalQueue.some(item => {
+                const g = item.guest || item;
+                const matchId = guestId && g.id && String(g.id) === String(guestId);
+                const matchName = guestName && g.name && g.name.trim().toLowerCase() === guestName.trim().toLowerCase();
+                return matchId || matchName;
+            });
+            if (alreadyInQueue) {
+                console.log('[Live] Tamu sudah ada dalam antrean:', guestName);
+                return;
+            }
+
             arrivalQueue.push(guestData);
             updateQueueBadge();
 
@@ -664,9 +757,21 @@
         }
 
         function processNextArrival() {
+            // Bersihkan antrean dari tamu-tamu yang mungkin dihapus saat sedang menunggu giliran
+            while (arrivalQueue.length > 0) {
+                const candidate = arrivalQueue[0];
+                const g = candidate.guest || candidate;
+                if (isGuestDeleted(g.id, g.name)) {
+                    arrivalQueue.shift();
+                } else {
+                    break;
+                }
+            }
+
             // Jika antrean sudah habis: sembunyikan pop-up & kembalikan robot ke tengah
             if (arrivalQueue.length === 0) {
                 isProcessingArrival = false;
+                currentDisplayedGuest = null;
                 updateQueueBadge();
 
                 const popup = document.getElementById('welcomePopup');
@@ -682,6 +787,14 @@
             // Ambil tamu berikutnya dari antrean (FIFO)
             isProcessingArrival = true;
             const currentGuestData = arrivalQueue.shift();
+            currentDisplayedGuest = currentGuestData.guest || currentGuestData;
+
+            // Pastikan sekali lagi tamu ini tidak dihapus sebelum dirender
+            if (isGuestDeleted(currentDisplayedGuest.id, currentDisplayedGuest.name)) {
+                processNextArrival();
+                return;
+            }
+
             updateQueueBadge();
             renderGuestArrival(currentGuestData);
         }
@@ -831,19 +944,8 @@
                             triggerGuestArrivalSequence(parsed.data);
                         } else if (parsed.type === 'guest_deleted') {
                             const delId = parsed.data?.id;
-                            if (delId) {
-                                markGuestDeleted(delId);
-                                checkedInGuests = checkedInGuests.filter(g => g.id !== delId);
-                                try {
-                                    localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests));
-                                } catch (e) {}
-                                updateBottomMarquee(checkedInGuests);
-                                const counterEl = document.getElementById('counterText');
-                                if (counterEl) {
-                                    counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedInGuests.length}</span> TAMU HADIR`;
-                                }
-                            }
-                            loadStats();
+                            const delName = parsed.data?.name;
+                            handleGuestDeleted(delId, delName);
                         } else if (parsed.type === 'database_reset') {
                             arrivalQueue.length = 0;
                             isProcessingArrival = false;
@@ -892,16 +994,8 @@
                         triggerGuestArrivalSequence(parsed.data);
                     } else if (parsed.type === 'guest_deleted') {
                         const delId = parsed.data?.id;
-                        if (delId) {
-                            checkedInGuests = checkedInGuests.filter(g => g.id !== delId);
-                            try { localStorage.setItem('mbd_live_guests', JSON.stringify(checkedInGuests)); } catch (e) {}
-                            updateBottomMarquee(checkedInGuests);
-                            const counterEl = document.getElementById('counterText');
-                            if (counterEl) {
-                                counterEl.innerHTML = `<span id="counterChecked" class="text-neonCyan">${checkedInGuests.length}</span> TAMU HADIR`;
-                            }
-                        }
-                        loadStats();
+                        const delName = parsed.data?.name;
+                        handleGuestDeleted(delId, delName);
                     } else if (parsed.type === 'guest_feedback') {
                         loadStats();
                     } else if (parsed.type === 'database_reset') {
@@ -947,11 +1041,19 @@
 
         async function pollArrivals() {
             try {
-                const res = await fetch('/api/guests?status=checked_in');
+                const res = await fetch('/api/guests?status=checked_in&t=' + Date.now());
                 const json = await res.json();
                 if (!json.success || !Array.isArray(json.data)) return;
 
-                const guests = json.data;
+                const liveResetEpoch = parseInt(localStorage.getItem('mbd_live_reset_epoch') || '0', 10);
+                const guests = json.data.filter(g => {
+                    if (!g || !g.id || isGuestDeleted(g.id, g.name)) return false;
+                    if (liveResetEpoch) {
+                        const gTime = new Date(g.created_at || g.checked_in_at || 0).getTime();
+                        if (gTime < liveResetEpoch) return false;
+                    }
+                    return true;
+                });
 
                 if (isInitialArrivalScan) {
                     // Tandai seluruh tamu yang sudah hadir saat halaman dibuka
@@ -960,8 +1062,8 @@
                     return;
                 }
 
-                // Cari tamu yang baru terdaftar dan belum disapa
-                const newArrivals = guests.filter(g => !greetedGuestIds.has(g.id));
+                // Cari tamu yang baru terdaftar, belum disapa, dan belum dihapus
+                const newArrivals = guests.filter(g => !greetedGuestIds.has(g.id) && !isGuestDeleted(g.id, g.name));
                 newArrivals.sort((a, b) => new Date(a.checked_in_at || a.created_at) - new Date(b.checked_in_at || b.created_at));
 
                 for (const g of newArrivals) {

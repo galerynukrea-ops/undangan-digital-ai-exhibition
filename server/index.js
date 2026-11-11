@@ -496,11 +496,14 @@ async function handleDeleteGuest(id, res) {
         return res.status(400).json({ success: false, error: 'ID instansi diperlukan' });
     }
     try {
+        const guestToDelete = db.prepare('SELECT name FROM guests WHERE id = ?').get(id);
+        const guestName = guestToDelete ? guestToDelete.name : null;
+
         await deleteGuestFromCloud(id);
         db.prepare('DELETE FROM guests WHERE id = ?').run(id);
         db.prepare('DELETE FROM guest_messages WHERE guest_id = ?').run(id);
-        broadcastEvent('guest_deleted', { id, timestamp: new Date().toISOString() });
-        res.json({ success: true, message: 'Data instansi berhasil dihapus', id });
+        broadcastEvent('guest_deleted', { id, name: guestName, timestamp: new Date().toISOString() });
+        res.json({ success: true, message: 'Data instansi berhasil dihapus', id, name: guestName });
     } catch (err) {
         console.error('[API] Error delete guest:', err.message);
         res.status(500).json({ success: false, error: 'Gagal menghapus data instansi' });
@@ -561,8 +564,8 @@ app.post('/api/emergency/remove-last', requireAdmin, async (req, res) => {
         db.prepare('DELETE FROM guests WHERE id = ?').run(lastGuest.id);
         db.prepare('DELETE FROM guest_messages WHERE guest_id = ?').run(lastGuest.id);
         
-        broadcastEvent('guest_deleted', { id: lastGuest.id, timestamp: new Date().toISOString() });
-        broadcastEvent('emergency_hide', { targetId: lastGuest.id, timestamp: new Date().toISOString() });
+        broadcastEvent('guest_deleted', { id: lastGuest.id, name: lastGuest.name, timestamp: new Date().toISOString() });
+        broadcastEvent('emergency_hide', { targetId: lastGuest.id, name: lastGuest.name, timestamp: new Date().toISOString() });
         
         return res.json({
             success: true,
