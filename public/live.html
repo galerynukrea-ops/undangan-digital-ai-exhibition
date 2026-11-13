@@ -608,6 +608,15 @@
                 const json = await res.json();
                 if (json.success) {
                     const stats = json.data;
+                    if (stats && (stats.resetEpoch === 0 || !stats.resetEpoch)) {
+                        try {
+                            localStorage.removeItem('mbd_live_reset_epoch');
+                            localStorage.removeItem('mbd_deleted_ids');
+                            localStorage.removeItem('mbd_deleted_names');
+                            deletedGuestIds.clear();
+                            deletedGuestNames.clear();
+                        } catch (e) {}
+                    }
                     const liveResetEpoch = parseInt(localStorage.getItem('mbd_live_reset_epoch') || '0', 10);
                     const incomingList = (stats.allCheckins || stats.recentCheckins || []).filter(g => {
                         if (!g || !g.id || deletedGuestIds.has(g.id)) return false;

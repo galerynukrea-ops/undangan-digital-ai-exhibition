@@ -269,7 +269,7 @@ app.get('/api/guests', async (req, res) => {
         query += ` ORDER BY CASE WHEN g.status = 'checked_in' THEN 0 ELSE 1 END, g.checked_in_at DESC, g.created_at DESC`;
 
         const guests = db.prepare(query).all(...params);
-        res.json({ success: true, count: guests.length, data: guests });
+        res.json({ success: true, count: guests.length, data: guests, resetEpoch: getResetEpoch() });
     } catch (err) {
         console.error('[API] Error get guests:', err.message);
         res.status(500).json({ success: false, error: 'Gagal mengambil data instansi tamu' });
@@ -1125,7 +1125,8 @@ app.get('/api/stats', async (req, res) => {
                 emotions,
                 keywords: sortedKeywords,
                 recentCheckins,
-                allCheckins
+                allCheckins,
+                resetEpoch: getResetEpoch()
             }
         });
     } catch (err) {

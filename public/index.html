@@ -433,6 +433,13 @@
                 const res = await fetch(url);
                 const json = await res.json();
                 if (json.success) {
+                    if (json.resetEpoch === 0 || !json.resetEpoch) {
+                        try {
+                            localStorage.removeItem('mbd_admin_reset_epoch');
+                            localStorage.removeItem('mbd_deleted_ids');
+                            deletedGuestIds.clear();
+                        } catch (e) {}
+                    }
                     const adminResetEpoch = parseInt(localStorage.getItem('mbd_admin_reset_epoch') || '0', 10);
                     const guests = (json.data || []).filter(g => {
                         if (!g || !g.id || deletedGuestIds.has(g.id)) return false;

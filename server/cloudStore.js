@@ -13,6 +13,8 @@ const STATE_FILE = process.env.VERCEL
     ? '/tmp/cloud_state.json'
     : path.join(__dirname, '..', 'data', 'cloud_state.json');
 
+const BUNDLED_STATE_FILE = path.join(__dirname, '..', 'data', 'cloud_state.json');
+
 const INITIAL_VIP_GUESTS = [];
 
 let memoryGuests = [];
@@ -22,8 +24,12 @@ let resetEpoch = 0; // Epoch timestamp (ms): any guest created before this is co
 
 function loadLocalState() {
     try {
-        if (fs.existsSync(STATE_FILE)) {
-            const raw = fs.readFileSync(STATE_FILE, 'utf-8');
+        const fileToRead = fs.existsSync(STATE_FILE)
+            ? STATE_FILE
+            : (fs.existsSync(BUNDLED_STATE_FILE) ? BUNDLED_STATE_FILE : null);
+
+        if (fileToRead) {
+            const raw = fs.readFileSync(fileToRead, 'utf-8');
             const parsed = JSON.parse(raw);
             if (parsed.resetEpoch) {
                 resetEpoch = typeof parsed.resetEpoch === 'number' 
